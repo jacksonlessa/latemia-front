@@ -1,11 +1,8 @@
+@import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
 
-@tailwind base;
-
+@source "../**/*.{js,ts,jsx,tsx,mdx}";
 @custom-variant dark (&:is(.dark *));
-@tailwind components;
-@tailwind utilities;
 
 :root {
   --card: oklch(1 0 0);
@@ -43,6 +40,19 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Late & Mia brand tokens */
+  --color-late-primary: #4E8C75;
+  --color-late-sidebar-bg: #F4F9F7;
+  --color-late-sidebar-active-bg: #EAF4F0;
+  --color-late-typography: #2C2C2E;
+  --color-late-gray-medium: #6B6B6E;
+  --color-late-warning: #D97706;
+  --color-late-error: #C94040;
+  --color-late-badge-confirmed-bg: #EAF4F0;
+  --color-late-badge-pending-bg: #FEF3C7;
+  --color-late-badge-cancelled-bg: #FDECEA;
+  --color-late-badge-completed-bg: #F0F0F0;
 }
 
 * {
