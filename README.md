@@ -1,5 +1,14 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## LateMia — URLs
+
+| Ambiente | Frontend (Vercel) | `NEXT_PUBLIC_API_URL` (exemplo do PRD) |
+|---|---|---|
+| Homologação | `https://planolatemia.jackssolutions.com.br` | `https://latemiaback.jackssolutions.com.br` |
+| Produção | `https://latemia.com.br` | `https://api.latemia.com.br` |
+
+A API de produção ainda pode não estar acessível com HTTPS válido até o certificado de `api.latemia.com.br` estar configurado no Droplet. Tabela completa e notas: README do repositório de documentação **LateMia**.
+
 ## Getting Started
 
 First, run the development server:
