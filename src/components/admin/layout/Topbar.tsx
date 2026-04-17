@@ -1,14 +1,17 @@
 "use client";
 
-import { Search, Bell, ChevronDown } from "lucide-react";
+import { Search, Bell, ChevronDown, LogOut } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { SessionUser } from "@/lib/session";
 
 const units = [
   { id: 1, name: "Unidade Camboriú" },
@@ -18,13 +21,23 @@ const units = [
 
 const notifications = [
   { id: 1, text: "Novo plano cadastrado para Rex", time: "5 min atrás" },
-  { id: 2, text: "Pagamento confirmado - Tutor João Silva", time: "15 min atrás" },
+  {
+    id: 2,
+    text: "Pagamento confirmado - Tutor João Silva",
+    time: "15 min atrás",
+  },
   { id: 3, text: "Carência finalizada - Pet Luna", time: "1h atrás" },
 ];
 
-export function Topbar() {
+interface TopbarProps {
+  user: SessionUser;
+}
+
+export function Topbar({ user }: TopbarProps) {
+  const router = useRouter();
   const [selectedUnit, setSelectedUnit] = useState(units[0]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const notificationsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,6 +58,20 @@ export function Topbar() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showNotifications]);
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      router.push("/admin/login");
+      router.refresh();
+    }
+  }
+
+  const initials = user.email.slice(0, 2).toUpperCase();
+  const displayName = user.email.split("@")[0];
+  const roleLabel = user.role === "admin" ? "Administrador" : "Atendente";
 
   return (
     <header className="flex h-16 items-center justify-between gap-4 border-b border-gray-200 bg-white px-4 md:px-6">
@@ -72,6 +99,7 @@ export function Topbar() {
           <button
             onClick={() => setShowNotifications((prev) => !prev)}
             className="relative rounded-lg p-2 transition-colors hover:bg-gray-100"
+            aria-label="Notificações"
           >
             <Bell className="h-5 w-5 text-[#6B6B6E]" />
             <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-[#C94040]" />
@@ -121,13 +149,37 @@ export function Topbar() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* User Avatar */}
-        <div className="flex items-center gap-2">
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-[#4E8C75] text-white">A</AvatarFallback>
-          </Avatar>
-          <span className="hidden text-sm text-[#2C2C2E] sm:inline">Admin</span>
-        </div>
+        {/* User Menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className="flex items-center gap-2 rounded-lg px-2 py-1.5 outline-none transition-colors hover:bg-gray-100"
+            disabled={loggingOut}
+          >
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="bg-[#4E8C75] text-white text-xs">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="hidden flex-col items-start sm:flex">
+              <span className="text-sm text-[#2C2C2E]">{displayName}</span>
+              <span className="text-xs text-[#6B6B6E]">{roleLabel}</span>
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <div className="px-3 py-2">
+              <p className="text-sm font-medium text-[#2C2C2E]">{displayName}</p>
+              <p className="text-xs text-[#6B6B6E]">{user.email}</p>
+            </div>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="text-[#C94040] focus:text-[#C94040]"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              {loggingOut ? "Saindo…" : "Sair"}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );
