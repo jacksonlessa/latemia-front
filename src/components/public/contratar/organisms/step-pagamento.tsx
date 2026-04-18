@@ -17,13 +17,6 @@ export interface StepPagamentoProps {
 export function StepPagamento({ summary, onNext, onBack, isSubmitting = false, formError }: StepPagamentoProps) {
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <h2 className="font-display text-2xl text-forest">Resumo do Pedido</h2>
-        <p className="text-sm text-muted-foreground">
-          Confira o resumo antes de concluir a contratação.
-        </p>
-      </div>
-
       {/* Pet list */}
       <div className="rounded-lg border border-border bg-white p-4 space-y-1 divide-y divide-border">
         {summary.pets.map((pet, index) => (

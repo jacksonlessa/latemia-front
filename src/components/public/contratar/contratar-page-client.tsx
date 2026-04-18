@@ -50,7 +50,16 @@ const INITIAL_STATE: ContratarState = {
   isSubmitting: false,
 };
 
-const STEPPER_STEPS = ['Cadastro', 'Pets', 'Contrato', 'Pagamento'];
+const em = (word: string) => (
+  <em style={{ fontStyle: 'italic', color: '#5D7A5E' }}>{word}</em>
+);
+
+const STEPPER_STEPS = [
+  { label: 'Cadastro',  title: <>Vamos começar pelo {em('tutor')}.</>,  helper: 'Seus dados ficam protegidos e servem apenas para emitir o contrato e o débito mensal.' },
+  { label: 'Pets',      title: <>Quem vamos {em('cuidar')}?</>,          helper: '' },
+  { label: 'Contrato',  title: <>O {em('acordo')} entre nós.</>,         helper: 'Leia com calma. Pode baixar em PDF e guardar.' },
+  { label: 'Pagamento', title: <>Seu {em('débito')} mensal.</>,          helper: 'Cobrança automática todo mês. Você pode cancelar a qualquer momento.' },
+];
 
 // ---------------------------------------------------------------------------
 // Helpers

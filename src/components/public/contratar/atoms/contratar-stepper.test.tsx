@@ -2,12 +2,18 @@ import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ContratarStepper } from './contratar-stepper';
 
-const STEPS = ['Plano', 'Cadastro', 'Pets', 'Contrato', 'Pagamento'];
+const STEPS = [
+  { label: 'Plano',     title: 'Título 1', helper: 'Auxílio 1' },
+  { label: 'Cadastro',  title: 'Título 2', helper: 'Auxílio 2' },
+  { label: 'Pets',      title: 'Título 3', helper: 'Auxílio 3' },
+  { label: 'Contrato',  title: 'Título 4', helper: 'Auxílio 4' },
+  { label: 'Pagamento', title: 'Título 5', helper: 'Auxílio 5' },
+];
 
 describe('ContratarStepper', () => {
   it('should render all step labels', () => {
     render(<ContratarStepper steps={STEPS} current={0} />);
-    for (const label of STEPS) {
+    for (const { label } of STEPS) {
       expect(screen.getByText(label)).toBeInTheDocument();
     }
   });

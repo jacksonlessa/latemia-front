@@ -51,14 +51,6 @@ export function StepPets({
 
   return (
     <div className="space-y-6">
-      {/* Step header */}
-      <div>
-        <h2 className="text-xl font-semibold text-foreground">Seus pets</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Preencha os dados de cada pet que deseja incluir no plano.
-        </p>
-      </div>
-
       {/* Pet cards */}
       <div className="space-y-4">
         {pets.map((pet, index) => (

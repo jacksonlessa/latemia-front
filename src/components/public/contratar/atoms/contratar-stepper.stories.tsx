@@ -8,7 +8,7 @@
 
 import type React from 'react';
 import { ContratarStepper } from './contratar-stepper';
-import type { ContratarStepperProps } from './contratar-stepper';
+import type { ContratarStepperProps, StepMeta } from './contratar-stepper';
 
 // ---------------------------------------------------------------------------
 // Meta
@@ -39,7 +39,12 @@ type Story = {
 // Shared data
 // ---------------------------------------------------------------------------
 
-const STEPS = ['Cadastro', 'Pets', 'Contrato', 'Pagamento'];
+const STEPS: StepMeta[] = [
+  { label: 'Cadastro',  title: 'Seus dados pessoais',  helper: 'Informe nome, e-mail, CPF e endereço.' },
+  { label: 'Pets',      title: 'Seus pets',             helper: 'Adicione os pets que serão cobertos.' },
+  { label: 'Contrato',  title: 'Contrato do plano',     helper: 'Leia e aceite os termos para continuar.' },
+  { label: 'Pagamento', title: 'Confirmação e envio',   helper: 'Revise o resumo e finalize sua adesão.' },
+];
 
 // ---------------------------------------------------------------------------
 // Stories

@@ -20,13 +20,6 @@ export function StepContrato({
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <h2 className="font-display text-2xl text-forest">Contrato de Serviço</h2>
-        <p className="text-sm text-muted-foreground">
-          Leia o contrato abaixo antes de prosseguir com a contratação.
-        </p>
-      </div>
-
       {/* Contract text with fixed-height scrollable area */}
       <div
         className="rounded-lg border border-border bg-muted/30 p-4 overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed text-foreground"

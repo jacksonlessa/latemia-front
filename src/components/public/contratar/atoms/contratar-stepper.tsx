@@ -1,16 +1,25 @@
+import React from 'react';
 import { Check } from 'lucide-react';
 
+export interface StepMeta {
+  label: string;
+  title: React.ReactNode;
+  helper: string;
+}
+
 export interface ContratarStepperProps {
-  steps: string[];
+  steps: StepMeta[];
   /** 0-based index of the currently active step. */
   current: number;
 }
 
 export function ContratarStepper({ steps, current }: ContratarStepperProps) {
+  const active = steps[current];
+
   return (
-    <nav aria-label="Progresso do formulário" className="w-full">
+    <nav aria-label="Progresso do formulário" className="w-full space-y-4">
       <ol className="flex items-start">
-        {steps.map((label, index) => {
+        {steps.map(({ label }, index) => {
           const isCompleted = index < current;
           const isActive = index === current;
           const isLast = index === steps.length - 1;
@@ -63,6 +72,24 @@ export function ContratarStepper({ steps, current }: ContratarStepperProps) {
           );
         })}
       </ol>
+
+      {/* Active step title + helper */}
+      {active && (
+        <div className="pt-1">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#6B6B6E] mb-1">
+            Passo {current + 1} de {steps.length}
+          </p>
+          <h2
+            className="font-display font-normal"
+            style={{ fontSize: 30, lineHeight: 1.05, letterSpacing: '-0.6px', color: '#1F2A1F', margin: 0 }}
+          >
+            {active.title}
+          </h2>
+          {active.helper && (
+            <p className="mt-1 text-sm text-[#6B6B6E]">{active.helper}</p>
+          )}
+        </div>
+      )}
     </nav>
   );
 }

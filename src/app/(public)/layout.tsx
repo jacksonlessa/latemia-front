@@ -15,7 +15,7 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-cream font-display min-h-screen">
+    <div className="bg-cream min-h-screen">
       <AnalyticsSlot />
       {children}
       <CookieBannerSlot />
