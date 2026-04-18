@@ -13,7 +13,7 @@ import {
   reactivateInternalUserAction,
   getInternalUserAction,
 } from '@/app/admin/(panel)/usuarios-internos/actions';
-import type { InternalUserDetail, PaginatedInternalUsers } from '@/lib/types/internal-users';
+import type { InternalUserDetail, PaginatedInternalUsers } from '@/lib/types/users';
 
 type ModalKind = 'none' | 'create' | 'edit' | 'deactivate' | 'reactivate' | 'reset';
 

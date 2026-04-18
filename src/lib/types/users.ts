@@ -20,7 +20,7 @@ export interface InternalUserRow {
 }
 
 /**
- * Full detail object returned by GET /v1/internal-users/:id.
+ * Full detail object returned by GET /v1/users/:id.
  * Contains raw (unmasked) CPF and phone for use in edit forms.
  */
 export interface InternalUserDetail {
@@ -36,7 +36,7 @@ export interface InternalUserDetail {
   deletedAt: string | null;
 }
 
-/** Paginated response wrapper for the internal users list endpoint. */
+/** Paginated response wrapper for the users list endpoint. */
 export interface PaginatedInternalUsers {
   data: InternalUserRow[];
   meta: {
@@ -47,7 +47,7 @@ export interface PaginatedInternalUsers {
   };
 }
 
-/** Payload for POST /v1/internal-users. */
+/** Payload for POST /v1/users. */
 export interface CreateInternalUserInput {
   name: string;
   email: string;
@@ -57,7 +57,7 @@ export interface CreateInternalUserInput {
   password: string;
 }
 
-/** Payload for PATCH /v1/internal-users/:id. All fields optional. */
+/** Payload for PATCH /v1/users/:id. All fields optional. */
 export interface UpdateInternalUserInput {
   name?: string;
   email?: string;
@@ -68,7 +68,7 @@ export interface UpdateInternalUserInput {
   password?: string;
 }
 
-/** Query parameters accepted by listInternalUsers. */
+/** Query parameters accepted by listUsers. */
 export interface ListInternalUsersParams {
   page?: number;
   limit?: number;

@@ -13,8 +13,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CpfInput } from '../atoms/cpf-input';
-import { PhoneInput } from '../atoms/phone-input';
+import { CpfInput } from '@/components/ui/cpf-input';
+import { PhoneInput } from '@/components/ui/phone-input';
 import {
   Select,
   SelectContent,
@@ -27,7 +27,7 @@ import {
   updateInternalUserAction,
 } from '@/app/admin/(panel)/usuarios-internos/actions';
 import type { ActionResult } from '@/app/admin/(panel)/usuarios-internos/actions';
-import type { InternalUserDetail } from '@/lib/types/internal-users';
+import type { InternalUserDetail } from '@/lib/types/users';
 
 // ---------------------------------------------------------------------------
 // Sub-components — one per mode so each has its own isolated useActionState

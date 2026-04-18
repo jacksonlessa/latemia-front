@@ -1,9 +1,9 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { fetchMe, listInternalUsers } from "@/lib/api-server";
+import { fetchMe, listUsers } from "@/lib/api-server";
 import { SESSION_COOKIE } from "@/lib/session";
 import { UsersPageClient } from "@/components/admin/usuarios-internos/organisms/users-page-client";
-import type { PaginatedInternalUsers } from "@/lib/types/internal-users";
+import type { PaginatedInternalUsers } from "@/lib/types/users";
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -35,7 +35,7 @@ export default async function UsuariosInternosPage({ searchParams }: PageProps) 
   let fetchError: string | null = null;
 
   try {
-    initialData = await listInternalUsers(token, {
+    initialData = await listUsers(token, {
       page,
       limit: 20,
       search,

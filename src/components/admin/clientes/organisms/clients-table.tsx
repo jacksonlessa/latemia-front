@@ -11,31 +11,21 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { RoleBadge } from '@/components/admin/usuarios-internos/atoms/role-badge';
-import { StatusBadge } from '@/components/admin/usuarios-internos/atoms/status-badge';
 import { EmptyState } from '@/components/admin/usuarios-internos/atoms/empty-state';
-import { UserRowActions } from '@/components/admin/usuarios-internos/molecules/user-row-actions';
-import type { InternalUserRow } from '@/lib/types/users';
+import type { ClientListItem } from '@/lib/types/client';
 
-interface UsersTableProps {
-  data: InternalUserRow[];
+interface ClientsTableProps {
+  data: ClientListItem[];
   total: number;
   page: number;
   limit: number;
-  currentUserId: string;
-  onEdit: (id: string) => void;
-  onDeactivate: (id: string) => void;
-  onReactivate: (id: string) => void;
-  onResetPassword: (id: string) => void;
 }
 
 const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
   dateStyle: 'short',
-  timeStyle: 'short',
 });
 
-function formatDate(iso: string | null): string {
-  if (!iso) return '—';
+function formatDate(iso: string): string {
   try {
     return dateFormatter.format(new Date(iso));
   } catch {
@@ -43,17 +33,7 @@ function formatDate(iso: string | null): string {
   }
 }
 
-export function UsersTable({
-  data,
-  total,
-  page,
-  limit,
-  currentUserId,
-  onEdit,
-  onDeactivate,
-  onReactivate,
-  onResetPassword,
-}: UsersTableProps) {
+export function ClientsTable({ data, total, page, limit }: ClientsTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -69,8 +49,8 @@ export function UsersTable({
     return (
       <EmptyState
         icon={<Users className="h-12 w-12" />}
-        title="Nenhum usuário encontrado"
-        description="Nenhum usuário corresponde aos filtros aplicados. Tente ajustar a busca ou os filtros."
+        title="Nenhum cliente encontrado"
+        description="Nenhum cliente corresponde à busca aplicada. Tente ajustar os termos de pesquisa."
       />
     );
   }
@@ -81,42 +61,41 @@ export function UsersTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Papel</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Criado em</TableHead>
-              <TableHead>Último login</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+              <TableHead scope="col">Nome</TableHead>
+              <TableHead scope="col">CPF</TableHead>
+              <TableHead scope="col">Telefone</TableHead>
+              <TableHead scope="col">E-mail</TableHead>
+              <TableHead scope="col">Cadastrado em</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {data.map((row) => (
-              <TableRow key={row.id}>
-                <TableCell className="font-medium">
-                  <div>{row.name}</div>
-                  <div className="text-xs text-muted-foreground">{row.email}</div>
+              <TableRow
+                key={row.id}
+                className="cursor-pointer hover:bg-[#F4F9F7]"
+                onClick={() => router.push(`/admin/clientes/${row.id}`)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    router.push(`/admin/clientes/${row.id}`);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={`Ver detalhes de ${row.name}`}
+              >
+                <TableCell className="font-medium">{row.name}</TableCell>
+                <TableCell className="font-mono text-sm text-muted-foreground">
+                  {row.cpfMasked}
                 </TableCell>
-                <TableCell>
-                  <RoleBadge role={row.role} />
+                <TableCell className="text-sm text-muted-foreground">
+                  {row.phoneMasked}
                 </TableCell>
-                <TableCell>
-                  <StatusBadge isActive={!row.deletedAt} />
+                <TableCell className="text-sm text-muted-foreground">
+                  {row.email}
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                   {formatDate(row.createdAt)}
-                </TableCell>
-                <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                  {formatDate(row.lastLoginAt)}
-                </TableCell>
-                <TableCell className="text-right">
-                  <UserRowActions
-                    user={row}
-                    isSelf={row.id === currentUserId}
-                    onEdit={() => onEdit(row.id)}
-                    onDeactivate={() => onDeactivate(row.id)}
-                    onReactivate={() => onReactivate(row.id)}
-                    onResetPassword={() => onResetPassword(row.id)}
-                  />
                 </TableCell>
               </TableRow>
             ))}
@@ -127,7 +106,8 @@ export function UsersTable({
       {/* Pagination controls */}
       <div className="flex items-center justify-between px-1">
         <p className="text-sm text-muted-foreground">
-          Total: <span className="font-medium">{total}</span> usuário{total !== 1 ? 's' : ''}
+          Total: <span className="font-medium">{total}</span>{' '}
+          cliente{total !== 1 ? 's' : ''}
         </p>
         <div className="flex items-center gap-3">
           <Button

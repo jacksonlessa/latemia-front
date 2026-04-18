@@ -2,7 +2,6 @@
 
 import {
   Home,
-  User,
   Shield,
   Clipboard,
   DollarSign,
@@ -28,7 +27,7 @@ interface SidebarProps {
 
 const menuItems = [
   { path: "/admin/home", label: "Dashboard", icon: Home, roles: ["admin", "atendente"] },
-  { path: "/admin/clientes", label: "Clientes", icon: User, roles: ["admin", "atendente"] },
+  { path: "/admin/clientes", label: "Clientes", icon: Users, roles: ["admin", "atendente"] },
   { path: "/admin/planos", label: "Planos", icon: Shield, roles: ["admin", "atendente"] },
   { path: "/admin/uso-beneficio", label: "Uso do Benefício", icon: Clipboard, roles: ["admin", "atendente"] },
   { path: "/admin/pagamentos", label: "Pagamentos", icon: DollarSign, roles: ["admin", "atendente"] },
@@ -72,7 +71,7 @@ export function Sidebar({ collapsed, onToggle, userRole }: SidebarProps) {
           <ul className="space-y-1">
             {filteredMenuItems.map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.path;
+              const isActive = pathname === item.path || pathname.startsWith(item.path + '/');
 
               const linkContent = (
                 <Link

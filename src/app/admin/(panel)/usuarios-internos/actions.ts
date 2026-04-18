@@ -4,15 +4,15 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
 import {
-  createInternalUser,
-  deactivateInternalUser,
-  getInternalUser,
-  reactivateInternalUser,
-  updateInternalUser,
+  createUser,
+  deactivateUser,
+  getUser,
+  reactivateUser,
+  updateUser,
 } from "@/lib/api-server";
 import { ApiError } from "@/lib/api-errors";
 import { SESSION_COOKIE } from "@/lib/session";
-import type { InternalUserDetail, Role } from "@/lib/types/internal-users";
+import type { InternalUserDetail, Role } from "@/lib/types/users";
 
 // ---------------------------------------------------------------------------
 // ActionResult type
@@ -134,7 +134,7 @@ export async function createInternalUserAction(
   }
 
   try {
-    const data = await createInternalUser(token, {
+    const data = await createUser(token, {
       name,
       email,
       phone,
@@ -191,7 +191,7 @@ export async function updateInternalUserAction(
   }
 
   try {
-    const data = await updateInternalUser(token, id, {
+    const data = await updateUser(token, id, {
       name,
       email,
       phone,
@@ -218,7 +218,7 @@ export async function deactivateInternalUserAction(
   if (!token) return unauthenticated();
 
   try {
-    await deactivateInternalUser(token, id);
+    await deactivateUser(token, id);
     revalidatePath("/admin/usuarios-internos");
     return { ok: true };
   } catch (err) {
@@ -238,7 +238,7 @@ export async function reactivateInternalUserAction(
   if (!token) return unauthenticated<InternalUserDetail>();
 
   try {
-    const data = await reactivateInternalUser(token, id);
+    const data = await reactivateUser(token, id);
     revalidatePath("/admin/usuarios-internos");
     return { ok: true, data };
   } catch (err) {
@@ -258,7 +258,7 @@ export async function getInternalUserAction(
   if (!token) return unauthenticated<InternalUserDetail>();
 
   try {
-    const data = await getInternalUser(token, id);
+    const data = await getUser(token, id);
     return { ok: true, data };
   } catch (err) {
     return handleUnknownError<InternalUserDetail>(err);

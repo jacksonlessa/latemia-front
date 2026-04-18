@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { InternalUserRow } from '@/lib/types/internal-users';
+import type { InternalUserRow } from '@/lib/types/users';
 
 interface UserRowActionsProps {
   user: InternalUserRow;
