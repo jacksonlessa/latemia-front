@@ -110,7 +110,7 @@ export class PetEntity {
     );
   }
 
-  /** Returns the payload to be sent to POST /v1/clients/:clientId/pets. */
+  /** Returns the payload to be sent to POST /v1/register/pet. */
   toApiPayload(): CreatePetPayload {
     return {
       name: this.name,

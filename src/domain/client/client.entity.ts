@@ -179,7 +179,7 @@ export class ClientEntity {
     );
   }
 
-  /** Returns the payload to be sent to POST /v1/clients. */
+  /** Returns the payload to be sent to POST /v1/register/client. */
   toApiPayload(): CreateClientPayload {
     return {
       name: this.name,

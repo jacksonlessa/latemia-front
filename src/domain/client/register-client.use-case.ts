@@ -1,7 +1,7 @@
 /**
  * RegisterClientUseCase
  *
- * Validates input via ClientEntity, calls POST /v1/clients, and maps
+ * Validates input via ClientEntity, calls POST /v1/register/client, and maps
  * API error codes to user-friendly per-field messages.
  *
  * No personal data is included in thrown errors or logs.
@@ -79,7 +79,7 @@ export class RegisterClientUseCase {
     // 2. Call API
     let res: Response;
     try {
-      res = await fetch(getApiUrl("/v1/clients"), {
+      res = await fetch(getApiUrl("/v1/register/client"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(entity.toApiPayload()),

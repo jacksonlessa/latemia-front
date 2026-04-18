@@ -1,8 +1,9 @@
 /**
  * RegisterPetUseCase
  *
- * Validates input via PetEntity, calls POST /v1/clients/:clientId/pets,
+ * Validates input via PetEntity, calls POST /v1/register/pet,
  * and maps API error codes to user-friendly per-field messages.
+ * clientId is sent in the request body instead of the URL path.
  *
  * No personal data is included in thrown errors or logs.
  */
@@ -73,10 +74,10 @@ export class RegisterPetUseCase {
     // 2. Call API
     let res: Response;
     try {
-      res = await fetch(getApiUrl(`/v1/clients/${clientId}/pets`), {
+      res = await fetch(getApiUrl("/v1/register/pet"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(entity.toApiPayload()),
+        body: JSON.stringify({ clientId, ...entity.toApiPayload() }),
       });
     } catch {
       // Network failure — no personal data in error

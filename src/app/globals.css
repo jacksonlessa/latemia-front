@@ -67,11 +67,11 @@ body {
 
 body {
   @apply bg-background text-foreground antialiased;
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-sans), Inter, -apple-system, system-ui, sans-serif;
 }
 
 @theme inline {
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-display);
   --font-sans: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -165,5 +165,5 @@ body {
   --color-forest: #5D7A5E;
   --color-forest-strong: #4E8C75;
   --color-sand: #E2E0D6;
-  --font-display: Georgia, 'Times New Roman', serif;
+  --font-display: var(--font-display), Fraunces, 'Iowan Old Style', Georgia, serif;
 }
