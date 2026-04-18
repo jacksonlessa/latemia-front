@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
-  title: "LateMia — Dev",
-  description: "LateMia",
+  title: "Late & Mia",
+  description: "Plano de Emergência Veterinária — 50% de desconto em atendimentos emergenciais para o seu pet.",
 };
 
 export default function RootLayout({

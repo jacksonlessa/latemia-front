@@ -1,9 +1,15 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { fetchMe } from "@/lib/api-server";
+import { fetchMe, listInternalUsers } from "@/lib/api-server";
 import { SESSION_COOKIE } from "@/lib/session";
+import { UsersPageClient } from "@/components/admin/usuarios-internos/organisms/users-page-client";
+import type { PaginatedInternalUsers } from "@/lib/types/internal-users";
 
-export default async function UsuariosInternosPage() {
+interface PageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function UsuariosInternosPage({ searchParams }: PageProps) {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
 
@@ -11,9 +17,33 @@ export default async function UsuariosInternosPage() {
     redirect("/admin/login");
   }
 
-  const user = await fetchMe(token);
-  if (!user || user.role !== "admin") {
+  const me = await fetchMe(token);
+  if (!me || me.role !== "admin") {
     redirect("/admin/home");
+  }
+
+  const params = await searchParams;
+  const page = Math.max(1, Number(params.page) || 1);
+  const search = typeof params.search === "string" && params.search ? params.search : undefined;
+  const role =
+    params.role === "admin" || params.role === "atendente" ? params.role : undefined;
+  // Default status is "active" per spec
+  const status: "active" | "inactive" =
+    params.status === "inactive" ? "inactive" : "active";
+
+  let initialData: PaginatedInternalUsers | null = null;
+  let fetchError: string | null = null;
+
+  try {
+    initialData = await listInternalUsers(token, {
+      page,
+      limit: 20,
+      search,
+      role,
+      status,
+    });
+  } catch {
+    fetchError = "Não foi possível carregar a lista de usuários.";
   }
 
   return (
@@ -27,17 +57,24 @@ export default async function UsuariosInternosPage() {
         </p>
       </div>
 
-      <div className="flex flex-col items-center justify-center rounded-xl border border-gray-100 bg-white p-8 shadow-sm md:p-12">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#EAF4F0]">
-          <span className="text-3xl">👤</span>
-        </div>
-        <h3 className="mb-2 text-lg font-semibold text-[#2C2C2E]">
-          Em desenvolvimento
-        </h3>
-        <p className="max-w-md text-center text-[#6B6B6E]">
-          A funcionalidade de gestão de usuários internos estará disponível em
-          breve.
-        </p>
+      <div className="rounded-xl border border-gray-100 bg-white shadow-sm">
+        {fetchError ? (
+          <div className="flex flex-col items-center justify-center gap-4 p-12 text-center">
+            <p className="text-sm text-destructive">{fetchError}</p>
+            <a
+              href={`/admin/usuarios-internos?page=${page}&status=${status}${search ? `&search=${encodeURIComponent(search)}` : ""}${role ? `&role=${role}` : ""}`}
+              className="text-sm text-[#4E8C75] underline underline-offset-4 hover:opacity-80"
+            >
+              Tentar novamente
+            </a>
+          </div>
+        ) : (
+          <UsersPageClient
+            initialData={initialData!}
+            page={page}
+            currentUserId={me.id}
+          />
+        )}
       </div>
     </div>
   );

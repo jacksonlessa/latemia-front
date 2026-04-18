@@ -158,3 +158,12 @@ body {
     @apply font-sans;
   }
 }
+
+/* Landing page public tokens — coexist with admin tokens */
+@theme {
+  --color-cream: #F6F4EE;
+  --color-forest: #5D7A5E;
+  --color-forest-strong: #4E8C75;
+  --color-sand: #E2E0D6;
+  --font-display: Georgia, 'Times New Roman', serif;
+}
