@@ -83,3 +83,25 @@ export const MultiplosPets: Story = {
     onBack: noop,
   },
 };
+
+/** Botão desabilitado e texto "Aguarde..." enquanto submissão está em andamento */
+export const Loading: Story = {
+  name: 'Loading',
+  args: {
+    summary: singlePetSummary,
+    onNext: noop,
+    onBack: noop,
+    isSubmitting: true,
+  },
+};
+
+/** Mensagem de erro de rede exibida acima dos botões de navegação */
+export const ErroDeRede: Story = {
+  name: 'Erro de rede',
+  args: {
+    summary: singlePetSummary,
+    onNext: noop,
+    onBack: noop,
+    formError: 'Ocorreu um erro inesperado. Tente novamente.',
+  },
+};

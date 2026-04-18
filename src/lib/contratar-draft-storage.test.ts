@@ -11,10 +11,10 @@ const STORAGE_KEY = 'latemia:contratar:draft:v1';
 const makeDraft = (overrides: Partial<ContratarDraft> = {}): ContratarDraft => ({
   step: 0,
   client: {
-    name: 'João Silva',
-    cpf: '529.982.247-25',
-    phone: '(11) 91234-5678',
-    email: 'joao@example.com',
+    name: 'Test User',
+    cpf: '000.000.001-91',
+    phone: '(11) 99999-0001',
+    email: 'test@example.com',
   },
   pets: [
     {

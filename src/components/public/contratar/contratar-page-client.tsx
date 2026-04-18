@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ContratarStepper } from '@/components/public/contratar/atoms/contratar-stepper';
 import {
   StepCadastro,
@@ -16,6 +16,7 @@ import { ValidateCheckoutDraftUseCase } from '@/domain/checkout/validate-checkou
 import { RegisterClientUseCase } from '@/domain/client/register-client.use-case';
 import { RegisterPetUseCase } from '@/domain/pet/register-pet.use-case';
 import { publicSite } from '@/config/public-site';
+import { loadDraft, saveDraft, clearDraft } from '@/lib/contratar-draft-storage';
 import type { AddressData, RegisterClientInput } from '@/lib/types/client';
 import type { RegisterPetInput } from '@/lib/types/pet';
 import type { CheckoutSummary } from '@/domain/checkout/checkout.types';
@@ -82,6 +83,42 @@ function setNestedValue<T extends Record<string, unknown>>(
 
 export function ContratarPageClient() {
   const [state, setState] = useState<ContratarState>(INITIAL_STATE);
+  const hydratedRef = useRef(false);
+
+  // -------------------------------------------------------------------------
+  // 5.1 Hydrate state from sessionStorage on mount (SSR-safe via useEffect)
+  // -------------------------------------------------------------------------
+  useEffect(() => {
+    const draft = loadDraft();
+    if (draft !== null) {
+      setState((prev) => ({
+        ...prev,
+        step: draft.step,
+        client: draft.client,
+        pets: draft.pets,
+        contractAccepted: draft.contractAccepted,
+        contractAcceptedAt: draft.contractAcceptedAt,
+      }));
+    }
+    hydratedRef.current = true;
+  }, []);
+
+  // -------------------------------------------------------------------------
+  // 5.2 Persist relevant state to sessionStorage on each relevant change
+  // -------------------------------------------------------------------------
+  useEffect(() => {
+    // Skip before hydration completes to avoid overwriting the draft with INITIAL_STATE
+    if (!hydratedRef.current) return;
+    // Do not persist terminal step (success) — clearDraft handles that
+    if (state.step === 4) return;
+    saveDraft({
+      step: state.step as 0 | 1 | 2 | 3,
+      client: state.client,
+      pets: state.pets,
+      contractAccepted: state.contractAccepted,
+      contractAcceptedAt: state.contractAcceptedAt,
+    });
+  }, [state.step, state.client, state.pets, state.contractAccepted, state.contractAcceptedAt]);
 
   // -------------------------------------------------------------------------
   // handleNext — validates current step then advances
@@ -162,6 +199,8 @@ export function ContratarPageClient() {
             await petUseCase.execute(registeredClient.id, pet as RegisterPetInput);
           }
 
+          // 5.3 Clear draft on success before advancing to step 4
+          clearDraft();
           setState((prev) => ({ ...prev, step: 4, summary, isSubmitting: false, fieldErrors: {} }));
         } catch (e) {
           if (e instanceof ValidationError) {
