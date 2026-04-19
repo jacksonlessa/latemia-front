@@ -7,9 +7,10 @@ import { PET_SPECIES_LABEL } from '@/lib/pet-labels';
 export interface StepSucessoProps {
   clientName: string;
   pets: Array<{ name: string; species: PetSpecies }>;
+  planIds?: string[];
 }
 
-export function StepSucesso({ clientName, pets }: StepSucessoProps) {
+export function StepSucesso({ clientName, pets, planIds = [] }: StepSucessoProps) {
   return (
     <div className="flex flex-col items-center gap-6 py-6 text-center">
       {/* Success icon */}
@@ -45,6 +46,28 @@ export function StepSucesso({ clientName, pets }: StepSucessoProps) {
               >
                 <span className="font-medium text-foreground">{pet.name}</span>
                 <span className="text-muted-foreground">{PET_SPECIES_LABEL[pet.species]}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Protocol IDs */}
+      {planIds.length > 0 && (
+        <div className="w-full max-w-xs rounded-lg border border-border bg-white p-4 space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Protocolos
+          </p>
+          <ul className="space-y-2" role="list">
+            {planIds.map((id) => (
+              <li key={id} className="space-y-0.5 text-left">
+                <p className="text-xs text-muted-foreground">Protocolo</p>
+                <pre
+                  className="text-xs font-mono text-foreground bg-muted/40 rounded px-2 py-1 break-all whitespace-pre-wrap select-all"
+                  title="Clique para selecionar"
+                >
+                  {id}
+                </pre>
               </li>
             ))}
           </ul>

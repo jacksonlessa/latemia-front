@@ -3,6 +3,9 @@
  * Placeholder lorem ipsum — replace with the approved legal text before production launch.
  */
 
+/** Versão do contrato — deve coincidir com o valor persistido no backend. */
+export const CONTRACT_VERSION = 'v1';
+
 export const CONTRATO_TEXTO = `
 CONTRATO DE PRESTAÇÃO DE SERVIÇOS — PLANO EMERGÊNCIA VETERINÁRIA
 

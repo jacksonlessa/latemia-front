@@ -15,6 +15,8 @@ import { ValidationError } from '@/lib/validation-error';
 import { ValidateCheckoutDraftUseCase } from '@/domain/checkout/validate-checkout-draft.use-case';
 import { RegisterClientUseCase } from '@/domain/client/register-client.use-case';
 import { RegisterPetUseCase } from '@/domain/pet/register-pet.use-case';
+import { RegisterContractUseCase } from '@/domain/contract/register-contract.use-case';
+import { CONTRACT_VERSION } from '@/content/contrato';
 import { publicSite } from '@/config/public-site';
 import { loadDraft, saveDraft, clearDraft } from '@/lib/contratar-draft-storage';
 import type { AddressData, RegisterClientInput } from '@/lib/types/client';
@@ -37,6 +39,7 @@ interface ContratarState {
   fieldErrors: Record<string, string>;
   summary: CheckoutSummary | null;
   isSubmitting: boolean;
+  planIds: string[];
 }
 
 const INITIAL_STATE: ContratarState = {
@@ -48,6 +51,7 @@ const INITIAL_STATE: ContratarState = {
   fieldErrors: {},
   summary: null,
   isSubmitting: false,
+  planIds: [],
 };
 
 const em = (word: string) => (
@@ -195,7 +199,7 @@ export function ContratarPageClient() {
           return;
         }
 
-        // Call API: register client then each pet
+        // Call API: register client then each pet then contract
         setState((prev) => ({ ...prev, isSubmitting: true, fieldErrors: {} }));
         try {
           const clientUseCase = new RegisterClientUseCase();
@@ -204,13 +208,30 @@ export function ContratarPageClient() {
           );
 
           const petUseCase = new RegisterPetUseCase();
+          const createdPetIds: string[] = [];
           for (const pet of state.pets) {
-            await petUseCase.execute(registeredClient.id, pet as RegisterPetInput);
+            const createdPet = await petUseCase.execute(registeredClient.id, pet as RegisterPetInput);
+            createdPetIds.push(createdPet.id);
           }
 
-          // 5.3 Clear draft on success before advancing to step 4
+          const contractUseCase = new RegisterContractUseCase();
+          const contractResult = await contractUseCase.execute({
+            clientId: registeredClient.id,
+            petIds: createdPetIds,
+            contractVersion: CONTRACT_VERSION,
+            consentedAt: state.contractAcceptedAt!,
+          });
+
+          // Clear draft only after full success (client + pets + contract)
           clearDraft();
-          setState((prev) => ({ ...prev, step: 4, summary, isSubmitting: false, fieldErrors: {} }));
+          setState((prev) => ({
+            ...prev,
+            step: 4,
+            summary,
+            isSubmitting: false,
+            fieldErrors: {},
+            planIds: contractResult.plan_ids,
+          }));
         } catch (e) {
           if (e instanceof ValidationError) {
             setState((prev) => ({ ...prev, isSubmitting: false, fieldErrors: e.fieldErrors }));
@@ -323,6 +344,7 @@ export function ContratarPageClient() {
         <StepSucesso
           clientName={state.summary.clientName}
           pets={state.summary.pets}
+          planIds={state.planIds}
         />
       </main>
     );

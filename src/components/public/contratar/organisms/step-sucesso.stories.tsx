@@ -69,3 +69,29 @@ export const SemPets: Story = {
     pets: [],
   },
 };
+
+/** Tela de sucesso com protocolos de plano exibidos */
+export const ComProtocolos: Story = {
+  name: 'Com protocolos',
+  args: {
+    clientName: 'Carlos Lima',
+    pets: [
+      { name: 'Bolinha', species: 'canino' },
+      { name: 'Fifi', species: 'felino' },
+    ],
+    planIds: [
+      'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+      'b2c3d4e5-f6a7-8901-bcde-f12345678901',
+    ],
+  },
+};
+
+/** Tela de sucesso com um único protocolo */
+export const ComUmProtocolo: Story = {
+  name: 'Com um protocolo',
+  args: {
+    clientName: 'Maria da Silva',
+    pets: [{ name: 'Rex', species: 'canino' }],
+    planIds: ['a1b2c3d4-e5f6-7890-abcd-ef1234567890'],
+  },
+};
