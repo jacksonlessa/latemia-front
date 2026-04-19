@@ -56,6 +56,7 @@ const mockPlans: PlanListItem[] = [
   {
     id: 'plan-uuid-exemplo-1',
     status: 'ativo',
+    clientId: 'client-uuid-exemplo-1',
     clientName: 'Maria da Silva',
     petName: 'Rex',
     createdAt: '2026-04-01T10:00:00.000Z',
@@ -63,6 +64,7 @@ const mockPlans: PlanListItem[] = [
   {
     id: 'plan-uuid-exemplo-2',
     status: 'pendente',
+    clientId: 'client-uuid-exemplo-2',
     clientName: 'João Souza',
     petName: 'Luna',
     createdAt: '2026-03-15T08:30:00.000Z',
@@ -70,6 +72,7 @@ const mockPlans: PlanListItem[] = [
   {
     id: 'plan-uuid-exemplo-3',
     status: 'inadimplente',
+    clientId: 'client-uuid-exemplo-3',
     clientName: 'Ana Costa',
     petName: 'Bolinha',
     createdAt: '2026-02-20T14:00:00.000Z',

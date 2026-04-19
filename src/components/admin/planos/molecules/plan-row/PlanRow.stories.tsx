@@ -49,6 +49,7 @@ type Story = {
 const mockPlan: PlanListItem = {
   id: 'plan-uuid-exemplo-1',
   status: 'ativo',
+  clientId: 'client-uuid-exemplo-1',
   clientName: 'Maria da Silva',
   petName: 'Rex',
   createdAt: '2026-04-01T10:00:00.000Z',
