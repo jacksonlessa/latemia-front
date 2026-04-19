@@ -21,6 +21,7 @@ export interface ListPlansParams {
   perPage?: number;
   status?: PlanStatus;
   search?: string;
+  clientId?: string;
   token: string;
 }
 
@@ -35,6 +36,8 @@ export async function listPlansUseCase(
     qs.set('status', params.status);
   if (params.search !== undefined && params.search !== '')
     qs.set('search', params.search);
+  if (params.clientId !== undefined && params.clientId !== '')
+    qs.set('clientId', params.clientId);
 
   const query = qs.toString();
   const url = `${apiUrl()}/v1/plans${query ? `?${query}` : ''}`;

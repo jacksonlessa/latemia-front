@@ -113,12 +113,6 @@ describe('getPlanByIdUseCase — error handling', () => {
     await expect(
       getPlanByIdUseCase('nonexistent-id', 'test-token'),
     ).rejects.toThrow(ApiError);
-
-    try {
-      await getPlanByIdUseCase('nonexistent-id', 'test-token');
-    } catch (err) {
-      // second call needs a mock
-    }
   });
 
   it('should throw ApiError with 404 code PLAN_NOT_FOUND when API returns 404', async () => {

@@ -109,7 +109,21 @@ export default async function PlanoDetailPage({ params }: PageProps) {
       <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm md:p-6">
         <h2 className="mb-4 text-base font-semibold text-[#2C2C2E]">Pet</h2>
         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <PlanDetailCard label="Nome" value={plan.pet.name} />
+          <PlanDetailCard
+            label="Nome"
+            value={
+              <span>
+                {plan.pet.name}{' '}
+                <Link
+                  href={`/admin/clientes/${plan.client.id}`}
+                  className="text-xs text-[#4E8C75] hover:opacity-80 hover:underline underline-offset-4"
+                  aria-label={`Ver detalhes do cliente de ${plan.pet.name}`}
+                >
+                  (ver cliente)
+                </Link>
+              </span>
+            }
+          />
           <PlanDetailCard
             label="Espécie"
             value={plan.pet.species.charAt(0).toUpperCase() + plan.pet.species.slice(1)}

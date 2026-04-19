@@ -6,6 +6,8 @@ import { fetchMe, fetchClientDetail } from "@/lib/api-server";
 import { SESSION_COOKIE } from "@/lib/session";
 import { ClientPetsList } from "@/components/admin/clientes/organisms/client-pets-list";
 import { ApiError } from "@/lib/api-errors";
+import { listPlansUseCase } from "@/domain/plan/list-plans.use-case";
+import { PlanStatusBadge } from "@/components/admin/planos/atoms/plan-status-badge/PlanStatusBadge";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -59,6 +61,12 @@ export default async function ClienteDetailPage({ params }: PageProps) {
     }
     throw err;
   }
+
+  const plansResponse = await listPlansUseCase({
+    clientId: id,
+    perPage: 100,
+    token,
+  });
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -136,6 +144,38 @@ export default async function ClienteDetailPage({ params }: PageProps) {
           Pets ({client.pets.length})
         </h2>
         <ClientPetsList pets={client.pets} />
+      </div>
+
+      {/* Planos */}
+      <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm md:p-6">
+        <h2 className="mb-4 text-base font-semibold text-[#2C2C2E]">
+          Planos ({plansResponse.data.length})
+        </h2>
+        {plansResponse.data.length === 0 ? (
+          <p className="text-sm text-[#6B6B6E]">Nenhum plano cadastrado.</p>
+        ) : (
+          <ul className="divide-y divide-gray-100">
+            {plansResponse.data.map((plan) => (
+              <li key={plan.id} className="py-3 first:pt-0 last:pb-0">
+                <Link
+                  href={`/admin/planos/${plan.id}`}
+                  className="flex items-center justify-between gap-4 hover:opacity-80"
+                  aria-label={`Ver detalhe do plano de ${plan.petName}`}
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-[#2C2C2E]">
+                      {plan.petName}
+                    </p>
+                    <p className="text-xs text-[#6B6B6E]">
+                      {formatDate(plan.createdAt)}
+                    </p>
+                  </div>
+                  <PlanStatusBadge status={plan.status} />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
