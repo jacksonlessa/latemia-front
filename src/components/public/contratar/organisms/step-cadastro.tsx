@@ -62,7 +62,7 @@ export function StepCadastro({
             name="cpf"
             autoComplete="off"
             defaultValue={data.cpf ?? ''}
-            key={`cpf-${data.cpf ?? ''}`}
+            key="cpf"
             onChange={(maskedValue) => onChange('cpf', maskedValue)}
             aria-describedby={errors['cpf'] ? 'cpf-error' : undefined}
             aria-invalid={!!errors['cpf']}
@@ -103,7 +103,7 @@ export function StepCadastro({
             name="phone"
             autoComplete="tel"
             defaultValue={data.phone ?? ''}
-            key={`phone-${data.phone ?? ''}`}
+            key="phone"
             onChange={(maskedValue) => onChange('phone', maskedValue)}
             aria-describedby={errors['phone'] ? 'phone-error' : undefined}
             aria-invalid={!!errors['phone']}
@@ -129,7 +129,7 @@ export function StepCadastro({
             name="address.cep"
             autoComplete="postal-code"
             defaultValue={address.cep ?? ''}
-            key={`cep-${address.cep ?? ''}`}
+            key="cep"
             onLookup={onAddressLookup}
             onChange={(maskedValue) => onChange('address.cep', maskedValue)}
             aria-describedby={errors['address.cep'] ? 'address-cep-error' : undefined}

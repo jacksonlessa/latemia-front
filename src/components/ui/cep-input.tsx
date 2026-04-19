@@ -1,5 +1,6 @@
 'use client';
 import { useCallback, useState } from 'react';
+import { Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { lookupCep, type CepResult } from '@/lib/cep';
 
@@ -18,6 +19,7 @@ interface CepInputProps extends Omit<React.ComponentProps<'input'>, 'onChange' |
 export function CepInput({ defaultValue = '', onLookup, onChange, ...props }: CepInputProps) {
   const initialDigits = (defaultValue ?? '').replace(/\D/g, '');
   const [value, setValue] = useState(applyMask(initialDigits));
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const digits = e.target.value.replace(/\D/g, '');
@@ -30,8 +32,13 @@ export function CepInput({ defaultValue = '', onLookup, onChange, ...props }: Ce
     const digits = value.replace(/\D/g, '');
     if (digits.length === 8) {
       if (onLookup) {
-        const result = await lookupCep(digits);
-        onLookup(result);
+        setIsLoading(true);
+        try {
+          const result = await lookupCep(digits);
+          onLookup(result);
+        } finally {
+          setIsLoading(false);
+        }
       }
     } else if (onLookup) {
       onLookup(null);
@@ -39,15 +46,25 @@ export function CepInput({ defaultValue = '', onLookup, onChange, ...props }: Ce
   }, [value, onLookup]);
 
   return (
-    <Input
-      {...props}
-      type="text"
-      inputMode="numeric"
-      value={value}
-      onChange={handleChange}
-      onBlur={handleBlur}
-      placeholder="00000-000"
-      maxLength={9}
-    />
+    <div className="relative">
+      <Input
+        {...props}
+        type="text"
+        inputMode="numeric"
+        value={value}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        placeholder="00000-000"
+        maxLength={9}
+        disabled={isLoading || props.disabled}
+        className={isLoading ? 'pr-9' : undefined}
+      />
+      {isLoading && (
+        <Loader2
+          className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground"
+          aria-hidden="true"
+        />
+      )}
+    </div>
   );
 }
