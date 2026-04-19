@@ -26,6 +26,7 @@ const mockResponse: PlanListResponse = {
     {
       id: 'plan-uuid-1',
       status: 'pendente',
+      clientId: 'client-uuid-1',
       clientName: 'Maria da Silva',
       petName: 'Rex',
       createdAt: '2026-04-01T10:00:00.000Z',
@@ -33,6 +34,7 @@ const mockResponse: PlanListResponse = {
     {
       id: 'plan-uuid-2',
       status: 'ativo',
+      clientId: 'client-uuid-2',
       clientName: 'João Souza',
       petName: 'Luna',
       createdAt: '2026-03-15T08:30:00.000Z',

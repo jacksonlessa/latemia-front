@@ -50,6 +50,12 @@ export const Pendente: Story = {
   args: { status: 'pendente' },
 };
 
+/** Badge para plano em carência */
+export const Carencia: Story = {
+  name: 'Carência',
+  args: { status: 'carencia' },
+};
+
 /** Badge para plano ativo */
 export const Ativo: Story = {
   name: 'Ativo',

@@ -24,7 +24,7 @@ interface PlanTableProps {
 }
 
 const SKELETON_ROWS = 5;
-const SKELETON_COLS = 4;
+const SKELETON_COLS = 5;
 
 function SkeletonRow() {
   return (
@@ -72,6 +72,7 @@ export function PlanTable({
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead scope="col">ID</TableHead>
               <TableHead scope="col">Status</TableHead>
               <TableHead scope="col">Cliente</TableHead>
               <TableHead scope="col">Pet</TableHead>

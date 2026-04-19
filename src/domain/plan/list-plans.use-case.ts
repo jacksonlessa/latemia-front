@@ -31,7 +31,7 @@ export async function listPlansUseCase(
 
   if (params.page !== undefined) qs.set('page', String(params.page));
   if (params.perPage !== undefined) qs.set('perPage', String(params.perPage));
-  if (params.status !== undefined && params.status !== undefined)
+  if (params.status !== undefined)
     qs.set('status', params.status);
   if (params.search !== undefined && params.search !== '')
     qs.set('search', params.search);

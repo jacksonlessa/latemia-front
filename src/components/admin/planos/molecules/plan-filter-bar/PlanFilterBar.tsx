@@ -16,6 +16,7 @@ import type { PlanStatus } from '@/lib/types/plan';
 const STATUS_OPTIONS: Array<{ value: PlanStatus | 'todos'; label: string }> = [
   { value: 'todos', label: 'Todos os status' },
   { value: 'pendente', label: 'Pendente' },
+  { value: 'carencia', label: 'Carência' },
   { value: 'ativo', label: 'Ativo' },
   { value: 'inadimplente', label: 'Inadimplente' },
   { value: 'cancelado', label: 'Cancelado' },

@@ -22,6 +22,9 @@ function formatDate(iso: string): string {
 export function PlanRow({ plan }: PlanRowProps) {
   return (
     <TableRow className="hover:bg-[#F4F9F7]">
+      <TableCell className="font-mono text-xs text-muted-foreground">
+        {plan.id.substring(0, 8)}
+      </TableCell>
       <TableCell>
         <PlanStatusBadge status={plan.status} />
       </TableCell>

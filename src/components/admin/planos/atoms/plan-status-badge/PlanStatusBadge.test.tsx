@@ -8,6 +8,11 @@ describe('PlanStatusBadge', () => {
     expect(screen.getByText('Pendente')).toBeInTheDocument();
   });
 
+  it('should render "Carência" label when status is carencia', () => {
+    render(<PlanStatusBadge status="carencia" />);
+    expect(screen.getByText('Carência')).toBeInTheDocument();
+  });
+
   it('should render "Ativo" label when status is ativo', () => {
     render(<PlanStatusBadge status="ativo" />);
     expect(screen.getByText('Ativo')).toBeInTheDocument();
@@ -32,6 +37,12 @@ describe('PlanStatusBadge', () => {
     const { container } = render(<PlanStatusBadge status="pendente" />);
     const badge = container.firstChild as HTMLElement;
     expect(badge.className).toContain('amber');
+  });
+
+  it('should apply orange color class when status is carencia', () => {
+    const { container } = render(<PlanStatusBadge status="carencia" />);
+    const badge = container.firstChild as HTMLElement;
+    expect(badge.className).toContain('orange');
   });
 
   it('should apply red color class when status is inadimplente', () => {

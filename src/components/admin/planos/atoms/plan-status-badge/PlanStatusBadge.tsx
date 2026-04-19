@@ -13,6 +13,11 @@ const statusConfig: Record<PlanStatus, { label: string; className: string }> = {
     className:
       'border-transparent bg-amber-50 text-amber-600 hover:bg-amber-50',
   },
+  carencia: {
+    label: 'Carência',
+    className:
+      'border-transparent bg-orange-50 text-orange-500 hover:bg-orange-50',
+  },
   ativo: {
     label: 'Ativo',
     className:

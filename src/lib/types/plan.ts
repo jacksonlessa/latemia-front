@@ -3,7 +3,7 @@
  * These mirror the backend API interfaces defined in the TechSpec.
  */
 
-export type PlanStatus = 'pendente' | 'ativo' | 'inadimplente' | 'cancelado';
+export type PlanStatus = 'pendente' | 'carencia' | 'ativo' | 'inadimplente' | 'cancelado';
 
 export type PaymentStatus = 'pendente' | 'pago' | 'cancelado';
 
@@ -11,6 +11,7 @@ export type PaymentStatus = 'pendente' | 'pago' | 'cancelado';
 export interface PlanListItem {
   id: string;
   status: PlanStatus;
+  clientId: string;
   clientName: string;
   petName: string;
   createdAt: string;
