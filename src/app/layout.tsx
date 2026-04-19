@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Inter, Fraunces } from "next/font/google";
 import { cn } from "@/lib/utils";
+import { HomologBanner } from "@/components/ui/homolog-banner";
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 const fraunces = Fraunces({ subsets: ['latin'], variable: '--font-fraunces', style: ['normal', 'italic'] });
@@ -18,7 +19,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className={cn("font-sans", inter.variable, fraunces.variable)}>
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>
+        <HomologBanner env={process.env.NEXT_PUBLIC_APP_ENV} />
+        {children}
+      </body>
     </html>
   );
 }
