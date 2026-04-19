@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import type { CheckoutSummary } from '@/domain/checkout/checkout.types';
 import { formatBRL } from '@/lib/currency';
+import { Loader2 } from 'lucide-react';
 
 export interface StepPagamentoProps {
   summary: CheckoutSummary;
@@ -68,7 +69,14 @@ export function StepPagamento({ summary, onNext, onBack, isSubmitting = false, f
           className="flex-1 bg-[#4E8C75] hover:bg-[#3d7260] text-white"
           disabled={isSubmitting}
         >
-          {isSubmitting ? 'Aguarde...' : 'Concluir'}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="animate-spin" />
+              Aguarde...
+            </>
+          ) : (
+            'Concluir'
+          )}
         </Button>
       </div>
     </div>

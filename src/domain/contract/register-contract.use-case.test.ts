@@ -175,6 +175,24 @@ describe('RegisterContractUseCase.execute — API error mapping', () => {
     }
   });
 
+  it('should map PET_NOT_FOUND to ValidationError with specific message', async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(
+      makeFetchResponse({ code: 'PET_NOT_FOUND' }, 404),
+    );
+
+    const useCase = new RegisterContractUseCase();
+
+    try {
+      await useCase.execute(validInput());
+    } catch (e) {
+      expect(e).toBeInstanceOf(ValidationError);
+      expect((e as ValidationError).fieldErrors['_form']).toContain(
+        'Um ou mais pets não foram encontrados',
+      );
+    }
+  });
+
   it('should throw ValidationError with _form error when API returns PET_CLIENT_MISMATCH', async () => {
     const mockFetch = vi.mocked(fetch);
     mockFetch.mockResolvedValueOnce(
@@ -188,6 +206,24 @@ describe('RegisterContractUseCase.execute — API error mapping', () => {
     } catch (e) {
       expect(e).toBeInstanceOf(ValidationError);
       expect((e as ValidationError).fieldErrors['_form']).toBeDefined();
+    }
+  });
+
+  it('should map 429 status to ValidationError with retry message', async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(
+      makeFetchResponse({ message: 'ThrottlerException: Too Many Requests' }, 429),
+    );
+
+    const useCase = new RegisterContractUseCase();
+
+    try {
+      await useCase.execute(validInput());
+    } catch (e) {
+      expect(e).toBeInstanceOf(ValidationError);
+      expect((e as ValidationError).fieldErrors['_form']).toContain(
+        'Muitas tentativas',
+      );
     }
   });
 

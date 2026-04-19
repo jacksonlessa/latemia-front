@@ -31,6 +31,13 @@ export interface RegisterContractResult {
 // ---------------------------------------------------------------------------
 
 async function mapContractApiError(res: Response): Promise<ValidationError> {
+  // Handle 429 before parsing body — throttler may not include a business code
+  if (res.status === 429) {
+    return new ValidationError({
+      _form: 'Muitas tentativas. Aguarde alguns instantes e tente novamente.',
+    });
+  }
+
   let body: ApiErrorBody = {};
   try {
     body = (await res.json()) as ApiErrorBody;
