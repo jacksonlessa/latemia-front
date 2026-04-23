@@ -76,6 +76,7 @@ export interface LandingContent {
     address: string;
     phone: string;
     email: string;
+    mapsUrl?: string;
     whatsapp: WhatsAppConfig;
   };
 }
@@ -101,7 +102,7 @@ export const landingContent: LandingContent = {
       {
         title: 'Atendimento em clínica parceira',
         description:
-          'Leve seu pet diretamente à clínica Late & Mia. Sem necessidade de reembolso ou papelada.',
+          'Leve seu pet diretamente à clínica Late & Mia Clínica Veterinária. Sem necessidade de reembolso ou papelada.',
         icon: 'Stethoscope',
       },
       {
@@ -122,13 +123,13 @@ export const landingContent: LandingContent = {
   coverage: {
     heading: 'O que o plano cobre',
     items: [
-      'Traumas graves (atropelamentos, quedas de altura, mordidas)',
       'Intoxicações e envenenamentos',
       'Convulsões',
       'Dificuldade respiratória aguda',
       'Hemorragias',
       'Choque (hipovolêmico, séptico ou anafilático)',
       'Dor aguda intensa',
+      'Traumas graves (atropelamentos, quedas de altura, mordidas)',
     ],
   },
 
@@ -225,9 +226,10 @@ export const landingContent: LandingContent = {
 
   contact: {
     heading: 'Fale com a gente',
-    address: 'Rua Placeholder, 123 — Bairro Exemplo, Cidade - SC, CEP 00000-000',
-    phone: '(47) 3000-0000',
-    email: 'contato@latemia.com.br',
+    address: 'Rua Osvaldo Minella, 56 - Lídia Duarte, Camboriú - SC, 88340-000',
+    phone: '(47) 99996-5009',
+    email: '',
+    mapsUrl: 'https://www.google.com/maps/place/Late+%26+Mia+Cl%C3%ADnica+Veterin%C3%A1ria/@-27.0337695,-48.6487444,19z/data=!4m6!3m5!1s0x94d8b76bc7fc191f:0x6b944b2d0758290b!8m2!3d-27.0337695!4d-48.6477971!16s%2Fg%2F11thc3nrm1?entry=ttu&g_ep=EgoyMDI2MDQxNS4wIKXMDSoASAFQAw%3D%3D',
     whatsapp: {
       number: '5547999965009',
       defaultMessage:

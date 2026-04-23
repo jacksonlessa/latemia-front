@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import { publicSite } from '@/config/public-site';
 
 interface BrandLogoProps {
@@ -6,10 +7,11 @@ interface BrandLogoProps {
   height?: number;
   priority?: boolean;
   className?: string;
+  asLink?: boolean;
 }
 
-export function BrandLogo({ width = 120, height = 120, priority = false, className }: BrandLogoProps) {
-  return (
+export function BrandLogo({ width = 120, height = 120, priority = false, className, asLink = false }: BrandLogoProps) {
+  const image = (
     <Image
       src={publicSite.brand.logoSrc}
       alt={publicSite.brand.logoAlt}
@@ -19,4 +21,10 @@ export function BrandLogo({ width = 120, height = 120, priority = false, classNa
       className={className}
     />
   );
+
+  if (asLink) {
+    return <Link href="/" aria-label="Ir para a página inicial">{image}</Link>;
+  }
+
+  return image;
 }

@@ -1,4 +1,4 @@
-import { MapPin, Phone, Mail, MessageCircle } from 'lucide-react';
+import { MapPin, Phone, Mail, MessageCircle, Map } from 'lucide-react';
 import { ContactLine } from '@/components/public/molecules/contact-line';
 import { WhatsAppLink } from '@/components/public/atoms/whatsapp-link';
 import type { LandingContent } from '@/content/landing';
@@ -15,8 +15,13 @@ export function ContactSection({ data }: ContactSectionProps) {
       </h2>
       <ul className="flex flex-col gap-4 mb-8">
         <ContactLine icon={MapPin} label="Endereço" value={data.address} />
+        {data.mapsUrl && (
+          <ContactLine icon={Map} label="Localização" value="Ver no Maps" href={data.mapsUrl} />
+        )}
         <ContactLine icon={Phone} label="Telefone" value={data.phone} href={`tel:${data.phone.replace(/\D/g, '')}`} />
-        <ContactLine icon={Mail} label="E-mail" value={data.email} href={`mailto:${data.email}`} />
+        {data.email && (
+          <ContactLine icon={Mail} label="E-mail" value={data.email} href={`mailto:${data.email}`} />
+        )}
       </ul>
       <div className="flex justify-center">
         <WhatsAppLink

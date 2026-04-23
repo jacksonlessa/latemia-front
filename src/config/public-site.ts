@@ -5,7 +5,7 @@ export const publicSite = {
   siteName: 'Late & Mia',
   checkoutPath: '/contratar',
   brand: {
-    logoSrc: '/brand/logo.png',
+    logoSrc: '/brand/logo-transparente.png',
     logoAlt: 'Late & Mia',
   },
   price: {

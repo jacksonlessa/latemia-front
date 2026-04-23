@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { HeaderNav } from '@/components/public/organisms/header-nav';
 import { HeroSection } from '@/components/public/organisms/hero-section';
 import { BenefitsSection } from '@/components/public/organisms/benefits-section';
 import { CoverageSection } from '@/components/public/organisms/coverage-section';
@@ -9,7 +8,6 @@ import { PricingSection } from '@/components/public/organisms/pricing-section';
 import { TestimonialsSection } from '@/components/public/organisms/testimonials-section';
 import { FaqSection } from '@/components/public/organisms/faq-section';
 import { ContactSection } from '@/components/public/organisms/contact-section';
-import { Footer } from '@/components/public/organisms/footer';
 import { landingContent } from '@/content/landing';
 
 export const metadata: Metadata = {
@@ -20,20 +18,16 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   return (
-    <>
-      <HeaderNav />
-      <main>
-        <HeroSection data={landingContent.hero} />
-        <BenefitsSection data={landingContent.benefits} />
-        <CoverageSection data={landingContent.coverage} />
-        <ExclusionsSection data={landingContent.exclusions} />
-        <GracePeriodSection data={landingContent.gracePeriod} />
-        <PricingSection data={landingContent.pricing} />
-        <TestimonialsSection data={landingContent.testimonials} />
-        <FaqSection data={landingContent.faq} />
-        <ContactSection data={landingContent.contact} />
-      </main>
-      <Footer />
-    </>
+    <main>
+      <HeroSection data={landingContent.hero} />
+      <BenefitsSection data={landingContent.benefits} />
+      <CoverageSection data={landingContent.coverage} />
+      <ExclusionsSection data={landingContent.exclusions} />
+      <GracePeriodSection data={landingContent.gracePeriod} />
+      <PricingSection data={landingContent.pricing} />
+      <TestimonialsSection data={landingContent.testimonials} />
+      <FaqSection data={landingContent.faq} />
+      <ContactSection data={landingContent.contact} />
+    </main>
   );
 }

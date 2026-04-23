@@ -7,7 +7,7 @@ export function Footer() {
   return (
     <footer className="border-t border-sand bg-sand/40 mt-16">
       <div className="px-6 md:px-10 py-10 max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-6 justify-between">
-        <BrandLogo width={56} height={56} />
+        <BrandLogo width={56} height={56} asLink />
         <nav className="flex gap-6 text-sm">
           <Link href="/privacidade" className="hover:text-forest">Política de Privacidade</Link>
           <Link href="/termos" className="hover:text-forest">Termos de Uso</Link>
