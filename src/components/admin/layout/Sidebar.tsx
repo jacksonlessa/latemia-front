@@ -6,6 +6,8 @@ import {
   Clipboard,
   DollarSign,
   Users,
+  CreditCard,
+  Settings,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -31,7 +33,9 @@ const menuItems = [
   { path: "/admin/planos", label: "Planos", icon: Shield, roles: ["admin", "atendente"] },
   { path: "/admin/uso-beneficio", label: "Uso do Benefício", icon: Clipboard, roles: ["admin", "atendente"] },
   { path: "/admin/pagamentos", label: "Pagamentos", icon: DollarSign, roles: ["admin", "atendente"] },
+  { path: "/admin/planos-assinatura", label: "Planos de Assinatura", icon: CreditCard, roles: ["admin"] },
   { path: "/admin/usuarios-internos", label: "Usuários Internos", icon: Users, roles: ["admin"] },
+  { path: "/admin/configuracoes", label: "Configurações", icon: Settings, roles: ["admin"] },
 ];
 
 export function Sidebar({ collapsed, onToggle, userRole }: SidebarProps) {
