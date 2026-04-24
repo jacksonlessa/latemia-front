@@ -10,6 +10,10 @@ import type {
   UpdateInternalUserInput,
 } from "./types/users";
 import type { ClientDetail, PaginatedClients } from "./types/client";
+import type {
+  SystemSettingsDto,
+  UpdateSystemSettingsInput,
+} from "./types/system-settings";
 
 function apiUrl(): string {
   return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
@@ -185,6 +189,45 @@ export async function reactivateUser(
 
   if (!res.ok) return handleErrorResponse(res);
   return res.json() as Promise<InternalUserDetail>;
+}
+
+// ---------------------------------------------------------------------------
+// System settings endpoints
+// ---------------------------------------------------------------------------
+
+/**
+ * GET /v1/settings
+ * Returns the current system settings.
+ */
+export async function fetchSystemSettings(
+  token: string,
+): Promise<SystemSettingsDto> {
+  const res = await fetch(`${apiUrl()}/v1/settings`, {
+    headers: authHeaders(token),
+    cache: "no-store",
+  });
+
+  if (!res.ok) return handleErrorResponse(res);
+  return res.json() as Promise<SystemSettingsDto>;
+}
+
+/**
+ * PUT /v1/settings
+ * Updates system settings. At least one field must be provided.
+ * Backend error codes: INVALID_PAYMENT_PROVIDER, INVALID_SUBSCRIPTION_PLAN_ID, EMPTY_UPDATE.
+ */
+export async function updateSystemSettings(
+  token: string,
+  payload: UpdateSystemSettingsInput,
+): Promise<SystemSettingsDto> {
+  const res = await fetch(`${apiUrl()}/v1/settings`, {
+    method: "PUT",
+    headers: authHeaders(token),
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) return handleErrorResponse(res);
+  return res.json() as Promise<SystemSettingsDto>;
 }
 
 // ---------------------------------------------------------------------------

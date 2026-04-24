@@ -46,6 +46,7 @@ function getFeedbackMessage(code: string): string {
 }
 
 export function SettingsForm({ initialValues, saveAction, fetchError }: SettingsFormProps) {
+  const [savedValues, setSavedValues] = useState(initialValues);
   const [paymentProvider, setPaymentProvider] = useState<string>(
     initialValues?.payment_provider ?? "",
   );
@@ -57,8 +58,8 @@ export function SettingsForm({ initialValues, saveAction, fetchError }: Settings
   const [isPending, startTransition] = useTransition();
 
   const isDirty =
-    paymentProvider !== (initialValues?.payment_provider ?? "") ||
-    subscriptionPlanId !== (initialValues?.subscription_plan_id ?? "");
+    paymentProvider !== (savedValues?.payment_provider ?? "") ||
+    subscriptionPlanId !== (savedValues?.subscription_plan_id ?? "");
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -72,6 +73,7 @@ export function SettingsForm({ initialValues, saveAction, fetchError }: Settings
     startTransition(async () => {
       const result = await saveAction(payload);
       if (result.success) {
+        setSavedValues(result.data);
         setSuccessMessage("Configurações salvas com sucesso.");
       } else {
         setErrorMessage(getFeedbackMessage(result.error.code));
@@ -108,6 +110,7 @@ export function SettingsForm({ initialValues, saveAction, fetchError }: Settings
       )}
       {errorMessage && (
         <div
+          id="settings-error"
           role="alert"
           aria-live="assertive"
           className="rounded-md bg-red-50 px-4 py-3 text-sm text-destructive"

@@ -11,10 +11,30 @@ import { SettingsForm } from "./settings-form";
 import type { SystemSettingsDto, UpdateSystemSettingsInput } from "@/lib/types/system-settings";
 
 // ---------------------------------------------------------------------------
+// Meta / StoryObj types (local shim — replace with @storybook/react once installed)
+// ---------------------------------------------------------------------------
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Meta<T extends React.ComponentType<any>> = {
+  title: string;
+  component: T;
+  tags?: string[];
+  parameters?: Record<string, unknown>;
+  args?: Partial<React.ComponentProps<T>>;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type StoryObj<T extends React.ComponentType<any>> = {
+  name?: string;
+  render?: (args: React.ComponentProps<T>) => React.ReactElement;
+  args?: Partial<React.ComponentProps<T>>;
+};
+
+// ---------------------------------------------------------------------------
 // Meta
 // ---------------------------------------------------------------------------
 
-const meta = {
+const meta: Meta<typeof SettingsForm> = {
   title: "Admin/Configuracoes/Organisms/SettingsForm",
   component: SettingsForm,
   tags: ["autodocs"],
@@ -24,16 +44,6 @@ const meta = {
 };
 
 export default meta;
-
-// ---------------------------------------------------------------------------
-// Story type helper (minimal — no @storybook/react dependency)
-// ---------------------------------------------------------------------------
-
-type Story = {
-  render?: () => React.ReactElement;
-  args?: Partial<React.ComponentProps<typeof SettingsForm>>;
-  name?: string;
-};
 
 // ---------------------------------------------------------------------------
 // Shared mock save action
@@ -61,7 +71,7 @@ const filledValues: SystemSettingsDto = {
 // ---------------------------------------------------------------------------
 
 /** Estado padrão com valores preenchidos */
-export const Default: Story = {
+export const Default: StoryObj<typeof SettingsForm> = {
   name: "Padrão (com valores)",
   args: {
     initialValues: filledValues,
@@ -70,7 +80,7 @@ export const Default: Story = {
 };
 
 /** Estado de carregamento — botão Salvar em estado pendente */
-export const Loading: Story = {
+export const Loading: StoryObj<typeof SettingsForm> = {
   name: "Carregando (submit em andamento)",
   args: {
     initialValues: filledValues,
@@ -79,7 +89,7 @@ export const Loading: Story = {
 };
 
 /** Estado vazio — sem valores iniciais (primeira configuração) */
-export const Empty: Story = {
+export const Empty: StoryObj<typeof SettingsForm> = {
   name: "Vazio (sem configurações)",
   args: {
     initialValues: null,
@@ -88,7 +98,7 @@ export const Empty: Story = {
 };
 
 /** Estado de erro no fetch inicial */
-export const FetchError: Story = {
+export const FetchError: StoryObj<typeof SettingsForm> = {
   name: "Erro no carregamento",
   args: {
     initialValues: null,
@@ -98,7 +108,7 @@ export const FetchError: Story = {
 };
 
 /** Estado de erro no submit */
-export const SubmitError: Story = {
+export const SubmitError: StoryObj<typeof SettingsForm> = {
   name: "Erro ao salvar",
   render: () => (
     <SettingsForm
@@ -109,7 +119,7 @@ export const SubmitError: Story = {
 };
 
 /** Botão desabilitado quando não há mudanças */
-export const Disabled: Story = {
+export const Disabled: StoryObj<typeof SettingsForm> = {
   name: "Sem alterações (botão desabilitado)",
   args: {
     initialValues: filledValues,
