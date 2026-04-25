@@ -35,12 +35,12 @@ describe('StepCadastro', () => {
     vi.clearAllMocks();
   });
 
-  it('should populate address fields after successful CEP lookup', async () => {
+  it('should populate address fields after successful CEP lookup for a serviced city', async () => {
     const cepResult: CepResult = {
       street: 'Rua das Flores',
       neighborhood: 'Centro',
-      city: 'Curitiba',
-      state: 'PR',
+      city: 'Camboriú',
+      state: 'SC',
     };
     mockLookupCep.mockResolvedValue(cepResult);
 
@@ -56,12 +56,138 @@ describe('StepCadastro', () => {
     );
 
     const cepInput = screen.getByPlaceholderText('00000-000');
-    fireEvent.change(cepInput, { target: { value: '80010110' } });
+    fireEvent.change(cepInput, { target: { value: '88340000' } });
     fireEvent.blur(cepInput);
 
     await waitFor(() => {
       expect(onAddressLookup).toHaveBeenCalledWith(cepResult);
     });
+  });
+
+  it('should show city-not-serviced error and clear address when CEP returns an out-of-area city', async () => {
+    const cepResult: CepResult = {
+      street: 'Rua XV de Novembro',
+      neighborhood: 'Centro',
+      city: 'Florianópolis',
+      state: 'SC',
+    };
+    mockLookupCep.mockResolvedValue(cepResult);
+
+    const onAddressLookup = vi.fn();
+    const onChange = vi.fn();
+    render(
+      <StepCadastro
+        data={{ address: { cep: '', street: '', number: '', city: '', state: '' } }}
+        errors={{}}
+        onChange={onChange}
+        onAddressLookup={onAddressLookup}
+        onNext={vi.fn()}
+      />,
+    );
+
+    const cepInput = screen.getByPlaceholderText('00000-000');
+    fireEvent.change(cepInput, { target: { value: '88010000' } });
+    fireEvent.blur(cepInput);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/No momento atendemos apenas/i),
+      ).toBeInTheDocument();
+    });
+
+    // Parent lookup should NOT be called with valid data
+    expect(onAddressLookup).toHaveBeenCalledWith(null);
+    // Address clearing calls should be made
+    expect(onChange).toHaveBeenCalledWith('address.city', '');
+    expect(onChange).toHaveBeenCalledWith('address.street', '');
+  });
+
+  it('should clear the CEP error when user starts typing a new CEP', async () => {
+    const cepResult: CepResult = {
+      street: 'Rua XV de Novembro',
+      neighborhood: 'Centro',
+      city: 'Florianópolis',
+      state: 'SC',
+    };
+    mockLookupCep.mockResolvedValue(cepResult);
+
+    render(
+      <StepCadastro
+        data={{ address: { cep: '', street: '', number: '', city: '', state: '' } }}
+        errors={{}}
+        onChange={vi.fn()}
+        onAddressLookup={vi.fn()}
+        onNext={vi.fn()}
+      />,
+    );
+
+    const cepInput = screen.getByPlaceholderText('00000-000');
+    fireEvent.change(cepInput, { target: { value: '88010000' } });
+    fireEvent.blur(cepInput);
+
+    await waitFor(() => {
+      expect(screen.getByText(/No momento atendemos apenas/i)).toBeInTheDocument();
+    });
+
+    // Now user starts typing again — error should clear
+    fireEvent.change(cepInput, { target: { value: '88340' } });
+    expect(screen.queryByText(/No momento atendemos apenas/i)).not.toBeInTheDocument();
+  });
+
+  it('should render the Complemento field between Número and Bairro', () => {
+    render(
+      <StepCadastro
+        data={{}}
+        errors={{}}
+        onChange={vi.fn()}
+        onAddressLookup={vi.fn()}
+        onNext={vi.fn()}
+      />,
+    );
+
+    const complement = screen.getByPlaceholderText(/Apto 205/i);
+    expect(complement).toBeInTheDocument();
+    expect(complement).toHaveAttribute('maxLength', '60');
+  });
+
+  it('should render the Complemento field with value from data', () => {
+    render(
+      <StepCadastro
+        data={{
+          address: {
+            cep: '88340-000',
+            street: 'Rua das Flores',
+            number: '10',
+            complement: 'Apto 302',
+            neighborhood: 'Centro',
+            city: 'Camboriú',
+            state: 'SC',
+          },
+        }}
+        errors={{}}
+        onChange={vi.fn()}
+        onAddressLookup={vi.fn()}
+        onNext={vi.fn()}
+      />,
+    );
+
+    const complement = screen.getByPlaceholderText(/Apto 205/i) as HTMLInputElement;
+    expect(complement.value).toBe('Apto 302');
+  });
+
+  it('should render the Cidade field as readOnly', () => {
+    render(
+      <StepCadastro
+        data={buildData()}
+        errors={{}}
+        onChange={vi.fn()}
+        onAddressLookup={vi.fn()}
+        onNext={vi.fn()}
+      />,
+    );
+
+    const cityInput = screen.getByPlaceholderText(/Preenchida automaticamente/i);
+    expect(cityInput).toHaveAttribute('readOnly');
   });
 
   it('should call onNext when the advance button is clicked', () => {
@@ -133,5 +259,48 @@ describe('StepCadastro', () => {
     fireEvent.change(cepInput, { target: { value: '01310100' } });
 
     expect(onChange).toHaveBeenCalledWith('address.cep', expect.stringContaining('01310'));
+  });
+
+  it('should display CEP error from props', () => {
+    render(
+      <StepCadastro
+        data={{}}
+        errors={{ 'address.cep': 'CEP é obrigatório.' }}
+        onChange={vi.fn()}
+        onAddressLookup={vi.fn()}
+        onNext={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('CEP é obrigatório.')).toBeInTheDocument();
+  });
+
+  it('should have aria-invalid and aria-describedby on CEP field when there is an error', async () => {
+    const cepResult: CepResult = {
+      street: 'Rua XV de Novembro',
+      neighborhood: 'Centro',
+      city: 'Florianópolis',
+      state: 'SC',
+    };
+    mockLookupCep.mockResolvedValue(cepResult);
+
+    render(
+      <StepCadastro
+        data={{ address: { cep: '', street: '', number: '', city: '', state: '' } }}
+        errors={{}}
+        onChange={vi.fn()}
+        onAddressLookup={vi.fn()}
+        onNext={vi.fn()}
+      />,
+    );
+
+    const cepInput = screen.getByPlaceholderText('00000-000');
+    fireEvent.change(cepInput, { target: { value: '88010000' } });
+    fireEvent.blur(cepInput);
+
+    await waitFor(() => {
+      expect(cepInput).toHaveAttribute('aria-invalid', 'true');
+      expect(cepInput).toHaveAttribute('aria-describedby', 'address-cep-error');
+    });
   });
 });

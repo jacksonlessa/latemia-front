@@ -61,24 +61,76 @@ export const Default: Story = {
   },
 };
 
-/** Formulário preenchido — todos os campos com dados válidos */
-export const Preenchido: Story = {
-  name: 'Preenchido',
+/** Formulário preenchido com complemento — endereço de cidade atendida */
+export const ComComplemento: Story = {
+  name: 'Preenchido com complemento',
   args: {
     ...baseArgs,
     data: {
       name: 'Maria da Silva',
       cpf: '529.982.247-25',
       email: 'maria@exemplo.com.br',
-      phone: '(11) 99999-8888',
+      phone: '(47) 99999-8888',
       address: {
-        cep: '01310-100',
-        street: 'Avenida Paulista',
-        number: '1578',
-        neighborhood: 'Bela Vista',
-        city: 'São Paulo',
-        state: 'SP',
+        cep: '88340-000',
+        street: 'Rua das Palmeiras',
+        number: '42',
+        complement: 'Apto 205, Bloco B',
+        neighborhood: 'Centro',
+        city: 'Camboriú',
+        state: 'SC',
       },
+    },
+  },
+};
+
+/** Erro de cidade não atendida — CEP retornou cidade fora da área de atendimento */
+export const ErroCidadeNaoAtendida: Story = {
+  name: 'Erro: cidade não atendida',
+  args: {
+    ...baseArgs,
+    data: {
+      name: 'João Pereira',
+      cpf: '529.982.247-25',
+      email: 'joao@exemplo.com.br',
+      phone: '(48) 98765-4321',
+      address: {
+        cep: '88010-000',
+        street: '',
+        number: '',
+        neighborhood: '',
+        city: '',
+        state: '',
+      },
+    },
+    errors: {
+      'address.cep':
+        'No momento atendemos apenas Camboriú, Balneário Camboriú, Itapema e Itajaí.',
+    },
+  },
+};
+
+/** Erro de CEP não encontrado — lookup ViaCEP retornou null */
+export const ErroCepNaoEncontrado: Story = {
+  name: 'Erro: CEP não encontrado',
+  args: {
+    ...baseArgs,
+    data: {
+      name: 'Ana Costa',
+      cpf: '529.982.247-25',
+      email: 'ana@exemplo.com.br',
+      phone: '(47) 97777-5555',
+      address: {
+        cep: '00000-000',
+        street: '',
+        number: '',
+        neighborhood: '',
+        city: '',
+        state: '',
+      },
+    },
+    errors: {
+      'address.cep': 'CEP não encontrado. Verifique e tente novamente.',
     },
   },
 };

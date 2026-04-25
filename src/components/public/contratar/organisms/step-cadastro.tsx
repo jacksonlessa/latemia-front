@@ -1,13 +1,18 @@
 'use client';
 
+import { useState, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { CpfInput } from '@/components/ui/cpf-input';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { CepInput } from '@/components/ui/cep-input';
+import { isServicedCity } from '@/domain/client/serviced-cities';
 import type { RegisterClientInput, AddressData } from '@/lib/types/client';
 import type { CepResult } from '@/lib/cep';
+
+const INVALID_CITY_MESSAGE =
+  'No momento atendemos apenas Camboriú, Balneário Camboriú, Itapema e Itajaí.';
 
 export interface StepCadastroProps {
   data: Partial<RegisterClientInput>;
@@ -25,6 +30,61 @@ export function StepCadastro({
   onNext,
 }: StepCadastroProps) {
   const address: Partial<AddressData> = data.address ?? {};
+
+  /**
+   * Local CEP error state — tracks errors generated internally by city
+   * validation so they can be displayed without requiring parent state changes.
+   * External errors (from props) take priority for display.
+   */
+  const [localCepError, setLocalCepError] = useState<string>('');
+
+  /** Effective CEP error: prop error takes precedence, then local error. */
+  const cepError = errors['address.cep'] || localCepError;
+
+  /**
+   * Intercept the ViaCEP lookup result to validate the returned city against
+   * the list of serviced cities before propagating the address data upward.
+   *
+   * PRD F2.4: if city is not serviced, show an inline error on the CEP field
+   * and clear address fields to prevent submission outside the service area.
+   */
+  const handleCepLookup = useCallback(
+    (result: CepResult | null) => {
+      setLocalCepError('');
+
+      if (result === null) {
+        // Lookup failed (CEP not found or network error) — propagate null so
+        // the parent can decide how to handle it (e.g. leave existing values).
+        onAddressLookup(null);
+        return;
+      }
+
+      if (!isServicedCity(result.city)) {
+        setLocalCepError(INVALID_CITY_MESSAGE);
+        // Clear address fields so the user cannot proceed with an out-of-area address.
+        onAddressLookup(null);
+        // Signal parent to clear address fields filled from a prior valid lookup.
+        onChange('address.street', '');
+        onChange('address.neighborhood', '');
+        onChange('address.city', '');
+        onChange('address.state', '');
+        return;
+      }
+
+      // City is valid — propagate the full result to the parent.
+      onAddressLookup(result);
+    },
+    [onAddressLookup, onChange],
+  );
+
+  /** Clear the local CEP error when the user starts editing the CEP field. */
+  const handleCepChange = useCallback(
+    (maskedValue: string) => {
+      setLocalCepError('');
+      onChange('address.cep', maskedValue);
+    },
+    [onChange],
+  );
 
   return (
     <div className="space-y-6">
@@ -130,14 +190,14 @@ export function StepCadastro({
             autoComplete="postal-code"
             defaultValue={address.cep ?? ''}
             key="cep"
-            onLookup={onAddressLookup}
-            onChange={(maskedValue) => onChange('address.cep', maskedValue)}
-            aria-describedby={errors['address.cep'] ? 'address-cep-error' : undefined}
-            aria-invalid={!!errors['address.cep']}
+            onLookup={handleCepLookup}
+            onChange={handleCepChange}
+            aria-describedby={cepError ? 'address-cep-error' : undefined}
+            aria-invalid={!!cepError}
           />
-          {errors['address.cep'] && (
+          {cepError && (
             <p id="address-cep-error" className="text-sm text-red-600" role="alert">
-              {errors['address.cep']}
+              {cepError}
             </p>
           )}
         </div>
@@ -184,6 +244,33 @@ export function StepCadastro({
           )}
         </div>
 
+        {/* Complemento (opcional) */}
+        <div className="space-y-1.5">
+          <Label htmlFor="address.complement">
+            Complemento{' '}
+            <span className="text-muted-foreground text-sm font-normal">(opcional)</span>
+          </Label>
+          <Input
+            id="address.complement"
+            name="address.complement"
+            type="text"
+            autoComplete="address-line2"
+            value={address.complement ?? ''}
+            onChange={(e) => onChange('address.complement', e.target.value)}
+            aria-describedby={
+              errors['address.complement'] ? 'address-complement-error' : undefined
+            }
+            aria-invalid={!!errors['address.complement']}
+            placeholder="Apto 205, Bloco B, Fundos…"
+            maxLength={60}
+          />
+          {errors['address.complement'] && (
+            <p id="address-complement-error" className="text-sm text-red-600" role="alert">
+              {errors['address.complement']}
+            </p>
+          )}
+        </div>
+
         {/* Bairro */}
         <div className="space-y-1.5">
           <Label htmlFor="address.neighborhood">Bairro</Label>
@@ -207,7 +294,7 @@ export function StepCadastro({
           )}
         </div>
 
-        {/* Cidade */}
+        {/* Cidade — preenchida automaticamente via CEP; não editável manualmente */}
         <div className="space-y-1.5">
           <Label htmlFor="address.city">Cidade</Label>
           <Input
@@ -216,10 +303,11 @@ export function StepCadastro({
             type="text"
             autoComplete="address-level2"
             value={address.city ?? ''}
-            onChange={(e) => onChange('address.city', e.target.value)}
+            readOnly
             aria-describedby={errors['address.city'] ? 'address-city-error' : undefined}
             aria-invalid={!!errors['address.city']}
-            placeholder="Cidade"
+            placeholder="Preenchida automaticamente pelo CEP"
+            className="bg-muted cursor-default text-muted-foreground"
           />
           {errors['address.city'] && (
             <p id="address-city-error" className="text-sm text-red-600" role="alert">
