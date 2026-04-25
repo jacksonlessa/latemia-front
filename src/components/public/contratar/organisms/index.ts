@@ -8,3 +8,5 @@ export { StepPagamento } from './step-pagamento';
 export type { StepPagamentoProps } from './step-pagamento';
 export { StepSucesso } from './step-sucesso';
 export type { StepSucessoProps } from './step-sucesso';
+export { PetForm, parseWeight, formatWeight } from './pet-form';
+export type { PetFormProps } from './pet-form';
