@@ -1,17 +1,50 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { StepPets } from './step-pets';
+import type { RegisterPetInput } from '@/lib/types/pet';
 
-const basePet = { _id: 'pet-1', name: '', species: 'canino' as const, breed: '', age_years: 0, age_months: 0, weight: 5, castrated: false };
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function yearsAgo(years: number): Date {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - years);
+  return d;
+}
+
+const rex: RegisterPetInput & { _id: string } = {
+  _id: 'pet-1',
+  name: 'Rex',
+  species: 'canino',
+  breed: 'Labrador',
+  birthDate: yearsAgo(3),
+  sex: 'male',
+  weight: 28.5,
+  castrated: true,
+};
+
+const mia: RegisterPetInput & { _id: string } = {
+  _id: 'pet-2',
+  name: 'Mia',
+  species: 'felino',
+  breed: 'SRD',
+  birthDate: yearsAgo(1),
+  sex: 'female',
+  weight: 4,
+  castrated: false,
+};
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
 
 describe('StepPets', () => {
-  it('should disable the remove button when only one pet card is present', () => {
+  it('should render the PetForm (State A) when pets list is empty', () => {
     render(
       <StepPets
-        pets={[basePet]}
-        errors={{}}
-        onPetChange={vi.fn()}
-        onAddPet={vi.fn()}
+        pets={[]}
+        onSavePet={vi.fn()}
         onRemovePet={vi.fn()}
         onNext={vi.fn()}
         onBack={vi.fn()}
@@ -19,19 +52,16 @@ describe('StepPets', () => {
       />,
     );
 
-    const removeButton = screen.getByRole('button', { name: 'Remover pet 1' });
-    expect(removeButton).toBeDisabled();
+    expect(screen.getByRole('heading', { name: 'Novo pet' })).toBeInTheDocument();
+    // List/summary controls are not rendered while in State A.
+    expect(screen.queryByRole('button', { name: 'Avançar' })).not.toBeInTheDocument();
   });
 
-  it('should enable the remove button for each card when multiple pets are present', () => {
-    const pet2 = { ...basePet, _id: 'pet-2' };
-
+  it('should render the list (State B) when pets list is not empty', () => {
     render(
       <StepPets
-        pets={[basePet, pet2]}
-        errors={{}}
-        onPetChange={vi.fn()}
-        onAddPet={vi.fn()}
+        pets={[rex]}
+        onSavePet={vi.fn()}
         onRemovePet={vi.fn()}
         onNext={vi.fn()}
         onBack={vi.fn()}
@@ -39,63 +69,17 @@ describe('StepPets', () => {
       />,
     );
 
-    const removeButtons = screen.getAllByRole('button', { name: /Remover pet/ });
-    expect(removeButtons).toHaveLength(2);
-    removeButtons.forEach((btn) => expect(btn).not.toBeDisabled());
+    expect(screen.getByRole('button', { name: 'Avançar' })).toBeInTheDocument();
+    expect(screen.getByText('Rex')).toBeInTheDocument();
   });
 
-  it('should display the correct subtotal for one pet', () => {
-    render(
-      <StepPets
-        pets={[basePet]}
-        errors={{}}
-        onPetChange={vi.fn()}
-        onAddPet={vi.fn()}
-        onRemovePet={vi.fn()}
-        onNext={vi.fn()}
-        onBack={vi.fn()}
-        pricePerPetCents={2500}
-      />,
-    );
-
-    // The price-per-pet and total are both R$ 25,00 when there is 1 pet
-    const matches = screen.getAllByText(/R\$\s?25,00/);
-    expect(matches.length).toBeGreaterThanOrEqual(1);
-  });
-
-  it('should not allow advancing with zero pets', () => {
-    const onNext = vi.fn();
+  it('should call onSavePet without _id and switch to State B after saving a new pet', () => {
+    const onSavePet = vi.fn();
 
     render(
       <StepPets
         pets={[]}
-        errors={{}}
-        onPetChange={vi.fn()}
-        onAddPet={vi.fn()}
-        onRemovePet={vi.fn()}
-        onNext={onNext}
-        onBack={vi.fn()}
-        pricePerPetCents={2500}
-      />,
-    );
-
-    const avancarButton = screen.getByRole('button', { name: 'Avançar' });
-    expect(avancarButton).toBeDisabled();
-  });
-
-  it('should display the correct subtotal for three pets', () => {
-    const pets = [
-      basePet,
-      { ...basePet, _id: 'pet-2' },
-      { ...basePet, _id: 'pet-3' },
-    ];
-
-    render(
-      <StepPets
-        pets={pets}
-        errors={{}}
-        onPetChange={vi.fn()}
-        onAddPet={vi.fn()}
+        onSavePet={onSavePet}
         onRemovePet={vi.fn()}
         onNext={vi.fn()}
         onBack={vi.fn()}
@@ -103,7 +87,155 @@ describe('StepPets', () => {
       />,
     );
 
-    // Subtotal: R$ 25,00 × 3 pets = R$ 75,00
-    expect(screen.getByText(/R\$\s?75,00/)).toBeInTheDocument();
+    // Fill the minimum valid form.
+    fireEvent.click(screen.getByRole('radio', { name: 'Cachorro' }));
+    fireEvent.change(screen.getByLabelText('Nome do pet'), { target: { value: 'Late' } });
+    fireEvent.change(screen.getByLabelText('Raça'), { target: { value: 'SRD' } });
+    fireEvent.change(screen.getByLabelText(/Idade aproximada/i), { target: { value: '3' } });
+    fireEvent.click(screen.getByRole('radio', { name: /Macho/i }));
+    fireEvent.change(screen.getByLabelText(/Peso \(kg\)/i), { target: { value: '10' } });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Adicionar pet' }));
+
+    expect(onSavePet).toHaveBeenCalledTimes(1);
+    const arg = onSavePet.mock.calls[0][0] as RegisterPetInput & { _id?: string };
+    expect(arg._id).toBeUndefined();
+    expect(arg.name).toBe('Late');
+  });
+
+  it('should load PetForm with existing data when Editar is clicked in State B', () => {
+    render(
+      <StepPets
+        pets={[rex, mia]}
+        onSavePet={vi.fn()}
+        onRemovePet={vi.fn()}
+        onNext={vi.fn()}
+        onBack={vi.fn()}
+        pricePerPetCents={2500}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Editar Rex' }));
+
+    expect(screen.getByRole('heading', { name: 'Editar pet' })).toBeInTheDocument();
+    const nameInput = screen.getByLabelText('Nome do pet') as HTMLInputElement;
+    expect(nameInput.value).toBe('Rex');
+    const breedInput = screen.getByLabelText('Raça') as HTMLInputElement;
+    expect(breedInput.value).toBe('Labrador');
+  });
+
+  it('should forward _id to onSavePet when saving an edited pet', () => {
+    const onSavePet = vi.fn();
+
+    render(
+      <StepPets
+        pets={[rex, mia]}
+        onSavePet={onSavePet}
+        onRemovePet={vi.fn()}
+        onNext={vi.fn()}
+        onBack={vi.fn()}
+        pricePerPetCents={2500}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Editar Rex' }));
+
+    // Tweak name then save.
+    fireEvent.change(screen.getByLabelText('Nome do pet'), { target: { value: 'Rex II' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar alterações' }));
+
+    expect(onSavePet).toHaveBeenCalledTimes(1);
+    const arg = onSavePet.mock.calls[0][0] as RegisterPetInput & { _id?: string };
+    expect(arg._id).toBe('pet-1');
+    expect(arg.name).toBe('Rex II');
+  });
+
+  it('should invoke onRemovePet with the pet id when Remover is clicked', () => {
+    const onRemovePet = vi.fn();
+
+    render(
+      <StepPets
+        pets={[rex, mia]}
+        onSavePet={vi.fn()}
+        onRemovePet={onRemovePet}
+        onNext={vi.fn()}
+        onBack={vi.fn()}
+        pricePerPetCents={2500}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remover Rex' }));
+
+    expect(onRemovePet).toHaveBeenCalledWith('pet-1');
+  });
+
+  it('should disable Avançar when there are zero pets (forced State B)', () => {
+    render(
+      <StepPets
+        pets={[]}
+        onSavePet={vi.fn()}
+        onRemovePet={vi.fn()}
+        onNext={vi.fn()}
+        onBack={vi.fn()}
+        pricePerPetCents={2500}
+        initialEditing={null}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Avançar' })).toBeDisabled();
+  });
+
+  it('should display the pricing summary in pt-BR currency for multiple pets', () => {
+    render(
+      <StepPets
+        pets={[rex, mia]}
+        onSavePet={vi.fn()}
+        onRemovePet={vi.fn()}
+        onNext={vi.fn()}
+        onBack={vi.fn()}
+        pricePerPetCents={2500}
+      />,
+    );
+
+    expect(screen.getByText('2 pets cadastrados')).toBeInTheDocument();
+    // Total: R$ 50,00. Use a non-strict matcher to tolerate non-breaking spaces.
+    const summary = screen.getByText('2 pets cadastrados').closest('div')?.parentElement
+      ?.parentElement as HTMLElement;
+    expect(within(summary).getByText(/R\$\s*50,00/)).toBeInTheDocument();
+  });
+
+  it('should switch to PetForm when "Adicionar outro pet" is clicked', () => {
+    render(
+      <StepPets
+        pets={[rex]}
+        onSavePet={vi.fn()}
+        onRemovePet={vi.fn()}
+        onNext={vi.fn()}
+        onBack={vi.fn()}
+        pricePerPetCents={2500}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Adicionar outro pet/i }));
+
+    expect(screen.getByRole('heading', { name: 'Novo pet' })).toBeInTheDocument();
+  });
+
+  it('should call onBack when Voltar is clicked', () => {
+    const onBack = vi.fn();
+
+    render(
+      <StepPets
+        pets={[rex]}
+        onSavePet={vi.fn()}
+        onRemovePet={vi.fn()}
+        onNext={vi.fn()}
+        onBack={onBack}
+        pricePerPetCents={2500}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Voltar' }));
+    expect(onBack).toHaveBeenCalledTimes(1);
   });
 });

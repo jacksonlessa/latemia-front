@@ -9,6 +9,7 @@
 import type React from 'react';
 import { StepPets } from './step-pets';
 import type { StepPetsProps } from './step-pets';
+import type { RegisterPetInput } from '@/lib/types/pet';
 
 // ---------------------------------------------------------------------------
 // Meta
@@ -36,16 +37,53 @@ type Story = {
 };
 
 // ---------------------------------------------------------------------------
-// Shared handlers
+// Sample data
 // ---------------------------------------------------------------------------
 
 const noop = () => {};
 
+function yearsAgo(years: number): Date {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - years);
+  return d;
+}
+
+const rex: RegisterPetInput & { _id: string } = {
+  _id: 'pet-1',
+  name: 'Rex',
+  species: 'canino',
+  breed: 'Labrador',
+  birthDate: yearsAgo(3),
+  sex: 'male',
+  weight: 28.5,
+  castrated: true,
+};
+
+const mia: RegisterPetInput & { _id: string } = {
+  _id: 'pet-2',
+  name: 'Mia',
+  species: 'felino',
+  breed: 'SRD',
+  birthDate: yearsAgo(1),
+  sex: 'female',
+  weight: 4,
+  castrated: false,
+};
+
+const bolt: RegisterPetInput & { _id: string } = {
+  _id: 'pet-3',
+  name: 'Bolt',
+  species: 'canino',
+  breed: 'Poodle',
+  birthDate: yearsAgo(5),
+  sex: 'male',
+  weight: 6,
+  castrated: true,
+};
+
 const baseArgs: StepPetsProps = {
   pets: [],
-  errors: {},
-  onPetChange: noop,
-  onAddPet: noop,
+  onSavePet: noop,
   onRemovePet: noop,
   onNext: noop,
   onBack: noop,
@@ -56,88 +94,39 @@ const baseArgs: StepPetsProps = {
 // Stories
 // ---------------------------------------------------------------------------
 
-/** Um único pet — botão de remoção desabilitado */
+/** Lista vazia — entra direto no Estado A (PetForm) */
+export const Empty: Story = {
+  name: 'Vazio (Estado A inicial)',
+  args: {
+    ...baseArgs,
+    pets: [],
+  },
+};
+
+/** Um pet — Estado B com botão de remover desabilitado */
 export const OnePet: Story = {
   name: '1 pet',
   args: {
     ...baseArgs,
-    pets: [
-      {
-        _id: 'pet-1',
-        species: 'canino',
-        name: 'Rex',
-        breed: 'Labrador',
-        age_years: 3,
-        age_months: 0,
-        weight: 28.5,
-        castrated: true,
-      },
-    ],
+    pets: [rex],
   },
 };
 
-/** Três pets — botão de remoção ativo em todos os cards; subtotal correto */
-export const ThreePets: Story = {
-  name: '3 pets',
+/** Múltiplos pets — Estado B com remoção habilitada e total atualizado */
+export const MultiPets: Story = {
+  name: 'Vários pets',
   args: {
     ...baseArgs,
-    pets: [
-      {
-        _id: 'pet-1',
-        species: 'canino',
-        name: 'Rex',
-        breed: 'Labrador',
-        age_years: 3,
-        age_months: 0,
-        weight: 28.5,
-        castrated: true,
-      },
-      {
-        _id: 'pet-2',
-        species: 'felino',
-        name: 'Mia',
-        breed: 'SRD',
-        age_years: 1,
-        age_months: 0,
-        weight: 4.0,
-        castrated: false,
-      },
-      {
-        _id: 'pet-3',
-        species: 'canino',
-        name: 'Bolt',
-        breed: 'Poodle',
-        age_years: 5,
-        age_months: 0,
-        weight: 6.0,
-        castrated: true,
-      },
-    ],
+    pets: [rex, mia, bolt],
   },
 };
 
-/** Passo com erros de validação visíveis nos cards */
-export const WithErrors: Story = {
-  name: 'Com erros',
+/** Edição forçada de um pet existente — exercita Estado A com `initial` */
+export const Editing: Story = {
+  name: 'Editando pet existente',
   args: {
     ...baseArgs,
-    pets: [
-      {
-        _id: 'pet-1',
-        species: undefined,
-        name: '',
-        breed: '',
-        age_years: undefined,
-        age_months: 0,
-        weight: undefined,
-        castrated: undefined,
-      },
-    ],
-    errors: {
-      'pets[0].species': 'Selecione a espécie do pet.',
-      'pets[0].name': 'O nome é obrigatório.',
-      'pets[0].breed': 'A raça é obrigatória.',
-      'pets[0].weight': 'O peso deve ser maior que 0.',
-    },
+    pets: [rex, mia],
+    initialEditing: 'pet-1',
   },
 };
