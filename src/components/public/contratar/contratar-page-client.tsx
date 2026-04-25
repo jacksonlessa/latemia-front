@@ -120,6 +120,18 @@ export function ContratarPageClient() {
   }, []);
 
   // -------------------------------------------------------------------------
+  // 5.1b Focus the first invalid field after automatic step navigation
+  // When fieldErrors is set and step changes (navigateToFieldStep), move keyboard
+  // focus to the first element with aria-invalid="true" so screen-reader users
+  // are not left with the cursor at an unexpected position.
+  // -------------------------------------------------------------------------
+  useEffect(() => {
+    if (Object.keys(state.fieldErrors).length === 0) return;
+    const el = document.querySelector<HTMLElement>('[aria-invalid="true"]');
+    el?.focus();
+  }, [state.fieldErrors, state.step]);
+
+  // -------------------------------------------------------------------------
   // 5.2 Persist relevant state to sessionStorage on each relevant change
   // -------------------------------------------------------------------------
   useEffect(() => {

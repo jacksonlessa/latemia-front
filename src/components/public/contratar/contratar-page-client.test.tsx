@@ -399,4 +399,29 @@ describe('ContratarPageClient — passo 0 dry-run validation', () => {
       expect(screen.queryByRole('button', { name: /avançar/i })).not.toBeInTheDocument();
     });
   });
+
+  it('should call validateClientUseCase exactly once when the "Avançar" button is double-clicked rapidly', async () => {
+    // Make validation slow so the second click arrives while the first is still in flight
+    let resolveValidation!: () => void;
+    const validationPromise = new Promise<void>((resolve) => {
+      resolveValidation = resolve;
+    });
+    mockValidateClientUseCase.mockReturnValueOnce(validationPromise);
+    vi.mocked(loadDraft).mockReturnValue(null);
+    render(<ContratarPageClient />);
+
+    const avancarButton = await screen.findByRole('button', { name: /avançar/i });
+
+    // Two synchronous clicks before React can re-render and disable the button
+    fireEvent.click(avancarButton);
+    fireEvent.click(avancarButton);
+
+    // Resolve so the async handler can finish cleanly
+    await act(async () => {
+      resolveValidation();
+    });
+
+    // The isValidating guard ensures only one call is made despite two click events
+    expect(mockValidateClientUseCase).toHaveBeenCalledTimes(1);
+  });
 });
