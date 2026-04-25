@@ -20,6 +20,8 @@ export interface StepCadastroProps {
   onChange: (field: string, value: string) => void;
   onAddressLookup: (result: CepResult | null) => void;
   onNext: () => void;
+  /** When true, disables the "Avançar" button and shows a loading indicator. */
+  isLoading?: boolean;
 }
 
 export function StepCadastro({
@@ -28,6 +30,7 @@ export function StepCadastro({
   onChange,
   onAddressLookup,
   onNext,
+  isLoading = false,
 }: StepCadastroProps) {
   const address: Partial<AddressData> = data.address ?? {};
 
@@ -345,10 +348,12 @@ export function StepCadastro({
         <Button
           type="button"
           onClick={onNext}
+          disabled={isLoading}
           style={{ backgroundColor: '#4E8C75', color: '#fff' }}
-          className="hover:opacity-90"
+          className="hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+          aria-busy={isLoading}
         >
-          Avançar
+          {isLoading ? 'Validando…' : 'Avançar'}
         </Button>
       </div>
     </div>

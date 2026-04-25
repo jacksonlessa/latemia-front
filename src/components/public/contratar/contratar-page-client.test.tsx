@@ -44,6 +44,12 @@ vi.mock('@/domain/client/register-client.use-case', () => ({
   },
 }));
 
+const mockValidateClientUseCase = vi.fn().mockResolvedValue(undefined);
+
+vi.mock('@/domain/client/validate-client.use-case', () => ({
+  validateClientUseCase: (...args: unknown[]) => mockValidateClientUseCase(...args),
+}));
+
 vi.mock('@/domain/pet/register-pet.use-case', () => ({
   RegisterPetUseCase: class {
     execute = mockPetExecute;
@@ -117,6 +123,7 @@ beforeEach(() => {
   vi.clearAllMocks();
 
   // Reset mock implementations to defaults after clearAllMocks
+  mockValidateClientUseCase.mockResolvedValue(undefined);
   mockClientExecute.mockResolvedValue({ id: 'client-uuid-1', name: 'Maria da Silva' });
   mockPetExecute
     .mockResolvedValueOnce({ id: 'pet-uuid-1' })
@@ -262,5 +269,134 @@ describe('ContratarPageClient — wizard submission (step 3 → 4)', () => {
 
     // Button should be re-enabled after error (isSubmitting=false)
     expect(concluirButton).not.toBeDisabled();
+  });
+
+  it('should navigate back to step 0 when RegisterClientUseCase throws ValidationError with a step-0 field', async () => {
+    // Client registration fails with a phone error (step 0 field)
+    mockClientExecute.mockRejectedValueOnce(
+      new ValidationError({ phone: 'Telefone inválido. Use DDD + número (10 ou 11 dígitos).' }),
+    );
+
+    renderAtStep3();
+
+    const concluirButton = await screen.findByRole('button', { name: /concluir/i });
+
+    await act(async () => {
+      fireEvent.click(concluirButton);
+    });
+
+    // Wizard should return to step 0; step 0 renders the "Dados do titular" heading
+    await waitFor(() => {
+      expect(screen.getByText(/dados do titular/i)).toBeInTheDocument();
+    });
+
+    expect(clearDraft).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// H2 Tests — Passo 0 dry-run validation
+// ---------------------------------------------------------------------------
+
+describe('ContratarPageClient — passo 0 dry-run validation', () => {
+  it('should call validateClientUseCase when the "Avançar" button is clicked on step 0', async () => {
+    vi.mocked(loadDraft).mockReturnValue(null);
+    render(<ContratarPageClient />);
+
+    const avancarButton = await screen.findByRole('button', { name: /avançar/i });
+
+    await act(async () => {
+      fireEvent.click(avancarButton);
+    });
+
+    await waitFor(() => {
+      expect(mockValidateClientUseCase).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('should advance to step 1 after validateClientUseCase resolves successfully', async () => {
+    mockValidateClientUseCase.mockResolvedValueOnce(undefined);
+    vi.mocked(loadDraft).mockReturnValue(null);
+    render(<ContratarPageClient />);
+
+    const avancarButton = await screen.findByRole('button', { name: /avançar/i });
+
+    await act(async () => {
+      fireEvent.click(avancarButton);
+    });
+
+    // Step 1 renders the pets section; check it is shown
+    await waitFor(() => {
+      // Step 1 button (from StepPets) — "Avançar" or "Próximo" with pets context
+      expect(screen.queryByRole('button', { name: /avançar/i })).not.toBeInTheDocument();
+    });
+  });
+
+  it('should display field error and stay on step 0 when validateClientUseCase throws ValidationError', async () => {
+    mockValidateClientUseCase.mockRejectedValueOnce(
+      new ValidationError({ phone: 'Telefone inválido. Use DDD + número (10 ou 11 dígitos).' }),
+    );
+    vi.mocked(loadDraft).mockReturnValue(null);
+    render(<ContratarPageClient />);
+
+    const avancarButton = await screen.findByRole('button', { name: /avançar/i });
+
+    await act(async () => {
+      fireEvent.click(avancarButton);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+    });
+
+    // Button should be re-enabled (isValidating=false) and user stays on step 0
+    expect(avancarButton).not.toBeDisabled();
+    expect(screen.getByText(/dados do titular/i)).toBeInTheDocument();
+  });
+
+  it('should display _form error when validateClientUseCase throws a non-ValidationError', async () => {
+    mockValidateClientUseCase.mockRejectedValueOnce(new Error('Network error'));
+    vi.mocked(loadDraft).mockReturnValue(null);
+    render(<ContratarPageClient />);
+
+    const avancarButton = await screen.findByRole('button', { name: /avançar/i });
+
+    await act(async () => {
+      fireEvent.click(avancarButton);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/não foi possível validar/i)).toBeInTheDocument();
+    });
+  });
+
+  it('should disable the "Avançar" button while validateClientUseCase is in progress', async () => {
+    let resolveValidation!: () => void;
+    const validationPromise = new Promise<void>((resolve) => {
+      resolveValidation = resolve;
+    });
+    mockValidateClientUseCase.mockReturnValueOnce(validationPromise);
+    vi.mocked(loadDraft).mockReturnValue(null);
+    render(<ContratarPageClient />);
+
+    const avancarButton = await screen.findByRole('button', { name: /avançar/i });
+
+    // Trigger validation (do not await)
+    fireEvent.click(avancarButton);
+
+    // Button should be disabled while in-progress
+    await waitFor(() => {
+      expect(avancarButton).toBeDisabled();
+    });
+
+    // Resolve the validation
+    await act(async () => {
+      resolveValidation();
+    });
+
+    // After resolution the step changes and the button exits DOM
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: /avançar/i })).not.toBeInTheDocument();
+    });
   });
 });

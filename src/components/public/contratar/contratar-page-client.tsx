@@ -9,13 +9,14 @@ import {
   StepPagamento,
   StepSucesso,
 } from '@/components/public/contratar/organisms';
-import { ClientEntity } from '@/domain/client/client.entity';
 import { PetEntity } from '@/domain/pet/pet.entity';
 import { ValidationError } from '@/lib/validation-error';
+import { validateClientUseCase } from '@/domain/client/validate-client.use-case';
 import { ValidateCheckoutDraftUseCase } from '@/domain/checkout/validate-checkout-draft.use-case';
 import { RegisterClientUseCase } from '@/domain/client/register-client.use-case';
 import { RegisterPetUseCase } from '@/domain/pet/register-pet.use-case';
 import { RegisterContractUseCase } from '@/domain/contract/register-contract.use-case';
+import { navigateToFieldStep } from '@/domain/client/field-to-step';
 import { CONTRACT_VERSION } from '@/content/contrato';
 import { publicSite } from '@/config/public-site';
 import { loadDraft, saveDraft, clearDraft } from '@/lib/contratar-draft-storage';
@@ -39,6 +40,7 @@ interface ContratarState {
   fieldErrors: Record<string, string>;
   summary: CheckoutSummary | null;
   isSubmitting: boolean;
+  isValidating: boolean;
   planIds: string[];
 }
 
@@ -51,6 +53,7 @@ const INITIAL_STATE: ContratarState = {
   fieldErrors: {},
   summary: null,
   isSubmitting: false,
+  isValidating: false,
   planIds: [],
 };
 
@@ -134,19 +137,42 @@ export function ContratarPageClient() {
   }, [state.step, state.client, state.pets, state.contractAccepted, state.contractAcceptedAt]);
 
   // -------------------------------------------------------------------------
+  // setStep — helper to update only the step field in state
+  // -------------------------------------------------------------------------
+  function setStep(s: 0 | 1 | 2 | 3): void {
+    setState((prev) => ({ ...prev, step: s as WizardStep }));
+  }
+
+  // -------------------------------------------------------------------------
+  // handleNextFromCadastro — async; calls validate-client dry-run before step 0→1
+  // -------------------------------------------------------------------------
+  async function handleNextFromCadastro(): Promise<void> {
+    if (state.isValidating) return;
+    setState((prev) => ({ ...prev, isValidating: true, fieldErrors: {} }));
+    try {
+      await validateClientUseCase(state.client as RegisterClientInput);
+      setState((prev) => ({ ...prev, step: 1, isValidating: false }));
+    } catch (e) {
+      if (e instanceof ValidationError) {
+        setState((prev) => ({ ...prev, isValidating: false, fieldErrors: e.fieldErrors }));
+        navigateToFieldStep(e.fieldErrors, setStep);
+      } else {
+        setState((prev) => ({
+          ...prev,
+          isValidating: false,
+          fieldErrors: { _form: 'Não foi possível validar seus dados. Verifique sua conexão.' },
+        }));
+      }
+    }
+  }
+
+  // -------------------------------------------------------------------------
   // handleNext — validates current step then advances
   // -------------------------------------------------------------------------
   async function handleNext(): Promise<void> {
     switch (state.step) {
       case 0: {
-        try {
-          ClientEntity.validate(state.client as RegisterClientInput);
-          setState((prev) => ({ ...prev, step: 1, fieldErrors: {} }));
-        } catch (e) {
-          if (e instanceof ValidationError) {
-            setState((prev) => ({ ...prev, fieldErrors: e.fieldErrors }));
-          }
-        }
+        await handleNextFromCadastro();
         break;
       }
 
@@ -235,11 +261,12 @@ export function ContratarPageClient() {
         } catch (e) {
           if (e instanceof ValidationError) {
             setState((prev) => ({ ...prev, isSubmitting: false, fieldErrors: e.fieldErrors }));
+            navigateToFieldStep(e.fieldErrors, setStep);
           } else {
             setState((prev) => ({
               ...prev,
               isSubmitting: false,
-              fieldErrors: { _form: 'Ocorreu um erro inesperado. Tente novamente.' },
+              fieldErrors: { _form: 'Erro inesperado ao finalizar.' },
             }));
           }
         }
@@ -354,13 +381,21 @@ export function ContratarPageClient() {
       <ContratarStepper steps={STEPPER_STEPS} current={state.step} />
 
       {state.step === 0 && (
-        <StepCadastro
-          data={state.client}
-          errors={state.fieldErrors}
-          onChange={handleClientChange}
-          onAddressLookup={handleAddressLookup}
-          onNext={handleNext}
-        />
+        <>
+          {state.fieldErrors['_form'] && (
+            <p role="alert" className="text-sm text-red-600 rounded-md border border-red-200 bg-red-50 px-4 py-2">
+              {state.fieldErrors['_form']}
+            </p>
+          )}
+          <StepCadastro
+            data={state.client}
+            errors={state.fieldErrors}
+            onChange={handleClientChange}
+            onAddressLookup={handleAddressLookup}
+            onNext={handleNext}
+            isLoading={state.isValidating}
+          />
+        </>
       )}
 
       {state.step === 1 && (
