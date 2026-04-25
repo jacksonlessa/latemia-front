@@ -158,57 +158,25 @@ describe("RegisterClientUseCase.execute — domain validation", () => {
 });
 
 // ---------------------------------------------------------------------------
-// API error mapping
+// API error mapping — complete catalogue (task 6.0)
 // ---------------------------------------------------------------------------
 
 describe("RegisterClientUseCase.execute — API error mapping", () => {
-  it("should throw ValidationError with cpf field error when API returns CPF_EMAIL_MISMATCH", async () => {
+  it("should throw ValidationError with name field error when API returns INVALID_NAME", async () => {
     const mockFetch = vi.mocked(fetch);
-    mockFetch.mockResolvedValueOnce(
-      makeFetchResponse({ code: "CPF_EMAIL_MISMATCH" }, 409),
-    );
-
+    mockFetch.mockResolvedValueOnce(makeFetchResponse({ code: "INVALID_NAME" }, 400));
     const useCase = new RegisterClientUseCase();
-
-    await expect(useCase.execute(validInput())).rejects.toThrow(ValidationError);
-
-    try {
-      mockFetch.mockResolvedValueOnce(
-        makeFetchResponse({ code: "CPF_EMAIL_MISMATCH" }, 409),
-      );
-      await useCase.execute(validInput());
-    } catch (e) {
-      expect((e as ValidationError).fieldErrors["cpf"]).toBe(
-        "CPF já cadastrado com outro e-mail",
-      );
-    }
-  });
-
-  it("should throw ValidationError with email field error when API returns EMAIL_ALREADY_REGISTERED", async () => {
-    const mockFetch = vi.mocked(fetch);
-    mockFetch.mockResolvedValueOnce(
-      makeFetchResponse({ code: "EMAIL_ALREADY_REGISTERED" }, 409),
-    );
-
-    const useCase = new RegisterClientUseCase();
-
     try {
       await useCase.execute(validInput());
     } catch (e) {
-      expect((e as ValidationError).fieldErrors["email"]).toBe(
-        "E-mail já cadastrado",
-      );
+      expect((e as ValidationError).fieldErrors["name"]).toBe("Informe seu nome completo");
     }
   });
 
   it("should throw ValidationError with cpf field error when API returns INVALID_CPF", async () => {
     const mockFetch = vi.mocked(fetch);
-    mockFetch.mockResolvedValueOnce(
-      makeFetchResponse({ code: "INVALID_CPF" }, 400),
-    );
-
+    mockFetch.mockResolvedValueOnce(makeFetchResponse({ code: "INVALID_CPF" }, 400));
     const useCase = new RegisterClientUseCase();
-
     try {
       await useCase.execute(validInput());
     } catch (e) {
@@ -216,19 +184,169 @@ describe("RegisterClientUseCase.execute — API error mapping", () => {
     }
   });
 
-  it("should throw ValidationError with _form field error when API returns unknown error code", async () => {
+  it("should throw ValidationError with phone field error when API returns INVALID_PHONE", async () => {
     const mockFetch = vi.mocked(fetch);
-    mockFetch.mockResolvedValueOnce(
-      makeFetchResponse({ code: "UNKNOWN_CODE" }, 500),
-    );
-
+    mockFetch.mockResolvedValueOnce(makeFetchResponse({ code: "INVALID_PHONE" }, 400));
     const useCase = new RegisterClientUseCase();
+    try {
+      await useCase.execute(validInput());
+    } catch (e) {
+      expect((e as ValidationError).fieldErrors["phone"]).toContain("Telefone inválido");
+    }
+  });
 
+  it("should throw ValidationError with email field error when API returns INVALID_EMAIL", async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse({ code: "INVALID_EMAIL" }, 400));
+    const useCase = new RegisterClientUseCase();
+    try {
+      await useCase.execute(validInput());
+    } catch (e) {
+      expect((e as ValidationError).fieldErrors["email"]).toBe("E-mail inválido");
+    }
+  });
+
+  it("should throw ValidationError with address.cep field error when API returns INVALID_CEP", async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse({ code: "INVALID_CEP" }, 400));
+    const useCase = new RegisterClientUseCase();
+    try {
+      await useCase.execute(validInput());
+    } catch (e) {
+      expect((e as ValidationError).fieldErrors["address.cep"]).toBe("CEP inválido");
+    }
+  });
+
+  it("should throw ValidationError with address.street field error when API returns INVALID_STREET", async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse({ code: "INVALID_STREET" }, 400));
+    const useCase = new RegisterClientUseCase();
+    try {
+      await useCase.execute(validInput());
+    } catch (e) {
+      expect((e as ValidationError).fieldErrors["address.street"]).toBe("Informe a rua");
+    }
+  });
+
+  it("should throw ValidationError with address.number field error when API returns INVALID_NUMBER", async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse({ code: "INVALID_NUMBER" }, 400));
+    const useCase = new RegisterClientUseCase();
+    try {
+      await useCase.execute(validInput());
+    } catch (e) {
+      expect((e as ValidationError).fieldErrors["address.number"]).toBe("Informe o número");
+    }
+  });
+
+  it("should throw ValidationError with address.complement field error when API returns INVALID_COMPLEMENT", async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse({ code: "INVALID_COMPLEMENT" }, 400));
+    const useCase = new RegisterClientUseCase();
+    try {
+      await useCase.execute(validInput());
+    } catch (e) {
+      expect((e as ValidationError).fieldErrors["address.complement"]).toContain("Complemento muito longo");
+    }
+  });
+
+  it("should throw ValidationError with address.cep field error and friendly message when API returns INVALID_CITY", async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse({ code: "INVALID_CITY" }, 400));
+    const useCase = new RegisterClientUseCase();
+    try {
+      await useCase.execute(validInput());
+    } catch (e) {
+      // INVALID_CITY maps to address.cep per PRD F2.4
+      expect((e as ValidationError).fieldErrors["address.cep"]).toContain("Camboriú");
+      expect((e as ValidationError).fieldErrors["address.city"]).toBeUndefined();
+    }
+  });
+
+  it("should throw ValidationError with address.state field error when API returns INVALID_STATE", async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse({ code: "INVALID_STATE" }, 400));
+    const useCase = new RegisterClientUseCase();
+    try {
+      await useCase.execute(validInput());
+    } catch (e) {
+      expect((e as ValidationError).fieldErrors["address.state"]).toBe("UF inválida");
+    }
+  });
+
+  it("should throw ValidationError with email field error when API returns EMAIL_ALREADY_REGISTERED", async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse({ code: "EMAIL_ALREADY_REGISTERED" }, 409));
+    const useCase = new RegisterClientUseCase();
+    try {
+      await useCase.execute(validInput());
+    } catch (e) {
+      expect((e as ValidationError).fieldErrors["email"]).toBe("E-mail já cadastrado");
+    }
+  });
+
+  it("should throw ValidationError with cpf field error when API returns CPF_EMAIL_MISMATCH", async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse({ code: "CPF_EMAIL_MISMATCH" }, 409));
+    const useCase = new RegisterClientUseCase();
+    await expect(useCase.execute(validInput())).rejects.toThrow(ValidationError);
+
+    try {
+      mockFetch.mockResolvedValueOnce(makeFetchResponse({ code: "CPF_EMAIL_MISMATCH" }, 409));
+      await useCase.execute(validInput());
+    } catch (e) {
+      expect((e as ValidationError).fieldErrors["cpf"]).toBe("CPF já cadastrado com outro e-mail");
+    }
+  });
+
+  it("should throw ValidationError with _form field error when API returns DUPLICATE_CLIENT", async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse({ code: "DUPLICATE_CLIENT" }, 409));
+    const useCase = new RegisterClientUseCase();
+    try {
+      await useCase.execute(validInput());
+    } catch (e) {
+      expect((e as ValidationError).fieldErrors["_form"]).toContain("cadastro com esses dados");
+    }
+  });
+
+  it("should throw ValidationError with _form field error when API returns RATE_LIMIT_EXCEEDED", async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse({ code: "RATE_LIMIT_EXCEEDED" }, 429));
+    const useCase = new RegisterClientUseCase();
+    try {
+      await useCase.execute(validInput());
+    } catch (e) {
+      expect((e as ValidationError).fieldErrors["_form"]).toContain("Muitas tentativas");
+    }
+  });
+
+  it("should throw ValidationError with _form field error when API returns INVALID_INPUT", async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse({ code: "INVALID_INPUT" }, 400));
+    const useCase = new RegisterClientUseCase();
+    try {
+      await useCase.execute(validInput());
+    } catch (e) {
+      expect((e as ValidationError).fieldErrors["_form"]).toContain("Verifique os dados informados");
+    }
+  });
+
+  it("should throw ValidationError with _form field error and warn when API returns unknown error code", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse({ code: "UNKNOWN_CODE" }, 500));
+    const useCase = new RegisterClientUseCase();
     try {
       await useCase.execute(validInput());
     } catch (e) {
       expect((e as ValidationError).fieldErrors["_form"]).toBeDefined();
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("unmapped error code"),
+        "UNKNOWN_CODE",
+      );
     }
+    warnSpy.mockRestore();
   });
 });
 
