@@ -13,13 +13,20 @@ import type { RegisterPetInput } from "@/lib/types/pet";
 // Fixtures
 // ---------------------------------------------------------------------------
 
+function buildBirthDate(yearsAgo: number, monthsAgo = 0): Date {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - yearsAgo);
+  d.setMonth(d.getMonth() - monthsAgo);
+  return d;
+}
+
 function validInput(overrides: Partial<RegisterPetInput> = {}): RegisterPetInput {
   return {
     name: "Rex",
     species: "canino",
     breed: "Labrador",
-    age_years: 3,
-    age_months: 6,
+    birthDate: buildBirthDate(3, 6),
+    sex: "male",
     weight: 28.5,
     castrated: true,
     ...overrides,
@@ -37,6 +44,7 @@ describe("PetEntity.validate — valid input", () => {
     expect(entity).toBeInstanceOf(PetEntity);
     expect(entity.name).toBe("Rex");
     expect(entity.species).toBe("canino");
+    expect(entity.sex).toBe("male");
   });
 
   it("should trim the pet name", () => {
@@ -49,16 +57,6 @@ describe("PetEntity.validate — valid input", () => {
     expect(entity.breed).toBe("Labrador");
   });
 
-  it("should accept age_months = 0 (valid lower bound)", () => {
-    const entity = PetEntity.validate(validInput({ age_months: 0 }));
-    expect(entity.age_months).toBe(0);
-  });
-
-  it("should accept age_months = 11 (valid upper bound)", () => {
-    const entity = PetEntity.validate(validInput({ age_months: 11 }));
-    expect(entity.age_months).toBe(11);
-  });
-
   it("should accept castrated = false", () => {
     const entity = PetEntity.validate(validInput({ castrated: false }));
     expect(entity.castrated).toBe(false);
@@ -67,6 +65,11 @@ describe("PetEntity.validate — valid input", () => {
   it("should accept felino species", () => {
     const entity = PetEntity.validate(validInput({ species: "felino" }));
     expect(entity.species).toBe("felino");
+  });
+
+  it("should accept sex = female", () => {
+    const entity = PetEntity.validate(validInput({ sex: "female" }));
+    expect(entity.sex).toBe("female");
   });
 });
 
@@ -100,31 +103,78 @@ describe("PetEntity.validate — species", () => {
 });
 
 // ---------------------------------------------------------------------------
-// age_months validation
+// birthDate validation
 // ---------------------------------------------------------------------------
 
-describe("PetEntity.validate — age_months", () => {
-  it("should throw ValidationError with age_months error when age_months = 12", () => {
+describe("PetEntity.validate — birthDate", () => {
+  it("should throw ValidationError with birthDate error when value is not a Date", () => {
     try {
-      PetEntity.validate(validInput({ age_months: 12 }));
+      PetEntity.validate(
+        validInput({ birthDate: "2020-01-01" as unknown as Date }),
+      );
     } catch (e) {
-      expect((e as ValidationError).fieldErrors["age_months"]).toBeDefined();
+      expect((e as ValidationError).fieldErrors["birthDate"]).toBeDefined();
     }
   });
 
-  it("should throw ValidationError with age_months error when age_months = -1", () => {
+  it("should throw ValidationError with birthDate error when Date is invalid (NaN)", () => {
     try {
-      PetEntity.validate(validInput({ age_months: -1 }));
+      PetEntity.validate(validInput({ birthDate: new Date("not-a-date") }));
     } catch (e) {
-      expect((e as ValidationError).fieldErrors["age_months"]).toBeDefined();
+      expect((e as ValidationError).fieldErrors["birthDate"]).toBeDefined();
     }
   });
 
-  it("should throw ValidationError with age_months error when age_months is not an integer", () => {
+  it("should throw ValidationError with birthDate error when date is in the future", () => {
+    const future = new Date();
+    future.setDate(future.getDate() + 7);
     try {
-      PetEntity.validate(validInput({ age_months: 5.5 }));
+      PetEntity.validate(validInput({ birthDate: future }));
     } catch (e) {
-      expect((e as ValidationError).fieldErrors["age_months"]).toBeDefined();
+      expect((e as ValidationError).fieldErrors["birthDate"]).toBeDefined();
+    }
+  });
+
+  it("should throw ValidationError with birthDate error when date is more than 30 years ago", () => {
+    const tooOld = new Date();
+    tooOld.setFullYear(tooOld.getFullYear() - 31);
+    try {
+      PetEntity.validate(validInput({ birthDate: tooOld }));
+    } catch (e) {
+      expect((e as ValidationError).fieldErrors["birthDate"]).toBeDefined();
+    }
+  });
+
+  it("should accept a birthDate within the last 30 years", () => {
+    const withinRange = new Date();
+    withinRange.setFullYear(withinRange.getFullYear() - 29);
+    const entity = PetEntity.validate(validInput({ birthDate: withinRange }));
+    expect(entity.birthDate.getTime()).toBe(withinRange.getTime());
+  });
+});
+
+// ---------------------------------------------------------------------------
+// sex validation
+// ---------------------------------------------------------------------------
+
+describe("PetEntity.validate — sex", () => {
+  it("should throw ValidationError with sex error when sex is missing", () => {
+    try {
+      PetEntity.validate(
+        validInput({ sex: undefined as unknown as "male" }),
+      );
+    } catch (e) {
+      expect((e as ValidationError).fieldErrors["sex"]).toBeDefined();
+    }
+  });
+
+  it("should throw ValidationError with sex error when sex is invalid", () => {
+    try {
+      PetEntity.validate(
+        validInput({ sex: "other" as unknown as "male" }),
+      );
+    } catch (e) {
+      expect((e as ValidationError).fieldErrors["sex"]).toBeDefined();
     }
   });
 });
@@ -142,12 +192,30 @@ describe("PetEntity.validate — weight", () => {
     }
   });
 
-  it("should throw ValidationError with weight error when weight = -1", () => {
+  it("should throw ValidationError with weight error when weight < 0.1", () => {
     try {
-      PetEntity.validate(validInput({ weight: -1 }));
+      PetEntity.validate(validInput({ weight: 0.05 }));
     } catch (e) {
       expect((e as ValidationError).fieldErrors["weight"]).toBeDefined();
     }
+  });
+
+  it("should throw ValidationError with weight error when weight > 100", () => {
+    try {
+      PetEntity.validate(validInput({ weight: 100.1 }));
+    } catch (e) {
+      expect((e as ValidationError).fieldErrors["weight"]).toBeDefined();
+    }
+  });
+
+  it("should accept weight = 0.1 (lower bound)", () => {
+    const entity = PetEntity.validate(validInput({ weight: 0.1 }));
+    expect(entity.weight).toBe(0.1);
+  });
+
+  it("should accept weight = 100 (upper bound)", () => {
+    const entity = PetEntity.validate(validInput({ weight: 100 }));
+    expect(entity.weight).toBe(100);
   });
 });
 
@@ -172,17 +240,26 @@ describe("PetEntity.validate — castrated", () => {
 
 describe("PetEntity.toApiPayload", () => {
   it("should return a payload matching the CreatePetPayload shape", () => {
-    const entity = PetEntity.validate(validInput());
+    const birthDate = buildBirthDate(3, 6);
+    const entity = PetEntity.validate(validInput({ birthDate }));
     const payload = entity.toApiPayload();
 
     expect(payload).toMatchObject({
       name: "Rex",
       species: "canino",
       breed: "Labrador",
-      age_years: 3,
-      age_months: 6,
+      sex: "male",
       weight: 28.5,
       castrated: true,
     });
+    expect(payload.birthDate).toBe(birthDate.toISOString());
+  });
+
+  it("should emit birthDate as an ISO 8601 string", () => {
+    const birthDate = new Date("2020-05-10T00:00:00.000Z");
+    const entity = PetEntity.validate(validInput({ birthDate }));
+    const payload = entity.toApiPayload();
+
+    expect(payload.birthDate).toBe("2020-05-10T00:00:00.000Z");
   });
 });

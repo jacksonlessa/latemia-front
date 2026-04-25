@@ -6,7 +6,12 @@
  * No personal data is included in error messages.
  */
 
-import type { CreatePetPayload, PetSpecies, RegisterPetInput } from "@/lib/types/pet";
+import type {
+  CreatePetPayload,
+  PetSex,
+  PetSpecies,
+  RegisterPetInput,
+} from "@/lib/types/pet";
 import { ValidationError } from "@/lib/validation-error";
 
 // Re-export ValidationError so callers can import from either entity file.
@@ -17,6 +22,12 @@ const VALID_SPECIES: ReadonlySet<string> = new Set<PetSpecies>([
   "felino",
 ]);
 
+const VALID_SEX: ReadonlySet<string> = new Set<PetSex>(["male", "female"]);
+
+const MAX_AGE_YEARS = 30;
+const MIN_WEIGHT = 0.1;
+const MAX_WEIGHT = 100;
+
 // ---------------------------------------------------------------------------
 // PetEntity
 // ---------------------------------------------------------------------------
@@ -26,11 +37,10 @@ export class PetEntity {
     public readonly name: string,
     public readonly species: PetSpecies,
     public readonly breed: string,
-    /** Full years of life (>= 0). */
-    public readonly age_years: number,
-    /** Months in the current year (0–11). */
-    public readonly age_months: number,
-    /** Weight in kg, > 0. */
+    /** Birth date. Always a valid past Date within the last 30 years. */
+    public readonly birthDate: Date,
+    public readonly sex: PetSex,
+    /** Weight in kg, between 0.1 and 100. */
     public readonly weight: number,
     public readonly castrated: boolean,
   ) {}
@@ -59,35 +69,41 @@ export class PetEntity {
       errors["breed"] = "Raça é obrigatória";
     }
 
-    // age_years
+    // birthDate — must be a finite Date, in the past, within 30 years
     if (
-      input.age_years === undefined ||
-      input.age_years === null ||
-      !Number.isInteger(input.age_years) ||
-      input.age_years < 0
+      !(input.birthDate instanceof Date) ||
+      Number.isNaN(input.birthDate.getTime())
     ) {
-      errors["age_years"] = "Anos de vida inválidos";
+      errors["birthDate"] = "Data de nascimento inválida";
+    } else {
+      const now = new Date();
+      if (input.birthDate >= now) {
+        errors["birthDate"] = "Data de nascimento deve ser no passado";
+      } else {
+        const maxPast = new Date();
+        maxPast.setFullYear(maxPast.getFullYear() - MAX_AGE_YEARS);
+        if (input.birthDate < maxPast) {
+          errors["birthDate"] =
+            "Pet com mais de 30 anos? Verifique a data.";
+        }
+      }
     }
 
-    // age_months — must be 0..11
-    if (
-      input.age_months === undefined ||
-      input.age_months === null ||
-      !Number.isInteger(input.age_months) ||
-      input.age_months < 0 ||
-      input.age_months > 11
-    ) {
-      errors["age_months"] = "Meses de vida inválidos (0 a 11)";
+    // sex — must be 'male' | 'female'
+    if (!input.sex || !VALID_SEX.has(input.sex)) {
+      errors["sex"] = "Selecione o sexo do pet";
     }
 
-    // weight — must be > 0
+    // weight — must be between 0.1 and 100
     if (
       input.weight === undefined ||
       input.weight === null ||
       typeof input.weight !== "number" ||
-      input.weight <= 0
+      !Number.isFinite(input.weight) ||
+      input.weight < MIN_WEIGHT ||
+      input.weight > MAX_WEIGHT
     ) {
-      errors["weight"] = "Peso deve ser maior que zero";
+      errors["weight"] = "Peso deve estar entre 0,1 e 100 kg";
     }
 
     // castrated — must be a boolean
@@ -103,8 +119,8 @@ export class PetEntity {
       input.name.trim(),
       input.species,
       input.breed.trim(),
-      input.age_years,
-      input.age_months,
+      input.birthDate,
+      input.sex,
       input.weight,
       input.castrated,
     );
@@ -116,8 +132,8 @@ export class PetEntity {
       name: this.name,
       species: this.species,
       breed: this.breed,
-      age_years: this.age_years,
-      age_months: this.age_months,
+      birthDate: this.birthDate.toISOString(),
+      sex: this.sex,
       weight: this.weight,
       castrated: this.castrated,
     };

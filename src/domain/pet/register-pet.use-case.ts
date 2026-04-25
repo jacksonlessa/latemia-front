@@ -33,14 +33,19 @@ async function mapPetApiError(res: Response): Promise<ValidationError> {
         _form: "Cliente não encontrado. Reinicie o cadastro.",
       });
 
-    case "INVALID_AGE_MONTHS":
+    case "INVALID_BIRTHDATE":
       return new ValidationError({
-        age_months: "Meses de vida inválidos (0 a 11)",
+        birthDate: "Data de nascimento inválida",
+      });
+
+    case "INVALID_SEX":
+      return new ValidationError({
+        sex: "Sexo inválido",
       });
 
     case "INVALID_WEIGHT":
       return new ValidationError({
-        weight: "Peso deve ser maior que zero",
+        weight: "Peso deve estar entre 0,1 e 100 kg",
       });
 
     default:

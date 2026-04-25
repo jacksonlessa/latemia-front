@@ -5,40 +5,43 @@
 
 export type PetSpecies = "canino" | "felino";
 
+export type PetSex = "male" | "female";
+
 /** Input shape accepted by the RegisterPetUseCase. */
 export interface RegisterPetInput {
   name: string;
   species: PetSpecies;
   breed: string;
-  /** Full years of life (>= 0). */
-  age_years: number;
-  /** Months of life in the current year (0–11). */
-  age_months: number;
-  /** Weight in kg, must be > 0. */
+  /** Birth date as a JS Date. Must be in the past and within the last 30 years. */
+  birthDate: Date;
+  sex: PetSex;
+  /** Weight in kg, must be between 0.1 and 100. */
   weight: number;
   castrated: boolean;
 }
 
-/** Payload sent to POST /v1/clients/:clientId/pets. */
+/** Payload sent to POST /v1/register/pet. */
 export interface CreatePetPayload {
   name: string;
   species: PetSpecies;
   breed: string;
-  age_years: number;
-  age_months: number;
+  /** ISO 8601 string derived from `birthDate`. */
+  birthDate: string;
+  sex: PetSex;
   weight: number;
   castrated: boolean;
 }
 
-/** Full pet detail returned by POST /v1/clients/:clientId/pets. */
+/** Full pet detail returned by POST /v1/register/pet. */
 export interface PetDetail {
   id: string;
   clientId: string;
   name: string;
   species: PetSpecies;
   breed: string;
-  /** ISO date string — approximate birth date computed by the backend. */
+  /** ISO date string returned by the backend. */
   birthDate: string;
+  sex: PetSex;
   weight: number;
   castrated: boolean;
   createdAt: string;

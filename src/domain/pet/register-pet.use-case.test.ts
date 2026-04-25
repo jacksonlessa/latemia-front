@@ -16,13 +16,20 @@ import type { RegisterPetInput } from "@/lib/types/pet";
 
 const CLIENT_ID = "client-uuid-1";
 
+function buildBirthDate(yearsAgo: number, monthsAgo = 0): Date {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - yearsAgo);
+  d.setMonth(d.getMonth() - monthsAgo);
+  return d;
+}
+
 function validInput(overrides: Partial<RegisterPetInput> = {}): RegisterPetInput {
   return {
     name: "Rex",
     species: "canino",
     breed: "Labrador",
-    age_years: 3,
-    age_months: 6,
+    birthDate: buildBirthDate(3, 6),
+    sex: "male",
     weight: 28.5,
     castrated: true,
     ...overrides,
@@ -35,7 +42,8 @@ const successResponse = {
   name: "Rex",
   species: "canino",
   breed: "Labrador",
-  birthDate: "2023-04-18",
+  birthDate: "2023-04-18T00:00:00.000Z",
+  sex: "male",
   weight: 28.5,
   castrated: true,
   createdAt: "2026-04-18T12:00:00.000Z",
@@ -105,8 +113,9 @@ describe("RegisterPetUseCase.execute — success", () => {
     const mockFetch = vi.mocked(fetch);
     mockFetch.mockResolvedValueOnce(makeFetchResponse(successResponse, 201));
 
+    const birthDate = buildBirthDate(2, 3);
     const useCase = new RegisterPetUseCase();
-    await useCase.execute(CLIENT_ID, validInput());
+    await useCase.execute(CLIENT_ID, validInput({ birthDate }));
 
     const [, init] = mockFetch.mock.calls[0];
     const body = JSON.parse((init as RequestInit).body as string);
@@ -116,11 +125,13 @@ describe("RegisterPetUseCase.execute — success", () => {
       name: "Rex",
       species: "canino",
       breed: "Labrador",
-      age_years: 3,
-      age_months: 6,
+      sex: "male",
       weight: 28.5,
       castrated: true,
     });
+    expect(body.birthDate).toBe(birthDate.toISOString());
+    expect(body.age_years).toBeUndefined();
+    expect(body.age_months).toBeUndefined();
   });
 
   it("should call POST with Content-Type application/json", async () => {
@@ -146,6 +157,7 @@ describe("RegisterPetUseCase.execute — success", () => {
 
     expect(result.id).toBe("pet-uuid-1");
     expect(result.clientId).toBe(CLIENT_ID);
+    expect(result.sex).toBe("male");
   });
 });
 
@@ -205,10 +217,10 @@ describe("RegisterPetUseCase.execute — API error mapping", () => {
     }
   });
 
-  it("should throw ValidationError with age_months field error when API returns INVALID_AGE_MONTHS", async () => {
+  it("should throw ValidationError with birthDate field error when API returns INVALID_BIRTHDATE", async () => {
     const mockFetch = vi.mocked(fetch);
     mockFetch.mockResolvedValueOnce(
-      makeFetchResponse({ code: "INVALID_AGE_MONTHS" }, 400),
+      makeFetchResponse({ code: "INVALID_BIRTHDATE" }, 400),
     );
 
     const useCase = new RegisterPetUseCase();
@@ -216,7 +228,22 @@ describe("RegisterPetUseCase.execute — API error mapping", () => {
     try {
       await useCase.execute(CLIENT_ID, validInput());
     } catch (e) {
-      expect((e as ValidationError).fieldErrors["age_months"]).toBeDefined();
+      expect((e as ValidationError).fieldErrors["birthDate"]).toBeDefined();
+    }
+  });
+
+  it("should throw ValidationError with sex field error when API returns INVALID_SEX", async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(
+      makeFetchResponse({ code: "INVALID_SEX" }, 400),
+    );
+
+    const useCase = new RegisterPetUseCase();
+
+    try {
+      await useCase.execute(CLIENT_ID, validInput());
+    } catch (e) {
+      expect((e as ValidationError).fieldErrors["sex"]).toBeDefined();
     }
   });
 
