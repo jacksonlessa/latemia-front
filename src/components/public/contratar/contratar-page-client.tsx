@@ -33,7 +33,7 @@ type WizardStep = 0 | 1 | 2 | 3 | 4;
 interface ContratarState {
   step: WizardStep;
   client: Partial<RegisterClientInput>;
-  pets: Array<Partial<RegisterPetInput> & { _id: string }>;
+  pets: Array<RegisterPetInput & { _id: string }>;
   contractAccepted: boolean;
   contractAcceptedAt: string | null;
   fieldErrors: Record<string, string>;
@@ -45,7 +45,7 @@ interface ContratarState {
 const INITIAL_STATE: ContratarState = {
   step: 0,
   client: {},
-  pets: [{ _id: crypto.randomUUID(), age_months: 0 }],
+  pets: [],
   contractAccepted: false,
   contractAcceptedAt: null,
   fieldErrors: {},
@@ -151,12 +151,12 @@ export function ContratarPageClient() {
       }
 
       case 1: {
-        if (state.pets.length === 0) return;
+        if (state.pets.length < 1) return;
         const allErrors: Record<string, string> = {};
         let allValid = true;
         state.pets.forEach((pet, i) => {
           try {
-            PetEntity.validate(pet as RegisterPetInput);
+            PetEntity.validate(pet);
           } catch (e) {
             allValid = false;
             if (e instanceof ValidationError) {
@@ -189,7 +189,7 @@ export function ContratarPageClient() {
         try {
           summary = useCase.execute({
             client: state.client as RegisterClientInput,
-            pets: state.pets as RegisterPetInput[],
+            pets: state.pets,
             contractAcceptedAt: state.contractAcceptedAt!,
           });
         } catch (e) {
@@ -210,7 +210,7 @@ export function ContratarPageClient() {
           const petUseCase = new RegisterPetUseCase();
           const createdPetIds: string[] = [];
           for (const pet of state.pets) {
-            const createdPet = await petUseCase.execute(registeredClient.id, pet as RegisterPetInput);
+            const createdPet = await petUseCase.execute(registeredClient.id, pet);
             createdPetIds.push(createdPet.id);
           }
 
@@ -298,36 +298,35 @@ export function ContratarPageClient() {
   }
 
   // -------------------------------------------------------------------------
-  // handlePetChange — updates a single field in a specific pet
+  // handleSavePet — inserts when `_id` is missing or updates when present.
+  // Used by the new StepPets A/B state machine where a single PetForm submits
+  // a complete validated pet object back to the orchestrator.
   // -------------------------------------------------------------------------
-  function handlePetChange(
-    id: string,
-    field: keyof RegisterPetInput,
-    value: unknown,
-  ): void {
-    setState((prev) => ({
-      ...prev,
-      pets: prev.pets.map((pet) =>
-        pet._id === id ? { ...pet, [field]: value } : pet,
-      ),
-    }));
+  function handleSavePet(pet: RegisterPetInput & { _id?: string }): void {
+    setState((prev) => {
+      if (pet._id) {
+        const id = pet._id;
+        return {
+          ...prev,
+          pets: prev.pets.map((p) =>
+            p._id === id ? { ...pet, _id: id } : p,
+          ),
+        };
+      }
+      const newId = crypto.randomUUID();
+      return {
+        ...prev,
+        pets: [...prev.pets, { ...pet, _id: newId }],
+      };
+    });
   }
 
   // -------------------------------------------------------------------------
-  // handleAddPet — appends a new blank pet entry
-  // -------------------------------------------------------------------------
-  function handleAddPet(): void {
-    setState((prev) => ({
-      ...prev,
-      pets: [...prev.pets, { _id: crypto.randomUUID(), age_months: 0 }],
-    }));
-  }
-
-  // -------------------------------------------------------------------------
-  // handleRemovePet — removes a pet by _id (minimum 1 pet enforced)
+  // handleRemovePet — removes a pet by `_id`. The new flow allows removing the
+  // last pet (StepPets falls back to State A automatically). Validation on
+  // "Avançar" still requires at least one saved pet.
   // -------------------------------------------------------------------------
   function handleRemovePet(id: string): void {
-    if (state.pets.length <= 1) return;
     setState((prev) => ({
       ...prev,
       pets: prev.pets.filter((pet) => pet._id !== id),
@@ -367,9 +366,7 @@ export function ContratarPageClient() {
       {state.step === 1 && (
         <StepPets
           pets={state.pets}
-          errors={state.fieldErrors}
-          onPetChange={handlePetChange}
-          onAddPet={handleAddPet}
+          onSavePet={handleSavePet}
           onRemovePet={handleRemovePet}
           onNext={handleNext}
           onBack={handleBack}
@@ -393,8 +390,8 @@ export function ContratarPageClient() {
           summary={{
             clientName: (state.client as RegisterClientInput).name ?? '',
             pets: state.pets.map((p) => ({
-              name: (p as RegisterPetInput).name ?? '',
-              species: (p as RegisterPetInput).species,
+              name: p.name,
+              species: p.species,
             })),
             pricePerPetCents: publicSite.price.perPetCents,
             totalCents: state.pets.length * publicSite.price.perPetCents,

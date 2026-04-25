@@ -22,8 +22,8 @@ const makeDraft = (overrides: Partial<ContratarDraft> = {}): ContratarDraft => (
       name: 'Rex',
       species: 'canino',
       breed: 'Labrador',
-      age_years: 2,
-      age_months: 3,
+      birthDate: new Date('2020-01-15T00:00:00.000Z'),
+      sex: 'male',
       weight: 25,
       castrated: false,
     },
@@ -39,11 +39,17 @@ describe('contratar-draft-storage', () => {
   });
 
   describe('saveDraft / loadDraft', () => {
-    it('should return the same object when loading after saving (round-trip)', () => {
+    it('should round-trip a draft and rehydrate birthDate to a Date', () => {
       const draft = makeDraft();
       saveDraft(draft);
       const loaded = loadDraft();
-      expect(loaded).toEqual(draft);
+      expect(loaded).not.toBeNull();
+      expect(loaded?.pets[0].birthDate).toBeInstanceOf(Date);
+      expect(loaded?.pets[0].birthDate.toISOString()).toBe(
+        draft.pets[0].birthDate.toISOString(),
+      );
+      expect(loaded?.pets[0].sex).toBe('male');
+      expect(loaded?.client.name).toBe('Test User');
     });
 
     it('should persist step value correctly when saving and loading', () => {
@@ -68,6 +74,26 @@ describe('contratar-draft-storage', () => {
       const loaded = loadDraft();
       expect(loaded?.step).toBe(3);
     });
+
+    it('should serialize birthDate as ISO 8601 string in sessionStorage', () => {
+      const draft = makeDraft();
+      saveDraft(draft);
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      expect(raw).not.toBeNull();
+      const parsed = JSON.parse(raw!);
+      expect(parsed.version).toBe(2);
+      expect(typeof parsed.pets[0].birthDate).toBe('string');
+      expect(parsed.pets[0].birthDate).toBe(
+        draft.pets[0].birthDate.toISOString(),
+      );
+    });
+
+    it('should preserve pets as an empty array when none have been added', () => {
+      const draft = makeDraft({ pets: [] });
+      saveDraft(draft);
+      const loaded = loadDraft();
+      expect(loaded?.pets).toEqual([]);
+    });
   });
 
   describe('loadDraft', () => {
@@ -82,6 +108,30 @@ describe('contratar-draft-storage', () => {
 
     it('should return null when sessionStorage value is an empty string', () => {
       sessionStorage.setItem(STORAGE_KEY, '');
+      expect(loadDraft()).toBeNull();
+    });
+
+    it('should silently discard a draft persisted under an older version', () => {
+      // Simulates a v1 draft (no `version` field, legacy pet shape with age_*).
+      const legacy = {
+        step: 1,
+        client: { name: 'Legacy User' },
+        pets: [
+          {
+            _id: 'legacy-pet-1',
+            name: 'Old Rex',
+            species: 'canino',
+            breed: 'SRD',
+            age_years: 2,
+            age_months: 0,
+            weight: 10,
+            castrated: false,
+          },
+        ],
+        contractAccepted: false,
+        contractAcceptedAt: null,
+      };
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(legacy));
       expect(loadDraft()).toBeNull();
     });
   });

@@ -35,12 +35,15 @@ function validClient(overrides: Partial<RegisterClientInput> = {}): RegisterClie
 }
 
 function validPet(overrides: Partial<RegisterPetInput> = {}): RegisterPetInput {
+  // Birth date ~3 years ago — well within the 30-year window enforced by PetEntity.
+  const birthDate = new Date();
+  birthDate.setFullYear(birthDate.getFullYear() - 3);
   return {
     name: "Rex",
     species: "canino",
     breed: "Labrador",
-    age_years: 3,
-    age_months: 6,
+    birthDate,
+    sex: "male",
     weight: 28.5,
     castrated: true,
     ...overrides,

@@ -87,13 +87,16 @@ const validClient = {
   },
 };
 
+const petBirthDate = new Date();
+petBirthDate.setFullYear(petBirthDate.getFullYear() - 3);
+
 const validPet = {
   _id: 'pet-local-1',
   name: 'Rex',
   species: 'canino' as const,
   breed: 'Labrador',
-  age_years: 3,
-  age_months: 0,
+  birthDate: petBirthDate,
+  sex: 'male' as const,
   weight: 28.5,
   castrated: true,
 };
