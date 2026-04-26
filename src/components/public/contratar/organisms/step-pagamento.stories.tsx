@@ -26,19 +26,11 @@ const meta = {
 
 export default meta;
 
-// ---------------------------------------------------------------------------
-// Story type helper (minimal — no @storybook/react dependency)
-// ---------------------------------------------------------------------------
-
 type Story = {
   render?: (args: StepPagamentoProps) => React.ReactElement;
   args?: Partial<StepPagamentoProps>;
   name?: string;
 };
-
-// ---------------------------------------------------------------------------
-// Shared handlers
-// ---------------------------------------------------------------------------
 
 const noop = () => {};
 
@@ -60,47 +52,56 @@ const multiPetSummary: CheckoutSummary = {
   totalCents: 7500,
 };
 
-// ---------------------------------------------------------------------------
-// Stories
-// ---------------------------------------------------------------------------
-
-/** Resumo com um único pet */
 export const Default: Story = {
-  name: 'Um pet',
+  name: 'Form — um pet',
   args: {
     summary: singlePetSummary,
-    onNext: noop,
+    onSubmit: noop,
     onBack: noop,
   },
 };
 
-/** Resumo com múltiplos pets — total calculado corretamente */
 export const MultiplosPets: Story = {
-  name: 'Múltiplos pets',
+  name: 'Form — múltiplos pets',
   args: {
     summary: multiPetSummary,
-    onNext: noop,
+    onSubmit: noop,
     onBack: noop,
   },
 };
 
-/** Botão desabilitado e texto "Aguarde..." enquanto submissão está em andamento */
-export const Loading: Story = {
-  name: 'Loading',
+export const Processing: Story = {
+  name: 'Processing (stage 5)',
   args: {
     summary: singlePetSummary,
-    onNext: noop,
+    onSubmit: noop,
     onBack: noop,
-    isSubmitting: true,
+    mode: 'processing',
+    currentStage: 5,
+    petStages: [{ name: 'Rex', state: 'pending' }],
   },
 };
 
-/** Mensagem de erro de rede exibida acima dos botões de navegação */
+export const Erro: Story = {
+  name: 'Erro (stage 6 — cartão recusado)',
+  args: {
+    summary: singlePetSummary,
+    onSubmit: noop,
+    onBack: noop,
+    onRetry: noop,
+    mode: 'error',
+    currentStage: 6,
+    errorStage: 6,
+    errorMessage: 'Seu cartão foi recusado. Verifique os dados ou tente outro cartão.',
+    petStages: [{ name: 'Rex', state: 'error' }],
+  },
+};
+
 export const ErroDeRede: Story = {
-  name: 'Erro de rede',
+  name: 'Erro de rede (inline)',
   args: {
     summary: singlePetSummary,
-    onNext: noop,
+    onSubmit: noop,
     onBack: noop,
     formError: 'Ocorreu um erro inesperado. Tente novamente.',
   },

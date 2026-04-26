@@ -20,6 +20,11 @@ vi.mock('@/lib/contratar-draft-storage', () => ({
   clearDraft: vi.fn(),
 }));
 
+// Stub tokenize-card so the orchestrator does not hit the real Pagar.me endpoint.
+vi.mock('@/lib/billing/tokenize-card', () => ({
+  tokenizeCard: vi.fn().mockResolvedValue({ cardToken: 'token_abc' }),
+}));
+
 const mockClientExecute = vi.fn().mockResolvedValue({
   id: 'client-uuid-1',
   name: 'Maria da Silva',
@@ -119,8 +124,51 @@ const validDraft = {
 // Setup
 // ---------------------------------------------------------------------------
 
+// Default fetch stub: handles /v1/checkout/customer + /v1/checkout/subscription
+function installCheckoutFetchMock() {
+  let subCounter = 0;
+  const fetchMock = vi.fn(async (url: string) => {
+    const u = String(url);
+    if (u.includes('/v1/checkout/customer')) {
+      return {
+        ok: true,
+        status: 201,
+        json: () => Promise.resolve({ pagarme_customer_id: 'cus_1', created: true }),
+      } as unknown as Response;
+    }
+    if (u.includes('/v1/checkout/subscription')) {
+      subCounter++;
+      return {
+        ok: true,
+        status: 201,
+        json: () => Promise.resolve({ pagarme_subscription_id: `sub_${subCounter}` }),
+      } as unknown as Response;
+    }
+    if (u.includes('/v1/checkout/rollback')) {
+      return { ok: true, status: 200, json: () => Promise.resolve({}) } as unknown as Response;
+    }
+    return { ok: true, status: 200, json: () => Promise.resolve({}) } as unknown as Response;
+  });
+  vi.stubGlobal('fetch', fetchMock);
+  return fetchMock;
+}
+
+function fillCardForm() {
+  fireEvent.change(screen.getByLabelText('Número do cartão'), {
+    target: { value: '4000 0000 0000 0010' },
+  });
+  fireEvent.change(screen.getByLabelText('Nome impresso no cartão'), {
+    target: { value: 'Maria da Silva' },
+  });
+  fireEvent.change(screen.getByLabelText('Validade'), {
+    target: { value: '12/30' },
+  });
+  fireEvent.change(screen.getByLabelText('CVV'), { target: { value: '123' } });
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
+  installCheckoutFetchMock();
 
   // Reset mock implementations to defaults after clearAllMocks
   mockValidateClientUseCase.mockResolvedValue(undefined);
@@ -147,6 +195,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 // ---------------------------------------------------------------------------
@@ -169,6 +218,7 @@ describe('ContratarPageClient — wizard submission (step 3 → 4)', () => {
     // Wait for hydration effect to fire and component to show step 3
     const concluirButton = await screen.findByRole('button', { name: /concluir/i });
     expect(concluirButton).toBeInTheDocument();
+    fillCardForm();
 
     await act(async () => {
       fireEvent.click(concluirButton);
@@ -185,6 +235,7 @@ describe('ContratarPageClient — wizard submission (step 3 → 4)', () => {
     renderAtStep3();
 
     const concluirButton = await screen.findByRole('button', { name: /concluir/i });
+    fillCardForm();
 
     await act(async () => {
       fireEvent.click(concluirButton);
@@ -202,6 +253,7 @@ describe('ContratarPageClient — wizard submission (step 3 → 4)', () => {
     renderAtStep3();
 
     const concluirButton = await screen.findByRole('button', { name: /concluir/i });
+    fillCardForm();
 
     await act(async () => {
       fireEvent.click(concluirButton);
@@ -225,13 +277,15 @@ describe('ContratarPageClient — wizard submission (step 3 → 4)', () => {
     renderAtStep3();
 
     const concluirButton = await screen.findByRole('button', { name: /concluir/i });
+    fillCardForm();
 
     // Start submission (do not await)
     fireEvent.click(concluirButton);
 
-    // Button should be disabled (isSubmitting=true) while waiting
+    // Once the orchestrator hits the contract stage, the form is replaced by
+    // the progress panel — button is removed from DOM (RF7).
     await waitFor(() => {
-      expect(concluirButton).toBeDisabled();
+      expect(screen.queryByRole('button', { name: /concluir/i })).not.toBeInTheDocument();
     });
 
     // Now resolve the contract call
@@ -242,13 +296,13 @@ describe('ContratarPageClient — wizard submission (step 3 → 4)', () => {
       });
     });
 
-    // After success, the step-4 screen is shown (button is gone)
+    // After success, the step-4 success screen is shown
     await waitFor(() => {
-      expect(screen.queryByRole('button', { name: /concluir/i })).not.toBeInTheDocument();
+      expect(screen.queryByText(/plan-uuid-1/i)).toBeInTheDocument();
     });
   });
 
-  it('should not call clearDraft and should display form error when contract registration fails', async () => {
+  it('should not call clearDraft and should display error panel when contract registration fails', async () => {
     // Override the contract mock for this test to simulate an error
     mockContractExecute.mockRejectedValueOnce(
       new ValidationError({ _form: 'Ocorreu um erro inesperado. Tente novamente.' }),
@@ -257,6 +311,7 @@ describe('ContratarPageClient — wizard submission (step 3 → 4)', () => {
     renderAtStep3();
 
     const concluirButton = await screen.findByRole('button', { name: /concluir/i });
+    fillCardForm();
 
     await act(async () => {
       fireEvent.click(concluirButton);
@@ -264,32 +319,29 @@ describe('ContratarPageClient — wizard submission (step 3 → 4)', () => {
 
     await waitFor(() => {
       expect(clearDraft).not.toHaveBeenCalled();
-      expect(screen.getByRole('alert')).toBeInTheDocument();
+      // Error panel renders the "Tentar novamente" button on stage failure
+      expect(screen.getByRole('button', { name: /tentar novamente/i })).toBeInTheDocument();
     });
-
-    // Button should be re-enabled after error (isSubmitting=false)
-    expect(concluirButton).not.toBeDisabled();
   });
 
-  it('should navigate back to step 0 when RegisterClientUseCase throws ValidationError with a step-0 field', async () => {
-    // Client registration fails with a phone error (step 0 field)
+  it('should keep user at step 3 with error panel when RegisterClientUseCase fails (stage 3)', async () => {
     mockClientExecute.mockRejectedValueOnce(
-      new ValidationError({ phone: 'Telefone inválido. Use DDD + número (10 ou 11 dígitos).' }),
+      new ValidationError({ _form: 'Erro ao validar cliente.' }),
     );
 
     renderAtStep3();
 
     const concluirButton = await screen.findByRole('button', { name: /concluir/i });
+    fillCardForm();
 
     await act(async () => {
       fireEvent.click(concluirButton);
     });
 
-    // Wizard should return to step 0; step 0 renders the "Dados do titular" heading
+    // The orchestrator surfaces the failure in the progress panel — retry button visible
     await waitFor(() => {
-      expect(screen.getByText(/dados do titular/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /tentar novamente/i })).toBeInTheDocument();
     });
-
     expect(clearDraft).not.toHaveBeenCalled();
   });
 });

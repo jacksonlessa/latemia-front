@@ -13,9 +13,14 @@ import { PetEntity } from '@/domain/pet/pet.entity';
 import { ValidationError } from '@/lib/validation-error';
 import { validateClientUseCase } from '@/domain/client/validate-client.use-case';
 import { ValidateCheckoutDraftUseCase } from '@/domain/checkout/validate-checkout-draft.use-case';
-import { RegisterClientUseCase } from '@/domain/client/register-client.use-case';
-import { RegisterPetUseCase } from '@/domain/pet/register-pet.use-case';
-import { RegisterContractUseCase } from '@/domain/contract/register-contract.use-case';
+import {
+  FinalizeCheckoutUseCase,
+  CheckoutError,
+  type CheckoutStage,
+  type OnStageChangePayload,
+} from '@/domain/checkout/finalize-checkout.use-case';
+import type { CheckoutPetStage } from '@/components/public/contratar/organisms/checkout-progress-panel';
+import type { CardFormValue } from '@/components/public/contratar/organisms/card-form';
 import { navigateToFieldStep } from '@/domain/client/field-to-step';
 import { CONTRACT_VERSION } from '@/content/contrato';
 import { publicSite } from '@/config/public-site';
@@ -31,6 +36,13 @@ import type { CepResult } from '@/lib/cep';
 
 type WizardStep = 0 | 1 | 2 | 3 | 4;
 
+interface CheckoutResumeState {
+  clientId?: string;
+  petIds?: string[];
+  pagarmeCustomerId?: string;
+  pagarmeSubscriptionIds?: string[];
+}
+
 interface ContratarState {
   step: WizardStep;
   client: Partial<RegisterClientInput>;
@@ -42,6 +54,16 @@ interface ContratarState {
   isSubmitting: boolean;
   isValidating: boolean;
   planIds: string[];
+  /** Modo do passo 4 (form ↔ painel de progresso ↔ erro). */
+  paymentMode: 'form' | 'processing' | 'error';
+  currentStage: CheckoutStage;
+  petStages: CheckoutPetStage[];
+  errorStage?: number;
+  errorMessage?: string;
+  /** Trigger para limpar CVV após erro (RF12). */
+  clearCvvOnError: boolean;
+  /** Estado de resume entre tentativas (idempotência — RF10). */
+  checkoutResume: CheckoutResumeState;
 }
 
 const INITIAL_STATE: ContratarState = {
@@ -55,6 +77,13 @@ const INITIAL_STATE: ContratarState = {
   isSubmitting: false,
   isValidating: false,
   planIds: [],
+  paymentMode: 'form',
+  currentStage: 1,
+  petStages: [],
+  errorStage: undefined,
+  errorMessage: undefined,
+  clearCvvOnError: false,
+  checkoutResume: {},
 };
 
 const em = (word: string) => (
@@ -219,75 +248,175 @@ export function ContratarPageClient() {
         break;
       }
 
-      case 3: {
-        if (!state.contractAcceptedAt) return;
-        // First validate the draft synchronously to build the summary
-        const useCase = new ValidateCheckoutDraftUseCase();
-        let summary: CheckoutSummary;
-        try {
-          summary = useCase.execute({
-            client: state.client as RegisterClientInput,
-            pets: state.pets,
-            contractAcceptedAt: state.contractAcceptedAt!,
-          });
-        } catch (e) {
-          if (e instanceof ValidationError) {
-            setState((prev) => ({ ...prev, fieldErrors: e.fieldErrors }));
-          }
-          return;
-        }
-
-        // Call API: register client then each pet then contract
-        setState((prev) => ({ ...prev, isSubmitting: true, fieldErrors: {} }));
-        try {
-          const clientUseCase = new RegisterClientUseCase();
-          const registeredClient = await clientUseCase.execute(
-            state.client as RegisterClientInput,
-          );
-
-          const petUseCase = new RegisterPetUseCase();
-          const createdPetIds: string[] = [];
-          for (const pet of state.pets) {
-            const createdPet = await petUseCase.execute(registeredClient.id, pet);
-            createdPetIds.push(createdPet.id);
-          }
-
-          const contractUseCase = new RegisterContractUseCase();
-          const contractResult = await contractUseCase.execute({
-            clientId: registeredClient.id,
-            petIds: createdPetIds,
-            contractVersion: CONTRACT_VERSION,
-            consentedAt: state.contractAcceptedAt!,
-          });
-
-          // Clear draft only after full success (client + pets + contract)
-          clearDraft();
-          setState((prev) => ({
-            ...prev,
-            step: 4,
-            summary,
-            isSubmitting: false,
-            fieldErrors: {},
-            planIds: contractResult.plan_ids,
-          }));
-        } catch (e) {
-          if (e instanceof ValidationError) {
-            setState((prev) => ({ ...prev, isSubmitting: false, fieldErrors: e.fieldErrors }));
-            navigateToFieldStep(e.fieldErrors, setStep);
-          } else {
-            setState((prev) => ({
-              ...prev,
-              isSubmitting: false,
-              fieldErrors: { _form: 'Erro inesperado ao finalizar.' },
-            }));
-          }
-        }
-        break;
-      }
-
       default:
         break;
     }
+  }
+
+  // -------------------------------------------------------------------------
+  // handleFinalizeCheckout — entry point for step 3 "Concluir" click.
+  // Orchestrates the 8 stages via FinalizeCheckoutUseCase, updating the
+  // payment progress panel on every transition.
+  // -------------------------------------------------------------------------
+  async function handleFinalizeCheckout(cardInput: CardFormValue): Promise<void> {
+    if (!state.contractAcceptedAt) return;
+
+    // Build summary synchronously (used to render success screen)
+    const validateUseCase = new ValidateCheckoutDraftUseCase();
+    let summary: CheckoutSummary;
+    try {
+      summary = validateUseCase.execute({
+        client: state.client as RegisterClientInput,
+        pets: state.pets,
+        contractAcceptedAt: state.contractAcceptedAt,
+      });
+    } catch (e) {
+      if (e instanceof ValidationError) {
+        setState((prev) => ({ ...prev, fieldErrors: e.fieldErrors }));
+      }
+      return;
+    }
+
+    // Build initial petStages, marking already-resumed subs as done (RF10)
+    const resumed = state.checkoutResume;
+    const initialPetStages: CheckoutPetStage[] = state.pets.map((pet, i) => ({
+      name: pet.name,
+      state:
+        i < (resumed.pagarmeSubscriptionIds?.length ?? 0) ? 'done' : 'pending',
+    }));
+
+    // RF10: pré-marca stages 3/4 como done quando já criadas
+    const initialStage: CheckoutStage = (() => {
+      if (resumed.pagarmeCustomerId) return 6;
+      if (resumed.petIds && resumed.petIds.length === state.pets.length) return 5;
+      if (resumed.clientId) return 4;
+      return 1;
+    })();
+
+    setState((prev) => ({
+      ...prev,
+      isSubmitting: true,
+      fieldErrors: {},
+      paymentMode: 'processing',
+      currentStage: initialStage,
+      petStages: initialPetStages,
+      errorStage: undefined,
+      errorMessage: undefined,
+      clearCvvOnError: false,
+    }));
+
+    const onStageChange = (payload: OnStageChangePayload): void => {
+      setState((prev) => {
+        let nextPetStages = prev.petStages;
+        if (payload.stage === 6 && payload.petIndex !== undefined) {
+          nextPetStages = prev.petStages.map((ps, i) => {
+            if (i < (payload.petIndex as number)) {
+              return { ...ps, state: 'done' };
+            }
+            if (i === payload.petIndex) {
+              return { ...ps, state: 'in_progress' };
+            }
+            return ps;
+          });
+        }
+        return {
+          ...prev,
+          currentStage: payload.stage,
+          petStages: nextPetStages,
+        };
+      });
+    };
+
+    try {
+      const useCase = new FinalizeCheckoutUseCase();
+      const result = await useCase.execute(
+        {
+          clientInput: state.client as RegisterClientInput,
+          pets: state.pets.map((p) => ({ name: p.name, data: p })),
+          cardInput,
+          contractAcceptedAt: state.contractAcceptedAt,
+          contractVersion: CONTRACT_VERSION,
+          resume: resumed,
+        },
+        onStageChange,
+      );
+
+      clearDraft();
+      setState((prev) => ({
+        ...prev,
+        step: 4,
+        summary,
+        isSubmitting: false,
+        paymentMode: 'form',
+        planIds: result.planIds,
+        currentStage: 8,
+        petStages: prev.petStages.map((ps) => ({ ...ps, state: 'done' })),
+        checkoutResume: {
+          clientId: result.clientId,
+          petIds: result.petIds,
+          pagarmeCustomerId: result.pagarmeCustomerId,
+          pagarmeSubscriptionIds: result.pagarmeSubscriptionIds,
+        },
+      }));
+    } catch (e) {
+      if (e instanceof CheckoutError) {
+        // RF12: pós-rollback (errorStage >= 6), reset do customer reference
+        // local — usuário recomeça a partir da etapa 5 idempotente.
+        const shouldClearCustomer = e.stage >= 6;
+        setState((prev) => ({
+          ...prev,
+          isSubmitting: false,
+          paymentMode: 'error',
+          errorStage: e.stage,
+          errorMessage: e.message,
+          // pet stage marker em erro (sub-step do pet K)
+          petStages:
+            e.stage === 6 && e.petIndex !== undefined
+              ? prev.petStages.map((ps, i) => {
+                  if (i === e.petIndex) {
+                    return { ...ps, state: 'error', errorMessage: e.message };
+                  }
+                  if (i < (e.petIndex as number)) {
+                    return { ...ps, state: 'done' };
+                  }
+                  return ps;
+                })
+              : prev.petStages,
+          checkoutResume: shouldClearCustomer
+            ? {
+                clientId: prev.checkoutResume.clientId,
+                petIds: prev.checkoutResume.petIds,
+              }
+            : {
+                ...prev.checkoutResume,
+                clientId: prev.checkoutResume.clientId ?? undefined,
+              },
+        }));
+        return;
+      }
+      // Erro inesperado — fallback genérico no painel
+      setState((prev) => ({
+        ...prev,
+        isSubmitting: false,
+        paymentMode: 'error',
+        errorStage: prev.currentStage,
+        errorMessage: 'Erro inesperado ao finalizar. Tente novamente.',
+      }));
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // handleRetryCheckout — back to form mode with CVV reset (RF12)
+  // -------------------------------------------------------------------------
+  function handleRetryCheckout(): void {
+    setState((prev) => ({
+      ...prev,
+      paymentMode: 'form',
+      errorStage: undefined,
+      errorMessage: undefined,
+      clearCvvOnError: true,
+      isSubmitting: false,
+    }));
   }
 
   // -------------------------------------------------------------------------
@@ -438,10 +567,16 @@ export function ContratarPageClient() {
             pricePerPetCents: publicSite.price.perPetCents,
             totalCents: state.pets.length * publicSite.price.perPetCents,
           }}
-          onNext={handleNext}
+          onSubmit={handleFinalizeCheckout}
           onBack={handleBack}
-          isSubmitting={state.isSubmitting}
+          onRetry={handleRetryCheckout}
+          mode={state.paymentMode}
+          currentStage={state.currentStage}
+          petStages={state.petStages}
+          errorStage={state.errorStage}
+          errorMessage={state.errorMessage}
           formError={state.fieldErrors['_form']}
+          clearCvvOnError={state.clearCvvOnError}
         />
       )}
     </main>

@@ -14,11 +14,22 @@ import type { ApiErrorBody } from '@/lib/api-client';
 // Types
 // ---------------------------------------------------------------------------
 
+export interface RegisterContractSubscription {
+  pet_id: string;
+  pagarme_subscription_id: string;
+}
+
 export interface RegisterContractInput {
   clientId: string;
   petIds: string[];
   contractVersion: string;
   consentedAt: string; // ISO timestamp from client clock
+  /**
+   * Subscriptions Pagar.me já criadas (1 por pet). Quando ausente, o backend
+   * aceita a chamada sem vínculo de provider — útil para fluxos legados em
+   * dev. No fluxo principal `/contratar` esse campo é sempre enviado.
+   */
+  subscriptions?: RegisterContractSubscription[];
 }
 
 export interface RegisterContractResult {
@@ -85,7 +96,7 @@ export class RegisterContractUseCase {
    * @param input - Contract registration data collected from the wizard.
    */
   async execute(input: RegisterContractInput): Promise<RegisterContractResult> {
-    const body = {
+    const body: Record<string, unknown> = {
       client_id: input.clientId,
       pet_ids: input.petIds,
       contract_version: input.contractVersion,
@@ -96,6 +107,10 @@ export class RegisterContractUseCase {
           typeof navigator !== 'undefined' ? navigator.userAgent : '',
       },
     };
+
+    if (input.subscriptions && input.subscriptions.length > 0) {
+      body.subscriptions = input.subscriptions;
+    }
 
     let res: Response;
     try {
