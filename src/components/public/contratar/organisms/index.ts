@@ -17,3 +17,14 @@ export type {
   CardFormErrors,
   CardFormField,
 } from './card-form';
+
+export {
+  CheckoutProgressPanel,
+  CHECKOUT_STAGE_MESSAGES,
+  CHECKOUT_TOTAL_STAGES,
+  ANTI_FLICKER_MS,
+} from './checkout-progress-panel';
+export type {
+  CheckoutProgressPanelProps,
+  CheckoutPetStage,
+} from './checkout-progress-panel';
