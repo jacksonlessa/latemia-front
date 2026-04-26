@@ -10,3 +10,10 @@ export { StepSucesso } from './step-sucesso';
 export type { StepSucessoProps } from './step-sucesso';
 export { PetForm, parseWeight, formatWeight } from './pet-form';
 export type { PetFormProps } from './pet-form';
+export { CardForm, EMPTY_CARD_FORM_VALUE } from './card-form';
+export type {
+  CardFormProps,
+  CardFormValue,
+  CardFormErrors,
+  CardFormField,
+} from './card-form';
