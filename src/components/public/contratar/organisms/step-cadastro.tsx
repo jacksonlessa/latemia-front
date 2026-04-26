@@ -344,7 +344,13 @@ export function StepCadastro({
       </div>
 
       {/* Navigation */}
-      <div className="flex justify-end pt-2">
+      <div className="flex flex-col gap-3 pt-2">
+        {errors['_form'] && (
+          <p role="alert" className="text-sm text-red-600 rounded-md border border-red-200 bg-red-50 px-4 py-2">
+            {errors['_form']}
+          </p>
+        )}
+        <div className="flex justify-end">
         <Button
           type="button"
           onClick={onNext}
@@ -355,6 +361,7 @@ export function StepCadastro({
         >
           {isLoading ? 'Validando…' : 'Avançar'}
         </Button>
+        </div>
       </div>
     </div>
   );

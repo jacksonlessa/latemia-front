@@ -2,7 +2,7 @@
 
 import { Cat, Dog, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { birthDateToApproximate } from '@/components/public/contratar/molecules/age-input';
+import { birthDateToYearsMonths } from '@/components/public/contratar/molecules/age-input';
 import type { RegisterPetInput } from '@/lib/types/pet';
 
 // ---------------------------------------------------------------------------
@@ -22,8 +22,10 @@ export interface PetListItemProps {
 // ---------------------------------------------------------------------------
 
 function formatApproximateAge(birth: Date): string {
-  const { value, unit } = birthDateToApproximate(birth);
-  return `${value} ${unit}`;
+  const { years, months } = birthDateToYearsMonths(birth);
+  if (years === 0) return `${months} ${months === 1 ? 'mês' : 'meses'}`;
+  if (months === 0) return `${years} ${years === 1 ? 'ano' : 'anos'}`;
+  return `${years} ${years === 1 ? 'ano' : 'anos'} e ${months} ${months === 1 ? 'mês' : 'meses'}`;
 }
 
 function formatSex(sex: RegisterPetInput['sex']): string {

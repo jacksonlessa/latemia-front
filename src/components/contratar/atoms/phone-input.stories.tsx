@@ -44,11 +44,19 @@ export const Default: Story = {
   args: {},
 };
 
-/** Campo com valor preenchido */
+/** Campo com valor preenchido — número celular de 11 dígitos */
 export const WithValue: Story = {
-  name: 'Com valor',
+  name: 'Com valor (11 dígitos)',
   args: {
-    defaultValue: '11987654321',
+    defaultValue: '47987654321',
+  },
+};
+
+/** Campo com valor preenchido — número fixo de 10 dígitos */
+export const WithTenDigits: Story = {
+  name: 'Com valor (10 dígitos)',
+  args: {
+    defaultValue: '4736001234',
   },
 };
 

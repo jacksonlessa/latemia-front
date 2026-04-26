@@ -8,9 +8,9 @@ describe('landing content integrity', () => {
     expect(publicSite.price.perPetCents).toBe(2500);
   });
 
-  it('should have whatsapp.number === 5547999965009 in both sources', () => {
-    expect(landingContent.contact.whatsapp.number).toBe('5547999965009');
-    expect(publicSite.whatsapp.number).toBe('5547999965009');
+  it('should have whatsapp.number === 5547997077953 in both sources', () => {
+    expect(landingContent.contact.whatsapp.number).toBe('5547997077953');
+    expect(publicSite.whatsapp.number).toBe('5547997077953');
   });
 
   it('should have 5 to 8 FAQ entries', () => {

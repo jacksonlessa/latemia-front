@@ -28,12 +28,17 @@ import { mapClientApiError, toApiPayload } from "./register-client.use-case";
 export async function validateClientUseCase(
   input: RegisterClientInput,
 ): Promise<void> {
+  // Entity validation runs outside the fetch try/catch so that ValidationErrors
+  // from invalid fields (CPF, phone, etc.) propagate as-is instead of being
+  // swallowed and replaced with the misleading "Verifique sua conexão" message.
+  const payload = toApiPayload(input);
+
   let res: Response;
   try {
     res = await fetch(getApiUrl("/v1/checkout/validate-client"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(toApiPayload(input)),
+      body: JSON.stringify(payload),
     });
   } catch {
     // Network failure — no personal data in error message

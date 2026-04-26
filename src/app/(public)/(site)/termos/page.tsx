@@ -44,7 +44,7 @@ export default function TermosPage() {
 
         <h2 className="text-xl font-semibold text-forest mt-8">6. Cancelamento</h2>
         <p>
-          O titular pode cancelar o plano a qualquer momento pelo WhatsApp <strong>(47) 99996-5009</strong>. O benefício permanece ativo até o fim do período já pago. Não há reembolso proporcional de mensalidades pagas.
+          O titular pode cancelar o plano a qualquer momento pelo WhatsApp <strong>(47) 99707-7953</strong>. O benefício permanece ativo até o fim do período já pago. Não há reembolso proporcional de mensalidades pagas.
         </p>
 
         <h2 className="text-xl font-semibold text-forest mt-8">7. Responsabilidades</h2>

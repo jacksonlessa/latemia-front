@@ -29,7 +29,7 @@ export interface FaqEntry {
 }
 
 export interface WhatsAppConfig {
-  number: '5547999965009';
+  number: '5547997077953';
   defaultMessage: string;
 }
 
@@ -98,12 +98,6 @@ export const landingContent: LandingContent = {
         description:
           'Metade do valor dos atendimentos emergenciais fica por nossa conta. Você paga menos quando mais precisa.',
         icon: 'BadgeDollarSign',
-      },
-      {
-        title: 'Atendimento em clínica parceira',
-        description:
-          'Leve seu pet diretamente à clínica Late & Mia Clínica Veterinária. Sem necessidade de reembolso ou papelada.',
-        icon: 'Stethoscope',
       },
       {
         title: 'Mensalidade fixa e transparente',
@@ -227,11 +221,11 @@ export const landingContent: LandingContent = {
   contact: {
     heading: 'Fale com a gente',
     address: 'Rua Osvaldo Minella, 56 - Lídia Duarte, Camboriú - SC, 88340-000',
-    phone: '(47) 99996-5009',
+    phone: '(47) 99707-7953',
     email: '',
     mapsUrl: 'https://www.google.com/maps/place/Late+%26+Mia+Cl%C3%ADnica+Veterin%C3%A1ria/@-27.0337695,-48.6487444,19z/data=!4m6!3m5!1s0x94d8b76bc7fc191f:0x6b944b2d0758290b!8m2!3d-27.0337695!4d-48.6477971!16s%2Fg%2F11thc3nrm1?entry=ttu&g_ep=EgoyMDI2MDQxNS4wIKXMDSoASAFQAw%3D%3D',
     whatsapp: {
-      number: '5547999965009',
+      number: '5547997077953',
       defaultMessage:
         'Olá! Tenho interesse no Plano Emergência da Late & Mia e gostaria de mais informações.',
     },

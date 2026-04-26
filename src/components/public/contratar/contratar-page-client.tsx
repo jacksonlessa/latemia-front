@@ -394,11 +394,6 @@ export function ContratarPageClient() {
 
       {state.step === 0 && (
         <>
-          {state.fieldErrors['_form'] && (
-            <p role="alert" className="text-sm text-red-600 rounded-md border border-red-200 bg-red-50 px-4 py-2">
-              {state.fieldErrors['_form']}
-            </p>
-          )}
           <StepCadastro
             data={state.client}
             errors={state.fieldErrors}

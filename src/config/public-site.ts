@@ -13,7 +13,7 @@ export const publicSite = {
     currency: 'BRL' as const,
   },
   whatsapp: {
-    number: '5547999965009',
+    number: '5547997077953',
     defaultMessage:
       'Olá! Tenho interesse no Plano Emergência da Late & Mia e gostaria de mais informações.',
   },

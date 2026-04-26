@@ -1,6 +1,7 @@
 'use client';
 
-import { useId, useState } from 'react';
+import React, { useId, useState } from 'react';
+import { Cat, Dog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -49,9 +50,9 @@ export function formatWeight(value: number | undefined): string {
 // Component
 // ---------------------------------------------------------------------------
 
-const SPECIES_OPTIONS: { label: string; value: PetSpecies }[] = [
-  { label: 'Cachorro', value: 'canino' },
-  { label: 'Gato', value: 'felino' },
+const SPECIES_OPTIONS: { label: string; value: PetSpecies; Icon: React.ComponentType<{ className?: string }> }[] = [
+  { label: 'Cachorro', value: 'canino', Icon: Dog },
+  { label: 'Gato', value: 'felino', Icon: Cat },
 ];
 
 export function PetForm({ initial, onSave, onCancel }: PetFormProps) {
@@ -131,7 +132,7 @@ export function PetForm({ initial, onSave, onCancel }: PetFormProps) {
                 aria-checked={selected}
                 onClick={() => setSpecies(opt.value)}
                 className={cn(
-                  'flex-1 rounded-md border px-4 py-2 text-sm font-medium transition-colors',
+                  'flex-1 inline-flex items-center justify-center gap-2 rounded-md border px-4 py-2 text-sm font-medium transition-colors',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4E8C75]',
                   selected
                     ? 'border-[#4E8C75] bg-[#4E8C75] text-white'
@@ -139,6 +140,7 @@ export function PetForm({ initial, onSave, onCancel }: PetFormProps) {
                   hasError('species') && !selected && 'border-destructive',
                 )}
               >
+                <opt.Icon className="size-4" />
                 {opt.label}
               </button>
             );
@@ -190,7 +192,7 @@ export function PetForm({ initial, onSave, onCancel }: PetFormProps) {
       </div>
 
       {/* Idade × Sexo */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-5">
         <div>
           <AgeInput
             id={`${baseId}-age`}
@@ -254,6 +256,7 @@ export function PetForm({ initial, onSave, onCancel }: PetFormProps) {
             aria-labelledby={`${baseId}-castrated-label`}
             aria-describedby={hasError('castrated') ? errorId('castrated') : undefined}
             aria-invalid={hasError('castrated') || undefined}
+            className="data-[state=checked]:bg-[#4E8C75] data-[state=unchecked]:bg-zinc-300"
           />
         </div>
         {hasError('castrated') && (

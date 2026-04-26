@@ -55,12 +55,12 @@ export default function PrivacidadePage() {
 
         <h2 className="text-xl font-semibold text-forest mt-8">6. Seus direitos</h2>
         <p>
-          Você pode, a qualquer momento, solicitar: acesso, correção, portabilidade, anonimização ou eliminação dos seus dados, bem como revogar consentimentos eventualmente concedidos. Entre em contato pelo WhatsApp <strong>(47) 99996-5009</strong>.
+          Você pode, a qualquer momento, solicitar: acesso, correção, portabilidade, anonimização ou eliminação dos seus dados, bem como revogar consentimentos eventualmente concedidos. Entre em contato pelo WhatsApp <strong>(47) 99707-7953</strong>.
         </p>
 
         <h2 className="text-xl font-semibold text-forest mt-8">7. Contato do encarregado (DPO)</h2>
         <p>
-          Para questões relacionadas a esta política, entre em contato pelo WhatsApp <strong>(47) 99996-5009</strong> ou pessoalmente na Rua Osvaldo Minella, 56, Camboriú - SC.
+          Para questões relacionadas a esta política, entre em contato pelo WhatsApp <strong>(47) 99707-7953</strong> ou pessoalmente na Rua Osvaldo Minella, 56, Camboriú - SC.
         </p>
       </section>
     </main>

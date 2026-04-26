@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useMemo, useState } from 'react';
+import { useId, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
@@ -9,7 +9,6 @@ import { cn } from '@/lib/utils';
 // Types
 // ---------------------------------------------------------------------------
 
-export type AgeUnit = 'anos' | 'meses';
 export type AgeMode = 'approximate' | 'exact';
 
 export interface AgeInputProps {
@@ -24,39 +23,34 @@ export interface AgeInputProps {
 // ---------------------------------------------------------------------------
 
 /**
- * Convert an approximate age (number + unit) into a `birthDate` by subtracting
- * the equivalent number of months from `today`.
- *
- * Note: JavaScript's `setMonth` overflow is acceptable for an approximate age
- * (PRD).
+ * Convert years + months into a `birthDate` by subtracting the total months
+ * from `today`. The day is clamped to the last valid day of the target month
+ * to avoid JS overflow (e.g. March 31 − 1 month → Feb 28, not Mar 3).
  */
-export function ageToBirthDate(value: number, unit: AgeUnit, today: Date = new Date()): Date {
-  const totalMonths = unit === 'anos' ? value * 12 : value;
-  const d = new Date(today.getTime());
-  d.setMonth(d.getMonth() - totalMonths);
-  return d;
+export function ageToBirthDate(years: number, months: number, today: Date = new Date()): Date {
+  const totalMonths = years * 12 + months;
+  const rawMonth = today.getMonth() - (totalMonths % 12);
+  const extraYears = rawMonth < 0 ? Math.ceil(-rawMonth / 12) : 0;
+  const targetYear = today.getFullYear() - Math.floor(totalMonths / 12) - extraYears;
+  const targetMonth = ((rawMonth % 12) + 12) % 12;
+  const daysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+  return new Date(targetYear, targetMonth, Math.min(today.getDate(), daysInMonth));
 }
 
 /**
- * Derive a "natural" approximate display from a `birthDate`.
+ * Derive years and remaining months from a `birthDate`.
  *
- * Rules:
- * - >= 24 months → return floor(years) in `anos`
- * - < 24 months → return floor(months) in `meses`
- * - < 1 month → returns `{ value: 0, unit: 'meses' }`
+ * e.g. 38 months ago → { years: 3, months: 2 }
  */
-export function birthDateToApproximate(
+export function birthDateToYearsMonths(
   birth: Date,
   today: Date = new Date(),
-): { value: number; unit: AgeUnit } {
-  const totalMonths = monthsBetween(birth, today);
-  if (totalMonths < 1) {
-    return { value: 0, unit: 'meses' };
-  }
-  if (totalMonths >= 24) {
-    return { value: Math.floor(totalMonths / 12), unit: 'anos' };
-  }
-  return { value: totalMonths, unit: 'meses' };
+): { years: number; months: number } {
+  const total = monthsBetween(birth, today);
+  return {
+    years: Math.floor(total / 12),
+    months: total % 12,
+  };
 }
 
 function monthsBetween(from: Date, to: Date): number {
@@ -100,54 +94,48 @@ function parseIsoDate(value: string): Date | null {
 export function AgeInput({ value, onChange, error, id }: AgeInputProps) {
   const generatedId = useId();
   const baseId = id ?? generatedId;
-  const numberId = `${baseId}-number`;
-  const unitId = `${baseId}-unit`;
+  const yearsId = `${baseId}-years`;
+  const monthsId = `${baseId}-months`;
   const dateId = `${baseId}-date`;
+  const toggleId = `${baseId}-mode-toggle`;
   const errorId = `${baseId}-error`;
 
-  const [mode, setMode] = useState<AgeMode>('approximate');
+  const [isExact, setIsExact] = useState<boolean>(false);
 
-  // Derive the approximate representation from `value` whenever in approximate
-  // mode. We keep local controlled state for the number+unit pair so the user
-  // can type "0" / clear input without losing focus.
-  const initialApprox = useMemo(() => {
-    if (value) return birthDateToApproximate(value);
-    return { value: 0, unit: 'anos' as AgeUnit };
-  }, [value]);
+  const [approxYears, setApproxYears] = useState<string>(() => {
+    if (!value) return '';
+    return String(birthDateToYearsMonths(value).years);
+  });
+  const [approxMonths, setApproxMonths] = useState<string>(() => {
+    if (!value) return '';
+    return String(birthDateToYearsMonths(value).months);
+  });
 
-  const [approxValue, setApproxValue] = useState<string>(
-    value ? String(initialApprox.value) : '',
-  );
-  const [approxUnit, setApproxUnit] = useState<AgeUnit>(initialApprox.unit);
-
-  const max = approxUnit === 'meses' ? 360 : 30;
-
-  const today = useMemo(() => new Date(), []);
+  const today = new Date();
   const todayIso = toIsoDate(today);
-  const minDate = useMemo(() => {
+  const minDate = (() => {
     const d = new Date(today.getTime());
     d.setFullYear(d.getFullYear() - 30);
     return toIsoDate(d);
-  }, [today]);
+  })();
 
   const dateIso = value ? toIsoDate(value) : '';
+  const describedBy = error ? errorId : undefined;
 
-  function handleApproxValueChange(raw: string) {
-    setApproxValue(raw);
-    if (raw === '') return;
-    const n = Number(raw);
-    if (!Number.isFinite(n) || n < 0) return;
-    const clamped = Math.min(n, approxUnit === 'meses' ? 360 : 30);
-    onChange(ageToBirthDate(clamped, approxUnit));
+  function fireApproxChange(rawYears: string, rawMonths: string) {
+    const y = rawYears === '' ? 0 : Math.min(Math.max(0, Number(rawYears) || 0), 30);
+    const m = rawMonths === '' ? 0 : Math.min(Math.max(0, Number(rawMonths) || 0), 12);
+    onChange(ageToBirthDate(y, m));
   }
 
-  function handleApproxUnitChange(unit: AgeUnit) {
-    setApproxUnit(unit);
-    if (approxValue === '') return;
-    const n = Number(approxValue);
-    if (!Number.isFinite(n) || n < 0) return;
-    const clamped = Math.min(n, unit === 'meses' ? 360 : 30);
-    onChange(ageToBirthDate(clamped, unit));
+  function handleYearsChange(raw: string) {
+    setApproxYears(raw);
+    fireApproxChange(raw, approxMonths);
+  }
+
+  function handleMonthsChange(raw: string) {
+    setApproxMonths(raw);
+    fireApproxChange(approxYears, raw);
   }
 
   function handleExactDateChange(raw: string) {
@@ -157,92 +145,99 @@ export function AgeInput({ value, onChange, error, id }: AgeInputProps) {
     onChange(parsed);
   }
 
-  function switchToExact() {
-    setMode('exact');
-    // value remains canonical, no conversion needed
-  }
-
-  function switchToApproximate() {
-    setMode('approximate');
-    if (value) {
-      const { value: v, unit } = birthDateToApproximate(value);
-      setApproxValue(String(v));
-      setApproxUnit(unit);
+  function handleModeChange(checked: boolean) {
+    if (!checked && value) {
+      const { years, months } = birthDateToYearsMonths(value);
+      setApproxYears(String(years));
+      setApproxMonths(String(months));
     }
+    setIsExact(checked);
   }
-
-  const describedBy = error ? errorId : undefined;
 
   return (
-    <div className="space-y-2">
-      {mode === 'approximate' ? (
-        <>
-          <div className="grid grid-cols-[1fr_auto] gap-2">
-            <div className="space-y-1.5">
-              <Label htmlFor={numberId}>Idade aproximada</Label>
-              <Input
-                id={numberId}
-                type="number"
-                min={0}
-                max={max}
-                step={1}
-                value={approxValue}
-                onChange={(e) => handleApproxValueChange(e.target.value)}
-                aria-describedby={describedBy}
-                aria-invalid={!!error || undefined}
-                placeholder="0"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor={unitId}>Unidade</Label>
-              <select
-                id={unitId}
-                value={approxUnit}
-                onChange={(e) => handleApproxUnitChange(e.target.value as AgeUnit)}
-                aria-describedby={describedBy}
-                aria-invalid={!!error || undefined}
-                className={cn(
-                  'h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4E8C75]',
-                )}
-              >
-                <option value="anos">anos</option>
-                <option value="meses">meses</option>
-              </select>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={switchToExact}
-            className="text-sm font-medium text-[#4E8C75] underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4E8C75] rounded"
-          >
-            Sei a data exata
-          </button>
-        </>
-      ) : (
-        <>
+    <div className="space-y-3">
+      {/* Mode toggle — segmented control */}
+      <div
+        id={toggleId}
+        role="group"
+        aria-label="Modo de entrada de idade"
+        className="inline-flex rounded-lg border border-border bg-muted p-1 gap-1"
+      >
+        <button
+          type="button"
+          onClick={() => handleModeChange(false)}
+          className={cn(
+            'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+            !isExact
+              ? 'bg-white text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground',
+          )}
+        >
+          Idade aproximada
+        </button>
+        <button
+          type="button"
+          onClick={() => handleModeChange(true)}
+          className={cn(
+            'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+            isExact
+              ? 'bg-white text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground',
+          )}
+        >
+          Sei a data exata
+        </button>
+      </div>
+
+      {!isExact ? (
+        <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor={dateId}>Data de nascimento</Label>
+            <Label htmlFor={yearsId}>Anos</Label>
             <Input
-              id={dateId}
-              type="date"
-              min={minDate}
-              max={todayIso}
-              value={dateIso}
-              onChange={(e) => handleExactDateChange(e.target.value)}
+              id={yearsId}
+              type="number"
+              min={0}
+              max={30}
+              step={1}
+              value={approxYears}
+              onChange={(e) => handleYearsChange(e.target.value)}
               aria-describedby={describedBy}
               aria-invalid={!!error || undefined}
+              placeholder="0"
             />
           </div>
-          <button
-            type="button"
-            onClick={switchToApproximate}
-            className="text-sm font-medium text-[#4E8C75] underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4E8C75] rounded"
-          >
-            Voltar para idade aproximada
-          </button>
-        </>
+          <div className="space-y-1.5">
+            <Label htmlFor={monthsId}>Meses</Label>
+            <Input
+              id={monthsId}
+              type="number"
+              min={0}
+              max={12}
+              step={1}
+              value={approxMonths}
+              onChange={(e) => handleMonthsChange(e.target.value)}
+              aria-describedby={describedBy}
+              aria-invalid={!!error || undefined}
+              placeholder="0"
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-1.5">
+          <Label htmlFor={dateId}>Data de nascimento</Label>
+          <Input
+            id={dateId}
+            type="date"
+            min={minDate}
+            max={todayIso}
+            value={dateIso}
+            onChange={(e) => handleExactDateChange(e.target.value)}
+            aria-describedby={describedBy}
+            aria-invalid={!!error || undefined}
+          />
+        </div>
       )}
+
       {error && (
         <p id={errorId} className="text-sm text-destructive" role="alert">
           {error}
