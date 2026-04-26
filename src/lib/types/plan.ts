@@ -3,9 +3,37 @@
  * These mirror the backend API interfaces defined in the TechSpec.
  */
 
-export type PlanStatus = 'pendente' | 'carencia' | 'ativo' | 'inadimplente' | 'cancelado';
+export type PlanStatus =
+  | 'pendente'
+  | 'carencia'
+  | 'ativo'
+  | 'inadimplente'
+  | 'cancelado'
+  | 'estornado'
+  | 'contestado';
 
-export type PaymentStatus = 'pendente' | 'pago' | 'cancelado';
+/**
+ * Set of Plan statuses considered terminal — no event reactivates the Plan
+ * once it lands in one of these states.
+ */
+export const TERMINAL_PLAN_STATUSES: ReadonlySet<PlanStatus> = new Set<PlanStatus>([
+  'cancelado',
+  'estornado',
+  'contestado',
+]);
+
+export function isTerminalPlanStatus(status: PlanStatus): boolean {
+  return TERMINAL_PLAN_STATUSES.has(status);
+}
+
+export type PaymentStatus =
+  | 'pendente'
+  | 'pago'
+  | 'em_atraso'
+  | 'inadimplente'
+  | 'cancelado'
+  | 'estornado'
+  | 'contestado';
 
 /** Lightweight row returned by GET /v1/plans list. */
 export interface PlanListItem {
@@ -36,6 +64,10 @@ export interface Payment {
   amount: number;
   createdAt: string;
   paidAt?: string;
+  /** Code returned by the gateway when a charge fails (e.g. `card_declined`). */
+  failureCode?: string;
+  /** ISO timestamp when a charge was refunded (full or partial). */
+  refundedAt?: string;
 }
 
 /** Full plan detail returned by GET /v1/plans/:id. */
@@ -43,6 +75,12 @@ export interface PlanDetail {
   id: string;
   status: PlanStatus;
   createdAt: string;
+  /** Pagar.me subscription identifier — present once the subscription is created. */
+  pagarmeSubscriptionId?: string;
+  /** ISO timestamp of the first approved charge — sets the grace-period anchor. */
+  firstPaidAt?: string;
+  /** ISO timestamp marking the end of the 6-month grace period. */
+  gracePeriodEndsAt?: string;
   pet: {
     name: string;
     species: string;

@@ -8,7 +8,10 @@ import { ApiError } from '@/lib/api-errors';
 import { getPlanByIdUseCase } from '@/domain/plan/get-plan-by-id.use-case';
 import { PlanStatusBadge } from '@/components/admin/planos/atoms/plan-status-badge/PlanStatusBadge';
 import { PlanDetailCard } from '@/components/admin/planos/molecules/plan-detail-card/PlanDetailCard';
+import { CopyableId } from '@/components/admin/planos/molecules/copyable-id/CopyableId';
+import { TerminalStateBanner } from '@/components/admin/planos/molecules/terminal-state-banner/TerminalStateBanner';
 import { PlanPaymentsList } from '@/components/admin/planos/organisms/plan-payments-list/PlanPaymentsList';
+import { isTerminalPlanStatus } from '@/lib/types/plan';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -90,6 +93,11 @@ export default async function PlanoDetailPage({ params }: PageProps) {
         </Link>
       </div>
 
+      {/* Banner — estado terminal */}
+      {isTerminalPlanStatus(plan.status) ? (
+        <TerminalStateBanner status={plan.status} />
+      ) : null}
+
       {/* Plano */}
       <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm md:p-6">
         <h1 className="mb-4 text-xl font-semibold text-[#2C2C2E] md:text-2xl">
@@ -102,6 +110,38 @@ export default async function PlanoDetailPage({ params }: PageProps) {
             value={<PlanStatusBadge status={plan.status} />}
           />
           <PlanDetailCard label="Criado em" value={formatDateTime(plan.createdAt)} />
+        </dl>
+      </div>
+
+      {/* Assinatura Pagar.me */}
+      <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm md:p-6">
+        <h2 className="mb-4 text-base font-semibold text-[#2C2C2E]">
+          Assinatura Pagar.me
+        </h2>
+        <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <PlanDetailCard
+            label="ID da assinatura (Pagar.me)"
+            value={
+              plan.pagarmeSubscriptionId ? (
+                <CopyableId
+                  value={plan.pagarmeSubscriptionId}
+                  label="ID da assinatura"
+                />
+              ) : (
+                '—'
+              )
+            }
+          />
+          <PlanDetailCard
+            label="Primeira cobrança paga em"
+            value={plan.firstPaidAt ? formatDateTime(plan.firstPaidAt) : '—'}
+          />
+          <PlanDetailCard
+            label="Carência termina em"
+            value={
+              plan.gracePeriodEndsAt ? formatDateTime(plan.gracePeriodEndsAt) : '—'
+            }
+          />
         </dl>
       </div>
 

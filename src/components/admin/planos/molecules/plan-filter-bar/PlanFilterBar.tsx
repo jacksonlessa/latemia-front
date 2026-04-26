@@ -20,6 +20,8 @@ const STATUS_OPTIONS: Array<{ value: PlanStatus | 'todos'; label: string }> = [
   { value: 'ativo', label: 'Ativo' },
   { value: 'inadimplente', label: 'Inadimplente' },
   { value: 'cancelado', label: 'Cancelado' },
+  { value: 'estornado', label: 'Estornado' },
+  { value: 'contestado', label: 'Contestado' },
 ];
 
 export function PlanFilterBar() {

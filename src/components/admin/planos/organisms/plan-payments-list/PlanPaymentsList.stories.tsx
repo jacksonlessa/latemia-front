@@ -80,3 +80,29 @@ export const Vazio: Story = {
   name: 'Sem pagamentos (estado vazio)',
   render: () => <PlanPaymentsList payments={[]} />,
 };
+
+/** Lista com falha de cobrança e refund — colunas opcionais aparecem */
+export const ComFalhaERefund: Story = {
+  name: 'Com falha e estorno',
+  render: () => (
+    <PlanPaymentsList
+      payments={[
+        {
+          id: 'payment-uuid-4',
+          status: 'inadimplente',
+          amount: 4990,
+          createdAt: '2026-04-10T10:00:00.000Z',
+          failureCode: 'card_declined',
+        },
+        {
+          id: 'payment-uuid-5',
+          status: 'estornado',
+          amount: 4990,
+          createdAt: '2026-03-01T10:00:00.000Z',
+          paidAt: '2026-03-05T14:30:00.000Z',
+          refundedAt: '2026-04-12T09:00:00.000Z',
+        },
+      ]}
+    />
+  ),
+};

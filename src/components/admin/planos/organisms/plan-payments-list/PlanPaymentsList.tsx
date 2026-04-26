@@ -55,9 +55,25 @@ const paymentStatusConfig: Record<
     className:
       'border-transparent bg-[#EAF4F0] text-[#4E8C75] hover:bg-[#EAF4F0]',
   },
+  em_atraso: {
+    label: 'Em atraso',
+    className: 'border-transparent bg-orange-50 text-orange-600 hover:bg-orange-50',
+  },
+  inadimplente: {
+    label: 'Inadimplente',
+    className: 'border-transparent bg-red-50 text-red-600 hover:bg-red-50',
+  },
   cancelado: {
     label: 'Cancelado',
     className: 'border-transparent bg-gray-100 text-[#6B6B6E] hover:bg-gray-100',
+  },
+  estornado: {
+    label: 'Estornado',
+    className: 'border-transparent bg-slate-700 text-white hover:bg-slate-700',
+  },
+  contestado: {
+    label: 'Contestado',
+    className: 'border-transparent bg-purple-950 text-white hover:bg-purple-950',
   },
 };
 
@@ -83,6 +99,10 @@ function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
  *
  * Renders a table with the payment history of a plan.
  * Displays an empty state when no payments are present.
+ *
+ * The optional columns "Falha" and "Estornado em" are only rendered when at
+ * least one payment in the list carries the corresponding field, keeping the
+ * happy-path layout uncluttered.
  */
 export function PlanPaymentsList({ payments }: PlanPaymentsListProps) {
   if (payments.length === 0) {
@@ -93,6 +113,9 @@ export function PlanPaymentsList({ payments }: PlanPaymentsListProps) {
     );
   }
 
+  const hasFailureColumn = payments.some((p) => Boolean(p.failureCode));
+  const hasRefundColumn = payments.some((p) => Boolean(p.refundedAt));
+
   return (
     <Table>
       <TableHeader>
@@ -101,6 +124,8 @@ export function PlanPaymentsList({ payments }: PlanPaymentsListProps) {
           <TableHead>Valor</TableHead>
           <TableHead>Criado em</TableHead>
           <TableHead>Pago em</TableHead>
+          {hasFailureColumn ? <TableHead>Falha</TableHead> : null}
+          {hasRefundColumn ? <TableHead>Estornado em</TableHead> : null}
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -118,6 +143,16 @@ export function PlanPaymentsList({ payments }: PlanPaymentsListProps) {
             <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
               {payment.paidAt ? formatDate(payment.paidAt) : '—'}
             </TableCell>
+            {hasFailureColumn ? (
+              <TableCell className="text-xs font-mono text-muted-foreground whitespace-nowrap">
+                {payment.failureCode ?? '—'}
+              </TableCell>
+            ) : null}
+            {hasRefundColumn ? (
+              <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                {payment.refundedAt ? formatDate(payment.refundedAt) : '—'}
+              </TableCell>
+            ) : null}
           </TableRow>
         ))}
       </TableBody>

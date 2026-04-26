@@ -39,10 +39,10 @@ describe('PlanStatusBadge', () => {
     expect(badge.className).toContain('amber');
   });
 
-  it('should apply orange color class when status is carencia', () => {
+  it('should apply light blue (sky) color class when status is carencia', () => {
     const { container } = render(<PlanStatusBadge status="carencia" />);
     const badge = container.firstChild as HTMLElement;
-    expect(badge.className).toContain('orange');
+    expect(badge.className).toContain('sky');
   });
 
   it('should apply red color class when status is inadimplente', () => {
@@ -61,5 +61,44 @@ describe('PlanStatusBadge', () => {
     const { container } = render(<PlanStatusBadge status="cancelado" />);
     const badge = container.firstChild as HTMLElement;
     expect(badge.className).toContain('gray');
+  });
+
+  it('should render "Estornado" label when status is estornado', () => {
+    render(<PlanStatusBadge status="estornado" />);
+    expect(screen.getByText('Estornado')).toBeInTheDocument();
+  });
+
+  it('should render "Contestado" label when status is contestado', () => {
+    render(<PlanStatusBadge status="contestado" />);
+    expect(screen.getByText('Contestado')).toBeInTheDocument();
+  });
+
+  it('should apply dark slate color class when status is estornado', () => {
+    const { container } = render(<PlanStatusBadge status="estornado" />);
+    const badge = container.firstChild as HTMLElement;
+    expect(badge.className).toContain('slate-700');
+  });
+
+  it('should apply dark purple color class when status is contestado', () => {
+    const { container } = render(<PlanStatusBadge status="contestado" />);
+    const badge = container.firstChild as HTMLElement;
+    expect(badge.className).toContain('purple-950');
+  });
+
+  it('should mark terminal status in aria-label when status is estornado', () => {
+    render(<PlanStatusBadge status="estornado" />);
+    expect(
+      screen.getByLabelText('Status: Estornado (estado terminal)'),
+    ).toBeInTheDocument();
+  });
+
+  it('should render lock icon for terminal statuses when status is contestado', () => {
+    render(<PlanStatusBadge status="contestado" />);
+    expect(screen.getByTestId('terminal-icon')).toBeInTheDocument();
+  });
+
+  it('should not render lock icon for non-terminal statuses when status is ativo', () => {
+    render(<PlanStatusBadge status="ativo" />);
+    expect(screen.queryByTestId('terminal-icon')).not.toBeInTheDocument();
   });
 });

@@ -68,8 +68,20 @@ export const Inadimplente: Story = {
   args: { status: 'inadimplente' },
 };
 
-/** Badge para plano cancelado */
+/** Badge para plano cancelado (terminal) */
 export const Cancelado: Story = {
   name: 'Cancelado',
   args: { status: 'cancelado' },
+};
+
+/** Badge para plano estornado (terminal — refund total) */
+export const Estornado: Story = {
+  name: 'Estornado',
+  args: { status: 'estornado' },
+};
+
+/** Badge para plano contestado (terminal — chargeback) */
+export const Contestado: Story = {
+  name: 'Contestado',
+  args: { status: 'contestado' },
 };
