@@ -162,8 +162,19 @@ body {
 /* Landing page public tokens — coexist with admin tokens */
 @theme {
   --color-cream: #F6F4EE;
+  --color-cream-dark: #EDEAE2;
   --color-forest: #5D7A5E;
   --color-forest-strong: #4E8C75;
+  --color-forest-deep: #3F5A41;
+  --color-forest-soft: #DDE8DA;
+  --color-forest-pale: #EEF3EC;
   --color-sand: #E2E0D6;
+  --color-sand-dark: #DDD9CE;
+  --color-ink: #1A261A;
+  --color-ink-soft: #556055;
+  --color-ink-muted: #8A9C8A;
+  --color-gold: #C9A96E;
+  --color-danger-bg: #FBF1EE;
+  --color-danger-text: #7A3020;
   --font-display: var(--font-fraunces), Fraunces, 'Iowan Old Style', Georgia, serif;
 }
