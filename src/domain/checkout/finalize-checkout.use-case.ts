@@ -300,12 +300,23 @@ export class FinalizeCheckoutUseCase {
     onStageChange({ stage: 2 });
     let cardToken: string;
     try {
+      const addr = input.clientInput.address;
       const result = await tokenizeCard({
         number: input.cardInput.number,
         holderName: input.cardInput.holderName,
         expMonth: input.cardInput.expiry.slice(0, 2),
         expYear: input.cardInput.expiry.slice(2, 4),
         cvv: input.cardInput.cvv,
+        billingAddress: {
+          zipCode: addr.cep,
+          city: addr.city,
+          state: addr.state,
+          street: addr.street,
+          number: addr.number,
+          complement: addr.complement,
+          neighborhood: addr.neighborhood,
+          country: 'BR',
+        },
       });
       cardToken = result.cardToken;
     } catch (err) {

@@ -13,6 +13,20 @@ import { ValidationError } from '@/lib/validation-error';
 
 const PAGARME_TOKENS_URL = 'https://api.pagar.me/core/v5/tokens';
 
+export interface TokenizeCardBillingAddress {
+  /** Apenas dígitos. */
+  zipCode: string;
+  city: string;
+  /** UF de 2 letras. */
+  state: string;
+  street: string;
+  number: string;
+  complement?: string;
+  neighborhood?: string;
+  /** ISO-2 (default 'BR'). */
+  country?: string;
+}
+
 export interface TokenizeCardInput {
   /** Apenas dígitos (16–19). */
   number: string;
@@ -23,6 +37,12 @@ export interface TokenizeCardInput {
   expYear: string;
   /** 3–4 dígitos. */
   cvv: string;
+  /**
+   * Endereço de cobrança — obrigatório para que o token gere `billing_address`
+   * embutido. Sem isso, a Pagar.me responde `validation_error | billing |
+   * "value" is required` ao processar a primeira charge da subscription.
+   */
+  billingAddress?: TokenizeCardBillingAddress;
 }
 
 export interface TokenizeCardResult {
@@ -97,7 +117,21 @@ export async function tokenizeCard(input: TokenizeCardInput): Promise<TokenizeCa
   const expYear = normalizeExpYear(input.expYear);
   const holderName = input.holderName.trim();
 
-  const body = {
+  const billing = input.billingAddress;
+  const billingAddress = billing
+    ? {
+        line_1: `${billing.number} ${billing.street}${
+          billing.complement ? ', ' + billing.complement : ''
+        }`.trim(),
+        line_2: billing.neighborhood ?? '',
+        zip_code: billing.zipCode.replace(/\D/g, ''),
+        city: billing.city,
+        state: billing.state,
+        country: billing.country ?? 'BR',
+      }
+    : undefined;
+
+  const body: Record<string, unknown> = {
     type: 'card',
     card: {
       number,
@@ -105,6 +139,7 @@ export async function tokenizeCard(input: TokenizeCardInput): Promise<TokenizeCa
       exp_month: Number(expMonth),
       exp_year: Number(expYear),
       cvv,
+      ...(billingAddress ? { billing_address: billingAddress } : {}),
     },
   };
 

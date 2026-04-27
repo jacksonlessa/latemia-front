@@ -45,6 +45,7 @@ export interface Plan {
   id: string;
   name: string;
   description?: string;
+  statementDescriptor?: string;
   status: BillingPlanStatus;
   interval: BillingInterval;
   intervalCount: number;
@@ -67,6 +68,11 @@ export interface Plan {
 export interface CreatePlanInput {
   name: string;
   description?: string;
+  /**
+   * Texto exibido na fatura do cartão (max 13 chars, alfanumérico).
+   * Limite imposto pelas adquirentes brasileiras.
+   */
+  statementDescriptor?: string;
   interval: BillingInterval;
   intervalCount: number;
   currency: 'BRL';

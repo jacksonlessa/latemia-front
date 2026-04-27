@@ -24,6 +24,7 @@ interface PlanFormProps {
 interface FormState {
   name: string;
   description: string;
+  statementDescriptor: string;
   interval: BillingInterval;
   intervalCount: string;
   items: Array<{ name: string; quantity: string; price: number }>;
@@ -40,6 +41,7 @@ function planToFormState(plan?: Plan): FormState {
     return {
       name: '',
       description: '',
+      statementDescriptor: '',
       interval: 'month',
       intervalCount: '1',
       items: [{ name: '', quantity: '1', price: 0 }],
@@ -54,6 +56,7 @@ function planToFormState(plan?: Plan): FormState {
   return {
     name: plan.name,
     description: plan.description ?? '',
+    statementDescriptor: plan.statementDescriptor ?? '',
     interval: plan.interval,
     intervalCount: String(plan.intervalCount),
     items: plan.items.map((item) => ({
@@ -97,6 +100,7 @@ function formStateToInput(state: FormState): CreatePlanInput {
   return {
     name: state.name.trim(),
     description: state.description.trim() || undefined,
+    statementDescriptor: state.statementDescriptor.trim() || undefined,
     interval: state.interval,
     intervalCount: Math.max(1, parseInt(state.intervalCount, 10) || 1),
     currency: 'BRL',
@@ -224,6 +228,37 @@ export function PlanForm({ initialData, onSubmit, isLoading = false, errorMessag
               disabled={isLoading}
               maxLength={500}
             />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="plan-statement-descriptor">
+              Descrição na fatura
+            </Label>
+            <Input
+              id="plan-statement-descriptor"
+              value={form.statementDescriptor}
+              onChange={(e) => {
+                const v = e.target.value
+                  .toUpperCase()
+                  .replace(/[^A-Z0-9 ]/g, '')
+                  .slice(0, 13);
+                update('statementDescriptor', v);
+              }}
+              placeholder="Ex.: LATEMIA"
+              disabled={isLoading}
+              maxLength={13}
+              aria-describedby="plan-statement-descriptor-help"
+            />
+            <p
+              id="plan-statement-descriptor-help"
+              className="text-xs text-muted-foreground"
+            >
+              Aparece na fatura do cartão. Máx. 13 caracteres, apenas letras,
+              números e espaços (sem acentos).{' '}
+              <span className="font-mono">
+                {form.statementDescriptor.length}/13
+              </span>
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
