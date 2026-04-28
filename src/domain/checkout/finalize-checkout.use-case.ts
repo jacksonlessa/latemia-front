@@ -52,6 +52,7 @@ export interface FinalizeCheckoutInput {
     clientId?: string;
     petIds?: string[];
     pagarmeCustomerId?: string;
+    pagarmeCardId?: string;
     pagarmeSubscriptionIds?: string[];
   };
 }
@@ -62,6 +63,7 @@ export interface FinalizeCheckoutResult {
   clientId: string;
   petIds: string[];
   pagarmeCustomerId: string;
+  pagarmeCardId: string;
   pagarmeSubscriptionIds: string[];
 }
 
@@ -228,6 +230,8 @@ function buildCheckoutError(
 interface CheckoutCustomerResponse {
   pagarme_customer_id: string;
   created?: boolean;
+  /** Presente quando enviamos `card_token` (multi-pet flow). */
+  pagarme_card_id?: string;
 }
 
 interface CheckoutSubscriptionResponse {
@@ -277,6 +281,7 @@ export class FinalizeCheckoutUseCase {
       ...(resume.pagarmeSubscriptionIds ?? []),
     ];
     let pagarmeCustomerId: string | undefined = resume.pagarmeCustomerId;
+    let pagarmeCardId: string | undefined = resume.pagarmeCardId;
 
     // -----------------------------------------------------------------------
     // Stage 1 — local card validation
@@ -369,19 +374,34 @@ export class FinalizeCheckoutUseCase {
     }
 
     // -----------------------------------------------------------------------
-    // Stage 5 — ensure Pagar.me customer
+    // Stage 5 — ensure Pagar.me customer + vincular card_token ao customer.
+    //
+    // Enviamos o `card_token` (single-use) já nesta etapa para que o backend
+    // crie um `card_id` permanente reutilizável nas N subscriptions da
+    // stage 6. Sem isso, o token seria consumido na 1ª subscription e a 2ª
+    // falharia com `Token not found`.
     // -----------------------------------------------------------------------
-    if (!pagarmeCustomerId) {
+    if (!pagarmeCustomerId || !pagarmeCardId) {
       onStageChange({ stage: 5 });
       const result = await postJson<CheckoutCustomerResponse>(
         '/v1/checkout/customer',
-        { client_id: clientId },
+        { client_id: clientId, card_token: cardToken },
       );
       if (!result.ok) {
         const { code } = await readApiError(result.res);
         throw buildCheckoutError(5, code, undefined, [], undefined);
       }
       pagarmeCustomerId = result.data.pagarme_customer_id;
+      pagarmeCardId = result.data.pagarme_card_id;
+      if (!pagarmeCardId) {
+        throw buildCheckoutError(
+          5,
+          'PROVIDER_UPSTREAM',
+          undefined,
+          [],
+          pagarmeCustomerId,
+        );
+      }
     }
 
     // -----------------------------------------------------------------------
@@ -398,26 +418,16 @@ export class FinalizeCheckoutUseCase {
         petIndex: i,
         petName: input.pets[i].name,
       });
-      // [debug-multi-pet] Confirma se o mesmo card_token está sendo reusado
-      // entre os pets (hipótese: token Pagar.me v5 é single-use).
-      // eslint-disable-next-line no-console
-      console.info(
-        `[checkout-debug] stage6 pet_index=${i} pet_id=${petIds[i]} card_token_tail=...${cardToken.slice(-4)} created_so_far=${createdSubscriptionIds.length}`,
-      );
       const result = await postJson<CheckoutSubscriptionResponse>(
         '/v1/checkout/subscription',
         {
           client_id: clientId,
           pet_id: petIds[i],
-          card_token: cardToken,
+          card_id: pagarmeCardId,
         },
       );
       if (!result.ok) {
         const { code } = await readApiError(result.res);
-        // eslint-disable-next-line no-console
-        console.error(
-          `[checkout-debug] stage6.failed pet_index=${i} status=${result.res.status} code=${code}`,
-        );
         const err = buildCheckoutError(
           6,
           code,
@@ -476,6 +486,7 @@ export class FinalizeCheckoutUseCase {
       clientId,
       petIds,
       pagarmeCustomerId,
+      pagarmeCardId,
       pagarmeSubscriptionIds: createdSubscriptionIds,
     };
   }
