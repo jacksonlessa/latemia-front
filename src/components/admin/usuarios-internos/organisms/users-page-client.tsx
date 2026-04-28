@@ -138,7 +138,7 @@ export function UsersPageClient({
   const { data, meta } = initialData;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 p-4 md:p-6">
       {/* Filter bar + create button */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex-1">
