@@ -1,7 +1,7 @@
 "use client";
 
-import { Search, Bell, ChevronDown, LogOut } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { Search, LogOut } from "lucide-react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -13,51 +13,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { SessionUser } from "@/lib/session";
 
-const units = [
-  { id: 1, name: "Unidade Camboriú" },
-  { id: 2, name: "Unidade Florianópolis" },
-  { id: 3, name: "Unidade Itajaí" },
-];
-
-const notifications = [
-  { id: 1, text: "Novo plano cadastrado para Rex", time: "5 min atrás" },
-  {
-    id: 2,
-    text: "Pagamento confirmado - Tutor João Silva",
-    time: "15 min atrás",
-  },
-  { id: 3, text: "Carência finalizada - Pet Luna", time: "1h atrás" },
-];
-
 interface TopbarProps {
   user: SessionUser;
 }
 
 export function Topbar({ user }: TopbarProps) {
   const router = useRouter();
-  const [selectedUnit, setSelectedUnit] = useState(units[0]);
-  const [showNotifications, setShowNotifications] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  const notificationsRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        notificationsRef.current &&
-        !notificationsRef.current.contains(event.target as Node)
-      ) {
-        setShowNotifications(false);
-      }
-    };
-
-    if (showNotifications) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showNotifications]);
 
   async function handleLogout() {
     setLoggingOut(true);
@@ -94,61 +56,6 @@ export function Topbar({ user }: TopbarProps) {
 
       {/* Right Section */}
       <div className="flex items-center gap-2 md:gap-4">
-        {/* Notifications */}
-        <div className="relative" ref={notificationsRef}>
-          <button
-            onClick={() => setShowNotifications((prev) => !prev)}
-            className="relative rounded-lg p-2 transition-colors hover:bg-gray-100"
-            aria-label="Notificações"
-          >
-            <Bell className="h-5 w-5 text-[#6B6B6E]" />
-            <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-[#C94040]" />
-          </button>
-
-          {showNotifications && (
-            <div className="absolute right-0 top-12 z-50 w-80 max-w-[calc(100vw-2rem)] rounded-lg border border-gray-200 bg-white shadow-lg">
-              <div className="border-b border-gray-200 p-4">
-                <h3 className="font-semibold text-[#2C2C2E]">Notificações</h3>
-              </div>
-              <div className="max-h-96 overflow-y-auto">
-                {notifications.map((notif) => (
-                  <div
-                    key={notif.id}
-                    className="cursor-pointer border-b border-gray-100 p-4 last:border-b-0 hover:bg-gray-50"
-                  >
-                    <p className="text-sm text-[#2C2C2E]">{notif.text}</p>
-                    <p className="mt-1 text-xs text-[#6B6B6E]">{notif.time}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Unit Selector */}
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg px-3 py-2 outline-none transition-colors hover:bg-gray-100">
-            <span className="hidden text-sm text-[#2C2C2E] lg:inline">
-              {selectedUnit.name}
-            </span>
-            <span className="text-sm text-[#2C2C2E] lg:hidden">
-              {selectedUnit.name.split(" ")[1]}
-            </span>
-            <ChevronDown className="h-4 w-4 text-[#6B6B6E]" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            {units.map((unit) => (
-              <DropdownMenuItem
-                key={unit.id}
-                onClick={() => setSelectedUnit(unit)}
-                className={unit.id === selectedUnit.id ? "bg-[#EAF4F0]" : ""}
-              >
-                {unit.name}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger
