@@ -103,3 +103,15 @@ export interface PlanDetail {
   };
   payments: Payment[];
 }
+
+/** Webhook event recebido do provider (admin-only). */
+export interface PlanWebhookEvent {
+  id: string;
+  eventType: string;
+  signatureValid: boolean;
+  pagarmeSubscriptionId: string | null;
+  receivedAt: string;
+  processedAt?: string;
+  processingError?: string;
+  payload: unknown;
+}

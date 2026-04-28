@@ -6,12 +6,14 @@ import { fetchMe } from '@/lib/api-server';
 import { SESSION_COOKIE } from '@/lib/session';
 import { ApiError } from '@/lib/api-errors';
 import { getPlanByIdUseCase } from '@/domain/plan/get-plan-by-id.use-case';
+import { getPlanWebhookEventsUseCase } from '@/domain/plan/get-plan-webhook-events.use-case';
 import { PlanStatusBadge } from '@/components/admin/planos/atoms/plan-status-badge/PlanStatusBadge';
 import { PlanDetailCard } from '@/components/admin/planos/molecules/plan-detail-card/PlanDetailCard';
 import { CopyableId } from '@/components/admin/planos/molecules/copyable-id/CopyableId';
 import { TerminalStateBanner } from '@/components/admin/planos/molecules/terminal-state-banner/TerminalStateBanner';
 import { PlanPaymentsList } from '@/components/admin/planos/organisms/plan-payments-list/PlanPaymentsList';
-import { isTerminalPlanStatus } from '@/lib/types/plan';
+import { PlanWebhookEventsList } from '@/components/admin/planos/organisms/plan-webhook-events-list/PlanWebhookEventsList';
+import { isTerminalPlanStatus, type PlanWebhookEvent } from '@/lib/types/plan';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -78,6 +80,17 @@ export default async function PlanoDetailPage({ params }: PageProps) {
       notFound();
     }
     throw err;
+  }
+
+  // Webhook events — admin-only. Falhas (incluindo 403) são absorvidas pra
+  // não quebrar a página: tudo que importa é não renderizar o card.
+  let webhookEvents: PlanWebhookEvent[] | null = null;
+  if (me.role === 'admin') {
+    try {
+      webhookEvents = await getPlanWebhookEventsUseCase(id, token);
+    } catch {
+      webhookEvents = null;
+    }
   }
 
   return (
@@ -225,6 +238,20 @@ export default async function PlanoDetailPage({ params }: PageProps) {
         </h2>
         <PlanPaymentsList payments={plan.payments} />
       </div>
+
+      {/* Eventos do provider — admin-only */}
+      {webhookEvents !== null ? (
+        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm md:p-6">
+          <h2 className="mb-1 text-base font-semibold text-[#2C2C2E]">
+            Eventos do provider ({webhookEvents.length})
+          </h2>
+          <p className="mb-4 text-xs text-[#6B6B6E]">
+            Webhooks recebidos da Pagar.me para esta assinatura. Visível apenas
+            para administradores.
+          </p>
+          <PlanWebhookEventsList events={webhookEvents} />
+        </div>
+      ) : null}
     </div>
   );
 }

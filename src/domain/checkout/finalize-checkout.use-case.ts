@@ -398,6 +398,12 @@ export class FinalizeCheckoutUseCase {
         petIndex: i,
         petName: input.pets[i].name,
       });
+      // [debug-multi-pet] Confirma se o mesmo card_token está sendo reusado
+      // entre os pets (hipótese: token Pagar.me v5 é single-use).
+      // eslint-disable-next-line no-console
+      console.info(
+        `[checkout-debug] stage6 pet_index=${i} pet_id=${petIds[i]} card_token_tail=...${cardToken.slice(-4)} created_so_far=${createdSubscriptionIds.length}`,
+      );
       const result = await postJson<CheckoutSubscriptionResponse>(
         '/v1/checkout/subscription',
         {
@@ -408,6 +414,10 @@ export class FinalizeCheckoutUseCase {
       );
       if (!result.ok) {
         const { code } = await readApiError(result.res);
+        // eslint-disable-next-line no-console
+        console.error(
+          `[checkout-debug] stage6.failed pet_index=${i} status=${result.res.status} code=${code}`,
+        );
         const err = buildCheckoutError(
           6,
           code,

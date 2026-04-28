@@ -30,12 +30,12 @@ function formatDate(iso: string): string {
   }
 }
 
-function formatCurrency(amountCents: number): string {
-  const reais = amountCents / 100;
+function formatCurrency(amount: number | string): string {
+  const reais = typeof amount === 'string' ? Number(amount) : amount;
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
-  }).format(reais);
+  }).format(Number.isFinite(reais) ? reais : 0);
 }
 
 // ---------------------------------------------------------------------------
