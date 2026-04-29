@@ -32,7 +32,7 @@ export interface CreatePetPayload {
   castrated: boolean;
 }
 
-/** Full pet detail returned by POST /v1/register/pet. */
+/** Full pet detail returned by POST /v1/register/pet and GET /v1/clients/:clientId/pets/:petId. */
 export interface PetDetail {
   id: string;
   clientId: string;
@@ -45,6 +45,8 @@ export interface PetDetail {
   weight: number;
   castrated: boolean;
   createdAt: string;
+  /** Optional — present in admin detail endpoint, may be absent in register response. */
+  updatedAt?: string;
 }
 
 /** Output returned by RegisterPetUseCase on success. */

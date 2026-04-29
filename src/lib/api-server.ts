@@ -10,6 +10,7 @@ import type {
   UpdateInternalUserInput,
 } from "./types/users";
 import type { ClientDetail, PaginatedClients } from "./types/client";
+import type { PetDetail } from "./types/pet";
 import type {
   SystemSettingsDto,
   UpdateSystemSettingsInput,
@@ -277,4 +278,26 @@ export async function fetchClientDetail(
 
   if (!res.ok) return handleErrorResponse(res);
   return res.json() as Promise<ClientDetail>;
+}
+
+/**
+ * GET /v1/clients/:clientId/pets/:petId
+ * Returns full pet detail. Throws ApiError(404) when pet does not exist
+ * or does not belong to the given client.
+ */
+export async function fetchPetDetail(
+  clientId: string,
+  petId: string,
+  token: string,
+): Promise<PetDetail> {
+  const res = await fetch(
+    `${apiUrl()}/v1/clients/${clientId}/pets/${petId}`,
+    {
+      headers: authHeaders(token),
+      cache: "no-store",
+    },
+  );
+
+  if (!res.ok) return handleErrorResponse(res);
+  return res.json() as Promise<PetDetail>;
 }
