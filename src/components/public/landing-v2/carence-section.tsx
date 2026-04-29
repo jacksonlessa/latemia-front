@@ -24,14 +24,13 @@ export function CarenceSection() {
                 <div className="font-display text-lg text-white">50% off ✓</div>
               </div>
             </div>
-            <div className="flex h-[180px] flex-col items-center justify-center gap-2.5 rounded-[18px] bg-forest-pale text-forest">
-              <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" className="opacity-35" aria-hidden>
-                <rect x="3" y="5" width="18" height="16" rx="2" />
-                <path d="M3 10h18M8 3v4M16 3v4" />
-              </svg>
-              <span className="text-[11px] font-semibold uppercase tracking-[1px] text-ink-muted opacity-70">
-                Foto clínica / equipe
-              </span>
+            <div className="h-[180px] w-full overflow-hidden rounded-[18px] bg-forest-pale">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="https://images.pexels.com/photos/7469226/pexels-photo-7469226.jpeg?auto=compress&cs=tinysrgb&w=800&fit=crop&h=400"
+                alt="Veterinário examinando cachorro na clínica"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
             </div>
           </div>
           <div className="flex flex-col gap-4">
@@ -39,7 +38,7 @@ export function CarenceSection() {
               Carência
             </span>
             <h2 className="font-display text-[28px] leading-[1.05] tracking-[-0.03em] text-ink">
-              6 meses para <em className="italic text-forest">proteger todos</em>.
+              6 meses para <span className="text-forest">proteger todos</span>.
             </h2>
             <p className="text-[14.5px] leading-[1.6] text-ink-soft">
               O período de carência existe para garantir o equilíbrio financeiro do plano e que possamos manter o benefício para todos os tutores. É uma prática padrão em planos de saúde.

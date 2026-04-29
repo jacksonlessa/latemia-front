@@ -161,7 +161,7 @@ export function CoverageSection() {
             Coberturas
           </span>
           <h2 className="font-display text-[clamp(28px,7vw,42px)] leading-[1.05] tracking-[-0.03em] text-ink">
-            O que o plano <em className="italic text-forest">cobre</em>.
+            O que o plano <span className="text-forest">cobre</span>.
           </h2>
           <p className="max-w-[560px] text-[15px] leading-[1.55] text-ink-soft">
             Situações que colocam a vida do seu pet em risco imediato — é para isso que existimos.
@@ -178,13 +178,13 @@ export function CoverageSection() {
             role="tab"
             aria-selected={isYes}
             onClick={() => setTab('yes')}
-            className={`inline-flex cursor-pointer items-center gap-[7px] rounded-full border-none px-[18px] py-2.5 text-[13.5px] font-semibold transition-all duration-200 ${
+            className={`inline-flex cursor-pointer items-center gap-[7px] rounded-full border-none px-[18px] py-2.5 text-[13.5px] font-semibold leading-none transition-all duration-200 ${
               isYes
                 ? 'bg-forest text-white shadow-[0_2px_8px_rgba(93,122,94,0.25)]'
                 : 'bg-transparent text-ink-soft'
             }`}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="block shrink-0" aria-hidden>
               <path d="M4 12l5 5L20 6" />
             </svg>
             Coberto
@@ -194,13 +194,13 @@ export function CoverageSection() {
             role="tab"
             aria-selected={!isYes}
             onClick={() => setTab('no')}
-            className={`inline-flex cursor-pointer items-center gap-[7px] rounded-full border-none px-[18px] py-2.5 text-[13.5px] font-semibold transition-all duration-200 ${
+            className={`inline-flex cursor-pointer items-center gap-[7px] rounded-full border-none px-[18px] py-2.5 text-[13.5px] font-semibold leading-none transition-all duration-200 ${
               !isYes
                 ? 'bg-[#6E6E68] text-white shadow-[0_2px_8px_rgba(110,110,104,0.25)]'
                 : 'bg-transparent text-ink-soft'
             }`}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="block shrink-0" aria-hidden>
               <path d="M6 6l12 12M18 6L6 18" />
             </svg>
             Não coberto
@@ -222,21 +222,6 @@ export function CoverageSection() {
                   }`}
                 >
                   {item.icon}
-                </div>
-                <div
-                  className={`absolute right-3.5 top-3.5 flex h-[22px] w-[22px] items-center justify-center rounded-full ${
-                    isYes ? 'bg-forest text-white' : 'bg-[#DCD9CF] text-[#6E6E68]'
-                  }`}
-                >
-                  {isYes ? (
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                      <path d="M4 12l5 5L20 6" />
-                    </svg>
-                  ) : (
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" aria-hidden>
-                      <path d="M6 6l12 12M18 6L6 18" />
-                    </svg>
-                  )}
                 </div>
                 <div className="text-[14.5px] font-bold leading-[1.25] tracking-[-0.1px] text-ink">
                   {item.title}

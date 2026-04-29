@@ -16,7 +16,7 @@ export function HeroSection() {
           </div>
 
           <h1 className="font-display text-[clamp(36px,10vw,58px)] leading-[1.05] tracking-[-0.03em] text-ink">
-            Emergência veterinária sem <em className="italic text-forest">susto no bolso</em>.
+            Emergência veterinária sem <span className="text-forest">susto no bolso</span>.
           </h1>
 
           <p className="max-w-[480px] text-base leading-[1.55] text-ink-soft">
@@ -64,17 +64,13 @@ export function HeroSection() {
         </div>
 
         <div className="relative mx-5 mb-6 h-[280px] sm:mx-0 sm:mr-5 sm:my-5 sm:h-auto sm:min-h-[420px] lg:min-h-[480px]">
-          <div className="flex h-full flex-col items-center justify-center gap-2.5 overflow-hidden rounded-[28px] bg-forest-pale text-forest">
-            <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className="opacity-35" aria-hidden>
-              <circle cx="5.5" cy="10" r="2" />
-              <circle cx="9.5" cy="6" r="2" />
-              <circle cx="14.5" cy="6" r="2" />
-              <circle cx="18.5" cy="10" r="2" />
-              <path d="M12 12c-2.5 0-5 2-5 4.5 0 1.5 1 2.5 2.5 2.5 1 0 1.5-.5 2.5-.5s1.5.5 2.5.5c1.5 0 2.5-1 2.5-2.5 0-2.5-2.5-4.5-5-4.5z" />
-            </svg>
-            <span className="text-[11px] font-semibold uppercase tracking-[1px] text-ink-muted opacity-70">
-              Foto de pet aqui
-            </span>
+          <div className="h-full w-full overflow-hidden rounded-[28px] bg-forest-pale">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://images.pexels.com/photos/5426879/pexels-photo-5426879.jpeg?auto=compress&cs=tinysrgb&w=800&fit=crop&h=900"
+              alt="Tutora com seu cachorro no sofá"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
           </div>
           <div className="absolute bottom-4 left-4 flex items-center gap-2.5 rounded-xl border border-white/60 bg-white/90 px-3.5 py-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.08)] backdrop-blur-sm">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-forest-pale">

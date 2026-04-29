@@ -48,7 +48,7 @@ export function BenefitsSection() {
             Por que contratar
           </span>
           <h2 className="font-display text-[clamp(28px,7vw,42px)] leading-[1.05] tracking-[-0.03em] text-ink">
-            Um plano feito para quando <em className="italic text-forest">mais importa</em>.
+            Um plano feito para quando <span className="text-forest">mais importa</span>.
           </h2>
           <p className="max-w-[560px] text-[15px] leading-[1.55] text-ink-soft">
             Sem categorias confusas, sem letras miúdas. Um valor fixo, um benefício claro.

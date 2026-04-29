@@ -29,6 +29,36 @@ export function Footer() {
       <p className="text-[11.5px] text-white/25">
         © {year} {publicSite.siteName}. Todos os direitos reservados.
       </p>
+      <p className="text-[10.5px] text-white/20">
+        Fotografias:{' '}
+        <a
+          href="https://www.pexels.com/pt-br/@kaboompics"
+          target="_blank"
+          rel="noopener"
+          className="underline-offset-2 transition-colors hover:text-white/40 hover:underline"
+        >
+          Kaboompics
+        </a>
+        ,{' '}
+        <a
+          href="https://www.pexels.com/pt-br/@mikhail-nilov"
+          target="_blank"
+          rel="noopener"
+          className="underline-offset-2 transition-colors hover:text-white/40 hover:underline"
+        >
+          Mikhail Nilov
+        </a>
+        ,{' '}
+        <a
+          href="https://www.pexels.com/pt-br/@pixabay"
+          target="_blank"
+          rel="noopener"
+          className="underline-offset-2 transition-colors hover:text-white/40 hover:underline"
+        >
+          Pixabay
+        </a>{' '}
+        via Pexels
+      </p>
     </footer>
   );
 }

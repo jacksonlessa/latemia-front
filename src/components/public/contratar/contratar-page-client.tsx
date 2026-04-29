@@ -87,7 +87,7 @@ const INITIAL_STATE: ContratarState = {
 };
 
 const em = (word: string) => (
-  <em style={{ fontStyle: 'italic', color: '#5D7A5E' }}>{word}</em>
+  <span style={{ color: '#5D7A5E' }}>{word}</span>
 );
 
 const STEPPER_STEPS = [

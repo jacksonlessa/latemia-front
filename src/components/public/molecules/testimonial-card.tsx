@@ -5,7 +5,7 @@ export function TestimonialCard({ petName, tutorName, rating, quote }: Testimoni
   return (
     <article className="rounded-2xl bg-white/60 border border-sand p-6 flex flex-col gap-3">
       <StarRating rating={rating} />
-      <blockquote className="text-sm leading-relaxed italic">&ldquo;{quote}&rdquo;</blockquote>
+      <blockquote className="text-sm leading-relaxed">&ldquo;{quote}&rdquo;</blockquote>
       <footer className="text-sm">
         <span className="font-semibold text-forest">{petName}</span>
         <span className="text-forest/70"> — tutor(a) {tutorName}</span>

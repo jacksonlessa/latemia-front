@@ -16,7 +16,7 @@ export function ContactSection() {
             Contato
           </span>
           <h2 className="font-display text-[clamp(28px,7vw,42px)] leading-[1.05] tracking-[-0.03em] text-ink">
-            Estamos em <em className="italic text-forest">Camboriú, SC</em>.
+            Estamos em <span className="text-forest">Camboriú, SC</span>.
           </h2>
         </div>
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">

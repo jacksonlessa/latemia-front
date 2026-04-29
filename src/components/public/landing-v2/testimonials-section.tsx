@@ -38,7 +38,7 @@ export function TestimonialsSection() {
             Depoimentos
           </span>
           <h2 className="font-display text-[clamp(28px,7vw,42px)] leading-[1.05] tracking-[-0.03em] text-ink">
-            Tutores que <em className="italic text-forest">já viveram</em> uma emergência.
+            Tutores que <span className="text-forest">já viveram</span> uma emergência.
           </h2>
         </div>
         <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
@@ -48,7 +48,7 @@ export function TestimonialsSection() {
               className="flex flex-col gap-3.5 rounded-[18px] border border-sand-dark bg-white p-[22px] sm:flex-1 sm:basis-[280px]"
             >
               <div className="flex gap-1 text-[14px] text-gold">⭐⭐⭐⭐⭐</div>
-              <p className="text-[14.5px] leading-[1.6] text-ink italic">{item.quote}</p>
+              <p className="text-[14.5px] leading-[1.6] text-ink">{item.quote}</p>
               <div className="flex items-center gap-2.5">
                 <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-forest-pale text-sm font-semibold text-forest-deep">
                   {item.initial}

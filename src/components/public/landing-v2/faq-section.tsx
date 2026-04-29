@@ -51,7 +51,7 @@ export function FaqSection() {
             Perguntas frequentes
           </span>
           <h2 className="font-display text-[clamp(28px,7vw,42px)] leading-[1.05] tracking-[-0.03em] text-ink">
-            Tem <em className="italic text-forest">dúvidas</em>? A gente responde.
+            Tem <span className="text-forest">dúvidas</span>? A gente responde.
           </h2>
         </div>
         <div className="mt-10 flex flex-col gap-2">
