@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import {
   Table,
   TableBody,
@@ -11,6 +12,7 @@ import type { PetListItem } from '@/lib/types/client';
 
 interface ClientPetsListProps {
   pets: PetListItem[];
+  clientId: string;
 }
 
 const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
@@ -29,7 +31,7 @@ function formatWeight(weight: number): string {
   return `${weight.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} kg`;
 }
 
-export function ClientPetsList({ pets }: ClientPetsListProps) {
+export function ClientPetsList({ pets, clientId }: ClientPetsListProps) {
   if (pets.length === 0) {
     return (
       <p className="py-6 text-center text-sm text-[#6B6B6E]">
@@ -53,8 +55,19 @@ export function ClientPetsList({ pets }: ClientPetsListProps) {
         </TableHeader>
         <TableBody>
           {pets.map((pet) => (
-            <TableRow key={pet.id}>
-              <TableCell className="font-medium">{pet.name}</TableCell>
+            <TableRow
+              key={pet.id}
+              className="cursor-pointer hover:bg-muted/50"
+            >
+              <TableCell className="font-medium">
+                <Link
+                  href={`/admin/clientes/${clientId}/pets/${pet.id}`}
+                  aria-label={`Ver detalhe de ${pet.name}`}
+                  className="text-[#4E8C75] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4E8C75] rounded-sm"
+                >
+                  {pet.name}
+                </Link>
+              </TableCell>
               <TableCell>
                 <PetSpeciesBadge species={pet.species} />
               </TableCell>

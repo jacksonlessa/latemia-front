@@ -31,6 +31,7 @@ export default meta;
 
 interface ClientPetsListProps {
   pets: PetListItem[];
+  clientId: string;
 }
 
 type Story = {
@@ -75,6 +76,7 @@ export const Default: Story = {
   name: 'Padrão (com pets)',
   args: {
     pets: mockPets,
+    clientId: 'uuid-client-1',
   },
 };
 
@@ -83,5 +85,6 @@ export const Empty: Story = {
   name: 'Vazio (sem pets)',
   args: {
     pets: [],
+    clientId: 'uuid-client-1',
   },
 };

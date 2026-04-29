@@ -149,7 +149,7 @@ export default async function ClienteDetailPage({ params }: PageProps) {
         <h2 className="mb-4 text-base font-semibold text-[#2C2C2E]">
           Pets ({client.pets.length})
         </h2>
-        <ClientPetsList pets={client.pets} />
+        <ClientPetsList pets={client.pets} clientId={id} />
       </div>
 
       {/* Planos */}
