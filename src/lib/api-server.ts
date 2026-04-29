@@ -15,6 +15,14 @@ import type {
   SystemSettingsDto,
   UpdateSystemSettingsInput,
 } from "./types/system-settings";
+import type {
+  ListNotificationBufferQuery,
+  NotificationBufferEntryDto,
+  NotificationBufferListResponse,
+  NotificationEventConfigDto,
+  NotificationEventType,
+  QuietHoursDto,
+} from "./types/notifications";
 
 function apiUrl(): string {
   return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
@@ -278,6 +286,120 @@ export async function fetchClientDetail(
 
   if (!res.ok) return handleErrorResponse(res);
   return res.json() as Promise<ClientDetail>;
+}
+
+// ---------------------------------------------------------------------------
+// Notifications endpoints (admin)
+// ---------------------------------------------------------------------------
+
+/**
+ * GET /v1/notifications/events
+ * Returns the list of event-type toggles.
+ */
+export async function fetchNotificationEvents(
+  token: string,
+): Promise<NotificationEventConfigDto[]> {
+  const res = await fetch(`${apiUrl()}/v1/notifications/events`, {
+    headers: authHeaders(token),
+    cache: "no-store",
+  });
+  if (!res.ok) return handleErrorResponse(res);
+  return res.json() as Promise<NotificationEventConfigDto[]>;
+}
+
+/**
+ * PATCH /v1/notifications/events/:type
+ * Toggles a specific event type on/off.
+ */
+export async function patchNotificationEvent(
+  token: string,
+  type: NotificationEventType,
+  enabled: boolean,
+): Promise<NotificationEventConfigDto> {
+  const res = await fetch(
+    `${apiUrl()}/v1/notifications/events/${encodeURIComponent(type)}`,
+    {
+      method: "PATCH",
+      headers: authHeaders(token),
+      body: JSON.stringify({ enabled }),
+    },
+  );
+  if (!res.ok) return handleErrorResponse(res);
+  return res.json() as Promise<NotificationEventConfigDto>;
+}
+
+/**
+ * GET /v1/notifications/quiet-hours
+ * Returns the quiet-hours configuration.
+ */
+export async function fetchQuietHours(token: string): Promise<QuietHoursDto> {
+  const res = await fetch(`${apiUrl()}/v1/notifications/quiet-hours`, {
+    headers: authHeaders(token),
+    cache: "no-store",
+  });
+  if (!res.ok) return handleErrorResponse(res);
+  return res.json() as Promise<QuietHoursDto>;
+}
+
+/**
+ * PUT /v1/notifications/quiet-hours
+ * Updates the quiet-hours configuration.
+ */
+export async function putQuietHours(
+  token: string,
+  payload: QuietHoursDto,
+): Promise<QuietHoursDto> {
+  const res = await fetch(`${apiUrl()}/v1/notifications/quiet-hours`, {
+    method: "PUT",
+    headers: authHeaders(token),
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) return handleErrorResponse(res);
+  return res.json() as Promise<QuietHoursDto>;
+}
+
+/**
+ * GET /v1/notifications/buffer
+ * Lists buffered notifications. Filters by status/reason; cursor pagination.
+ */
+export async function fetchNotificationBuffer(
+  token: string,
+  query: ListNotificationBufferQuery = {},
+): Promise<NotificationBufferListResponse> {
+  const qs = new URLSearchParams();
+  if (query.status) qs.set("status", query.status);
+  if (query.reason) qs.set("reason", query.reason);
+  if (query.limit !== undefined) qs.set("limit", String(query.limit));
+  if (query.cursor) qs.set("cursor", query.cursor);
+  if (query.includeText) qs.set("includeText", "true");
+
+  const url = `${apiUrl()}/v1/notifications/buffer${qs.toString() ? `?${qs.toString()}` : ""}`;
+  const res = await fetch(url, {
+    headers: authHeaders(token),
+    cache: "no-store",
+  });
+  if (!res.ok) return handleErrorResponse(res);
+  return res.json() as Promise<NotificationBufferListResponse>;
+}
+
+/**
+ * GET /v1/notifications/buffer/:id with includeText=true (helper).
+ * Backend reuses the list endpoint with a cursor; for single-item access we
+ * call the list endpoint with includeText=true and return the first match.
+ */
+export async function fetchNotificationBufferEntryText(
+  token: string,
+  id: string,
+): Promise<NotificationBufferEntryDto | null> {
+  // Backend exposes lookup via GET /v1/notifications/buffer?includeText=true
+  // and the entry id is filtered client-side for now (no dedicated GET-by-id
+  // endpoint). Callers should already have the entry; this helper exists
+  // for future-proofing.
+  const list = await fetchNotificationBuffer(token, {
+    includeText: true,
+    limit: 100,
+  });
+  return list.items.find((item) => item.id === id) ?? null;
 }
 
 /**
