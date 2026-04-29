@@ -22,6 +22,7 @@ export interface ListPlansParams {
   status?: PlanStatus;
   search?: string;
   clientId?: string;
+  petId?: string;
   token: string;
 }
 
@@ -38,6 +39,8 @@ export async function listPlansUseCase(
     qs.set('search', params.search);
   if (params.clientId !== undefined && params.clientId !== '')
     qs.set('clientId', params.clientId);
+  if (params.petId !== undefined && params.petId !== '')
+    qs.set('petId', params.petId);
 
   const query = qs.toString();
   const url = `${apiUrl()}/v1/plans${query ? `?${query}` : ''}`;

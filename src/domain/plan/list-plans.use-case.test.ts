@@ -132,6 +132,26 @@ describe('listPlansUseCase — success', () => {
     const [url] = mockFetch.mock.calls[0];
     expect(String(url)).not.toContain('search=');
   });
+
+  it('should include petId query param when petId is provided', async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse(mockResponse, 200));
+
+    await listPlansUseCase({ token: 'test-token', petId: 'pet-uuid-1' });
+
+    const [url] = mockFetch.mock.calls[0];
+    expect(String(url)).toContain('petId=pet-uuid-1');
+  });
+
+  it('should not include petId query param when petId is absent', async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse(mockResponse, 200));
+
+    await listPlansUseCase({ token: 'test-token' });
+
+    const [url] = mockFetch.mock.calls[0];
+    expect(String(url)).not.toContain('petId=');
+  });
 });
 
 describe('listPlansUseCase — error handling', () => {
