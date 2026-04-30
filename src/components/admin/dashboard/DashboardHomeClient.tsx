@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { KPICard } from "@/components/admin/dashboard/KPICard";
+import { KPIGrid } from "@/components/admin/dashboard/KPIGrid";
 import { StatusChart } from "@/components/admin/dashboard/StatusChart";
 import { PlansTable } from "@/components/admin/dashboard/PlansTable";
 import { AlertsPanel } from "@/components/admin/dashboard/AlertsPanel";
@@ -33,13 +33,12 @@ interface DashboardHomeClientProps {
  * those tasks.
  */
 export function DashboardHomeClient({
-  kpis: _kpis,
+  kpis,
   statusChart: _statusChart,
   plansInitial: _plansInitial,
   role: _role,
 }: DashboardHomeClientProps) {
-  // Suppress unused-warnings until tasks 8–12 wire these props into children.
-  void _kpis;
+  // Suppress unused-warnings until tasks 9–12 wire these props into children.
   void _statusChart;
   void _plansInitial;
   void _role;
@@ -49,24 +48,7 @@ export function DashboardHomeClient({
   return (
     <div className="space-y-4 md:space-y-6">
       {/* KPIs */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-4">
-        <KPICard
-          title="Clientes consultados hoje"
-          value={47}
-          trend={{ value: "+12%", isPositive: true }}
-        />
-        <KPICard
-          title="Planos em carência"
-          value={13}
-          trend={{ value: "-8%", isPositive: true }}
-        />
-        <KPICard title="Planos ativos" value="92%" progress={92} />
-        <KPICard
-          title="Planos inadimplentes"
-          value={3}
-          trend={{ value: "-2", isPositive: true }}
-        />
-      </div>
+      <KPIGrid kpis={kpis} />
 
       {/* Chart and Alerts */}
       <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-3">
