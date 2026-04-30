@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
-import { fetchMe } from '@/lib/api-server';
+import { fetchBenefitUsagesByPlan, fetchMe } from '@/lib/api-server';
 import { SESSION_COOKIE } from '@/lib/session';
 import { ApiError } from '@/lib/api-errors';
 import { getPlanByIdUseCase } from '@/domain/plan/get-plan-by-id.use-case';
@@ -13,7 +13,9 @@ import { CopyableId } from '@/components/admin/planos/molecules/copyable-id/Copy
 import { TerminalStateBanner } from '@/components/admin/planos/molecules/terminal-state-banner/TerminalStateBanner';
 import { PlanPaymentsList } from '@/components/admin/planos/organisms/plan-payments-list/PlanPaymentsList';
 import { PlanWebhookEventsList } from '@/components/admin/planos/organisms/plan-webhook-events-list/PlanWebhookEventsList';
+import { BenefitUsageSection } from '@/components/admin/uso-beneficio/organisms/benefit-usage-section/BenefitUsageSection';
 import { isTerminalPlanStatus, type PlanWebhookEvent } from '@/lib/types/plan';
+import type { BenefitUsageResponse } from '@/lib/types/benefit-usage';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -72,9 +74,20 @@ export default async function PlanoDetailPage({ params }: PageProps) {
 
   const { id } = await params;
 
+  // Fetch the plan and its benefit usages in parallel. The usages call is
+  // tolerant: if it fails for any reason we still render the page with an
+  // empty list — the plan detail itself remains the primary content.
   let plan;
+  let benefitUsages: BenefitUsageResponse[] = [];
   try {
-    plan = await getPlanByIdUseCase(id, token);
+    const [planResult, usagesResult] = await Promise.all([
+      getPlanByIdUseCase(id, token),
+      fetchBenefitUsagesByPlan({ planId: id, token }).catch(
+        () => [] as BenefitUsageResponse[],
+      ),
+    ]);
+    plan = planResult;
+    benefitUsages = usagesResult;
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) {
       notFound();
@@ -238,6 +251,9 @@ export default async function PlanoDetailPage({ params }: PageProps) {
         </h2>
         <PlanPaymentsList payments={plan.payments} />
       </div>
+
+      {/* Uso do Benefício */}
+      <BenefitUsageSection plan={plan} initialUsages={benefitUsages} />
 
       {/* Eventos do provider — admin-only */}
       {webhookEvents !== null ? (

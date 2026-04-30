@@ -85,8 +85,8 @@ export function BenefitUsageRow({
       <TableCell className="text-sm text-[#2C2C2E]">
         {usage.creator.name}
       </TableCell>
-      <TableCell>
-        {canEdit ? (
+      {canEdit ? (
+        <TableCell>
           <Button
             variant="ghost"
             size="icon-sm"
@@ -96,8 +96,8 @@ export function BenefitUsageRow({
           >
             <Pencil className="h-4 w-4" aria-hidden="true" />
           </Button>
-        ) : null}
-      </TableCell>
+        </TableCell>
+      ) : null}
     </TableRow>
   );
 }
