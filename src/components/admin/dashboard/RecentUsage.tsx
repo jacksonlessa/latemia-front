@@ -1,4 +1,5 @@
 import { Clock } from "lucide-react";
+import { MockDataBanner } from "./MockDataBanner";
 
 interface Usage {
   id: string;
@@ -18,35 +19,50 @@ const mockUsages: Usage[] = [
   { id: "6", pet: "Nina", tutor: "Juliana Costa", date: "14/04/2026", time: "10:30", discount: "R$ 175,00" },
 ];
 
-export function RecentUsage() {
+interface RecentUsageProps {
+  /**
+   * Override opcional para permitir variantes (ex.: estado vazio em Storybook).
+   * Quando omitido, usa `mockUsages` interno.
+   */
+  usages?: Usage[];
+}
+
+export function RecentUsage({ usages = mockUsages }: RecentUsageProps = {}) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm md:p-6">
+      <MockDataBanner />
       <h3 className="mb-4 text-base font-semibold text-[#2C2C2E] md:text-lg">
         Últimos usos do benefício
       </h3>
-      <div className="space-y-3">
-        {mockUsages.map((usage) => (
-          <div
-            key={usage.id}
-            className="flex cursor-pointer items-start gap-3 rounded-lg p-3 transition-colors hover:bg-gray-50"
-          >
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#EAF4F0]">
-              <Clock className="h-5 w-5 text-[#4E8C75]" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-[#2C2C2E]">{usage.pet}</p>
-                <span className="text-sm font-semibold text-[#4E8C75]">
-                  {usage.discount}
-                </span>
+      {usages.length === 0 ? (
+        <p className="text-sm text-[#6B6B6E]">
+          Nenhum uso registrado recentemente.
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {usages.map((usage) => (
+            <div
+              key={usage.id}
+              className="flex cursor-pointer items-start gap-3 rounded-lg p-3 transition-colors hover:bg-gray-50"
+            >
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#EAF4F0]">
+                <Clock className="h-5 w-5 text-[#4E8C75]" />
               </div>
-              <p className="mt-0.5 text-xs text-[#6B6B6E]">
-                {usage.tutor} • {usage.date} às {usage.time}
-              </p>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-[#2C2C2E]">{usage.pet}</p>
+                  <span className="text-sm font-semibold text-[#4E8C75]">
+                    {usage.discount}
+                  </span>
+                </div>
+                <p className="mt-0.5 text-xs text-[#6B6B6E]">
+                  {usage.tutor} • {usage.date} às {usage.time}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
