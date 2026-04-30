@@ -174,10 +174,26 @@ export const Combined: Story = {
   name: 'Lista combinada',
   render: () => (
     <TableShell>
-      <BenefitUsageRow usage={baseUsage} canEdit />
-      <BenefitUsageRow usage={emergencyUsage} canEdit />
-      <BenefitUsageRow usage={longDescriptionUsage} canEdit={false} />
-      <BenefitUsageRow usage={largeValueUsage} canEdit />
+      <BenefitUsageRow
+        usage={baseUsage}
+        canEdit
+        onEdit={(usage) => console.log('edit', usage.id)}
+      />
+      <BenefitUsageRow
+        usage={emergencyUsage}
+        canEdit
+        onEdit={(usage) => console.log('edit', usage.id)}
+      />
+      <BenefitUsageRow
+        usage={longDescriptionUsage}
+        canEdit
+        onEdit={(usage) => console.log('edit', usage.id)}
+      />
+      <BenefitUsageRow
+        usage={largeValueUsage}
+        canEdit
+        onEdit={(usage) => console.log('edit', usage.id)}
+      />
     </TableShell>
   ),
 };

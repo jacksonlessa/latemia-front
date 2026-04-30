@@ -9,7 +9,11 @@ import { MoneyInput } from '@/components/admin/planos-assinatura/atoms/money-inp
 import { PlanStatusAlert } from '@/components/admin/uso-beneficio/molecules/plan-status-alert/PlanStatusAlert';
 import { cn } from '@/lib/utils';
 import type { PlanSummary } from '@/lib/types/plan';
-import type { CreateBenefitUsageInput } from '@/lib/types/benefit-usage';
+import type {
+  BenefitUsageResponse,
+  CreateBenefitUsageInput,
+  UpdateBenefitUsageInput,
+} from '@/lib/types/benefit-usage';
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -27,11 +31,39 @@ export interface BenefitUsageFormFieldErrors {
   discountApplied?: string;
 }
 
+/** Mode hint passed by the parent — controls payload shape and submit label. */
+export type BenefitUsageFormMode = 'create' | 'edit';
+
+/**
+ * Discriminated submit handler:
+ * - `create` mode → receives `CreateBenefitUsageInput` (with `planId`).
+ * - `edit` mode → receives `UpdateBenefitUsageInput` (no `planId`).
+ *
+ * The form handles both shapes via a single union; the parent picks the
+ * matching variant when narrowing on `mode`.
+ */
+export type BenefitUsageFormSubmit =
+  | ((input: CreateBenefitUsageInput) => Promise<void>)
+  | ((input: UpdateBenefitUsageInput) => Promise<void>);
+
 export interface BenefitUsageFormProps {
   /** Plan context — used to render pet/status header and the status alert. */
   plan: PlanSummary;
-  /** Resolves with a server-mapped error envelope or `null` on success. */
-  onSubmit: (input: CreateBenefitUsageInput) => Promise<void>;
+  /**
+   * Submission mode. Defaults to `create` to preserve the existing call sites.
+   * When `edit`, the submit payload omits `planId` and the action label changes.
+   */
+  mode?: BenefitUsageFormMode;
+  /**
+   * Pre-fills the form fields. Required (in practice) when `mode === 'edit'`;
+   * ignored when `mode === 'create'`.
+   */
+  initialValues?: BenefitUsageResponse;
+  /**
+   * Resolves on success. The shape passed in depends on `mode`:
+   * `create` → `CreateBenefitUsageInput`; `edit` → `UpdateBenefitUsageInput`.
+   */
+  onSubmit: BenefitUsageFormSubmit;
   onCancel: () => void;
   /** Disables fields and submit button while the parent runs the request. */
   isSubmitting?: boolean;
@@ -83,6 +115,28 @@ function centsToDecimalString(cents: number): string {
   return (cents / 100).toFixed(2);
 }
 
+/**
+ * Parses a Decimal string emitted by the backend (e.g. `"1234.56"`) into
+ * integer cents to feed the `MoneyInput` atom. Falls back to `0` for invalid
+ * input so the form remains usable instead of crashing on malformed data.
+ */
+function decimalStringToCents(value: string | undefined): number {
+  if (!value) return 0;
+  const parsed = Number.parseFloat(value);
+  if (!Number.isFinite(parsed) || parsed < 0) return 0;
+  return Math.round(parsed * 100);
+}
+
+/**
+ * Converts an ISO 8601 timestamp from the backend into the value expected by
+ * `<input type="datetime-local">` in the user's local timezone.
+ */
+function isoToDatetimeLocalValue(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return toDatetimeLocalValue(date);
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -97,7 +151,16 @@ interface FormState {
   discountApplied: number;
 }
 
-function buildInitialState(): FormState {
+function buildInitialState(initial?: BenefitUsageResponse): FormState {
+  if (initial) {
+    return {
+      attendedAt: isoToDatetimeLocalValue(initial.attendedAt),
+      procedureDescription: initial.procedureDescription,
+      isEmergency: initial.isEmergency,
+      totalValue: decimalStringToCents(initial.totalValue),
+      discountApplied: decimalStringToCents(initial.discountApplied),
+    };
+  }
   return {
     attendedAt: toDatetimeLocalValue(new Date()),
     procedureDescription: '',
@@ -119,6 +182,8 @@ function buildInitialState(): FormState {
  */
 export function BenefitUsageForm({
   plan,
+  mode = 'create',
+  initialValues,
   onSubmit,
   onCancel,
   isSubmitting = false,
@@ -126,7 +191,9 @@ export function BenefitUsageForm({
   topErrorMessage,
   className,
 }: BenefitUsageFormProps) {
-  const [form, setForm] = useState<FormState>(buildInitialState);
+  const [form, setForm] = useState<FormState>(() =>
+    buildInitialState(initialValues),
+  );
   const [localErrors, setLocalErrors] = useState<BenefitUsageFormFieldErrors>(
     {},
   );
@@ -215,6 +282,22 @@ export function BenefitUsageForm({
     }
     setLocalErrors({});
 
+    if (mode === 'edit') {
+      // PATCH payload — `planId` is intentionally omitted (the backend rejects
+      // attempts to change the linked plan). All editable fields are sent.
+      const payload: UpdateBenefitUsageInput = {
+        attendedAt: datetimeLocalToIso(form.attendedAt),
+        procedureDescription: form.procedureDescription.trim(),
+        isEmergency: form.isEmergency,
+        totalValue: centsToDecimalString(form.totalValue),
+        discountApplied: centsToDecimalString(form.discountApplied),
+      };
+      await (onSubmit as (input: UpdateBenefitUsageInput) => Promise<void>)(
+        payload,
+      );
+      return;
+    }
+
     const payload: CreateBenefitUsageInput = {
       planId: plan.id,
       attendedAt: datetimeLocalToIso(form.attendedAt),
@@ -224,7 +307,9 @@ export function BenefitUsageForm({
       discountApplied: centsToDecimalString(form.discountApplied),
     };
 
-    await onSubmit(payload);
+    await (onSubmit as (input: CreateBenefitUsageInput) => Promise<void>)(
+      payload,
+    );
   }
 
   // Combine local validation errors with backend-mapped ones; backend wins
@@ -453,7 +538,13 @@ export function BenefitUsageForm({
           className="bg-[#4E8C75] hover:bg-[#3d7060] text-white"
           aria-live="polite"
         >
-          {isSubmitting ? 'Registrando...' : 'Registrar uso'}
+          {mode === 'edit'
+            ? isSubmitting
+              ? 'Salvando...'
+              : 'Salvar alterações'
+            : isSubmitting
+              ? 'Registrando...'
+              : 'Registrar uso'}
         </Button>
       </div>
     </form>

@@ -13,12 +13,29 @@ import {
   type BenefitUsageFormProps,
 } from './BenefitUsageForm';
 import type { PlanSummary } from '@/lib/types/plan';
+import type { BenefitUsageResponse } from '@/lib/types/benefit-usage';
 
 const examplePlan: PlanSummary = {
   id: '11111111-2222-3333-4444-555555555555',
   status: 'ativo',
   petName: 'Tobias',
   clientName: 'Maria Silva',
+};
+
+const exampleUsage: BenefitUsageResponse = {
+  id: '99999999-9999-9999-9999-999999999999',
+  planId: examplePlan.id,
+  attendedAt: '2026-04-29T13:30:00.000Z',
+  procedureDescription: 'Consulta clínica + vacinação V10',
+  isEmergency: false,
+  totalValue: '350.00',
+  discountApplied: '105.00',
+  createdBy: 'usr_atendente1',
+  updatedBy: null,
+  creator: { id: 'usr_atendente1', name: 'Ana Souza' },
+  updater: null,
+  createdAt: '2026-04-29T13:35:00.000Z',
+  updatedAt: '2026-04-29T13:35:00.000Z',
 };
 
 const noopAsync = async (): Promise<void> => {
@@ -94,5 +111,20 @@ export const GenericError: Story = {
     isSubmitting: false,
     topErrorMessage:
       'Não é possível registrar uso para um plano com este status.',
+  },
+};
+
+/** Edit mode — pré-preenche os campos a partir de um registro existente. */
+export const EditMode: Story = {
+  name: 'Edit mode (pré-preenchido)',
+  args: {
+    plan: examplePlan,
+    mode: 'edit',
+    initialValues: exampleUsage,
+    onSubmit: noopAsync,
+    onCancel: () => {
+      /* no-op */
+    },
+    isSubmitting: false,
   },
 };
