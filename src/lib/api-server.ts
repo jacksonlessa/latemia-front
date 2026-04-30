@@ -23,6 +23,10 @@ import type {
   NotificationEventType,
   QuietHoursDto,
 } from "./types/notifications";
+import type {
+  BenefitUsageResponse,
+  Paginated,
+} from "./types/benefit-usage";
 
 function apiUrl(): string {
   return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
@@ -422,4 +426,77 @@ export async function fetchPetDetail(
 
   if (!res.ok) return handleErrorResponse(res);
   return res.json() as Promise<PetDetail>;
+}
+
+// ---------------------------------------------------------------------------
+// Benefit usages endpoints
+// ---------------------------------------------------------------------------
+
+/**
+ * GET /v1/benefit-usages
+ * Paginated global listing with optional filters by period and plan.
+ * Admin-only on the backend.
+ */
+export async function fetchBenefitUsages(params: {
+  from?: string;
+  to?: string;
+  planId?: string;
+  page?: number;
+  limit?: number;
+  token: string;
+}): Promise<Paginated<BenefitUsageResponse>> {
+  const qs = new URLSearchParams();
+  if (params.from) qs.set("from", params.from);
+  if (params.to) qs.set("to", params.to);
+  if (params.planId) qs.set("planId", params.planId);
+  if (params.page !== undefined) qs.set("page", String(params.page));
+  if (params.limit !== undefined) qs.set("perPage", String(params.limit));
+
+  const query = qs.toString();
+  const url = `${apiUrl()}/v1/benefit-usages${query ? `?${query}` : ""}`;
+
+  const res = await fetch(url, {
+    headers: authHeaders(params.token),
+    cache: "no-store",
+  });
+
+  if (!res.ok) return handleErrorResponse(res);
+  return res.json() as Promise<Paginated<BenefitUsageResponse>>;
+}
+
+/**
+ * GET /v1/benefit-usages/by-plan/:planId
+ * Returns all usages for a given plan ordered by attendedAt desc (no pagination).
+ */
+export async function fetchBenefitUsagesByPlan(params: {
+  planId: string;
+  token: string;
+}): Promise<BenefitUsageResponse[]> {
+  const res = await fetch(
+    `${apiUrl()}/v1/benefit-usages/by-plan/${params.planId}`,
+    {
+      headers: authHeaders(params.token),
+      cache: "no-store",
+    },
+  );
+
+  if (!res.ok) return handleErrorResponse(res);
+  return res.json() as Promise<BenefitUsageResponse[]>;
+}
+
+/**
+ * GET /v1/benefit-usages/:id
+ * Returns a single benefit-usage detail.
+ */
+export async function fetchBenefitUsageById(params: {
+  id: string;
+  token: string;
+}): Promise<BenefitUsageResponse> {
+  const res = await fetch(`${apiUrl()}/v1/benefit-usages/${params.id}`, {
+    headers: authHeaders(params.token),
+    cache: "no-store",
+  });
+
+  if (!res.ok) return handleErrorResponse(res);
+  return res.json() as Promise<BenefitUsageResponse>;
 }
