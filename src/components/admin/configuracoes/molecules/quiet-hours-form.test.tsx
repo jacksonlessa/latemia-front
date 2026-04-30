@@ -11,12 +11,32 @@ const filled: QuietHoursDto = {
 };
 
 describe("QuietHoursForm", () => {
-  it("should show validation error when start is not HH:MM", async () => {
+  it("should clamp out-of-range digits via input mask", async () => {
+    const action = vi.fn(async (payload: QuietHoursDto) => ({
+      success: true as const,
+      data: payload,
+    }));
+    render(<QuietHoursForm initialValues={filled} saveAction={action} />);
+
+    const startInput = screen.getByLabelText(/Início/i) as HTMLInputElement;
+    // Usuário tenta digitar "2599" → máscara satura em 23:59.
+    fireEvent.change(startInput, { target: { value: "2599" } });
+    expect(startInput.value).toBe("23:59");
+
+    fireEvent.click(screen.getByRole("button", { name: /Salvar/i }));
+    await waitFor(() => expect(action).toHaveBeenCalledTimes(1));
+    expect(action).toHaveBeenCalledWith(
+      expect.objectContaining({ start: "23:59" }),
+    );
+  });
+
+  it("should show validation error when time is incomplete", async () => {
     const action = vi.fn();
     render(<QuietHoursForm initialValues={filled} saveAction={action} />);
 
     const startInput = screen.getByLabelText(/Início/i) as HTMLInputElement;
-    fireEvent.change(startInput, { target: { value: "25:99" } });
+    // "22" sozinho ainda não é HH:MM válido (sem minuto).
+    fireEvent.change(startInput, { target: { value: "22" } });
     fireEvent.click(screen.getByRole("button", { name: /Salvar/i }));
 
     await waitFor(() =>

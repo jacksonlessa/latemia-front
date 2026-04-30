@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { TimeInput, isValidHhMm } from "@/components/ui/time-input";
 import {
   Select,
   SelectContent,
@@ -24,8 +25,6 @@ const TIMEZONE_OPTIONS = [
   { value: "America/Noronha", label: "America/Noronha" },
   { value: "America/Bahia", label: "America/Bahia" },
 ];
-
-const HHMM_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 function getServerErrorMessage(code: string): string {
   switch (code) {
@@ -91,10 +90,10 @@ export function QuietHoursForm({
 
   function validate(): boolean {
     const errors: typeof validationErrors = {};
-    if (!HHMM_REGEX.test(start)) {
+    if (!isValidHhMm(start)) {
       errors.start = "Use o formato HH:MM (ex.: 22:00).";
     }
-    if (!HHMM_REGEX.test(end)) {
+    if (!isValidHhMm(end)) {
       errors.end = "Use o formato HH:MM (ex.: 07:00).";
     }
     if (!effectiveTimezone) {
@@ -182,13 +181,11 @@ export function QuietHoursForm({
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="quiet-hours-start">Início (HH:MM)</Label>
-          <Input
+          <TimeInput
             id="quiet-hours-start"
-            type="text"
-            inputMode="numeric"
             placeholder="22:00"
             value={start}
-            onChange={(e) => setStart(e.target.value)}
+            onChange={setStart}
             disabled={isDisabled}
             aria-invalid={Boolean(validationErrors.start)}
             aria-describedby={
@@ -208,13 +205,11 @@ export function QuietHoursForm({
 
         <div className="space-y-2">
           <Label htmlFor="quiet-hours-end">Fim (HH:MM)</Label>
-          <Input
+          <TimeInput
             id="quiet-hours-end"
-            type="text"
-            inputMode="numeric"
             placeholder="07:00"
             value={end}
-            onChange={(e) => setEnd(e.target.value)}
+            onChange={setEnd}
             disabled={isDisabled}
             aria-invalid={Boolean(validationErrors.end)}
             aria-describedby={
