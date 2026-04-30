@@ -116,6 +116,58 @@ export interface PlanDetail {
   payments: Payment[];
 }
 
+/**
+ * Plan detail shape as returned by the backend GET /v1/plans/:id.
+ *
+ * Used by the admin dashboard's `PlanDetailDrawer` which fetches the plan
+ * via the internal Route Handler `/api/admin/plans/:id`. Keeps email/phone
+ * masked field names exactly as the backend emits them so no transform
+ * layer is required between the API and the UI.
+ *
+ * Per PRD §5.2 the operator (including atendente) sees the full client
+ * name in this drawer because the data is needed for operational lookups.
+ */
+export interface DrawerPlanDetail {
+  id: string;
+  status: PlanStatus;
+  createdAt: string;
+  pagarmeSubscriptionId?: string;
+  firstPaidAt?: string;
+  gracePeriodEndsAt?: string;
+  pet: {
+    id: string;
+    name: string;
+    species: string;
+    breed?: string;
+    weight?: number;
+    castrated: boolean;
+    birthDate: string;
+  };
+  client: {
+    id: string;
+    name: string;
+    /** Already masked server-side (e.g. `j***@email.com`). */
+    emailMasked: string;
+    /** Already masked server-side (e.g. `(47) 9****-4567`). */
+    phoneMasked: string;
+  };
+  contract: {
+    id: string;
+    contractVersion: string;
+    consentedAt: string;
+  };
+  payments: Array<{
+    id: string;
+    status: string;
+    /** Decimal amount serialised as string by the backend. */
+    amount: string;
+    createdAt: string;
+    paidAt?: string;
+    failureCode?: string;
+    refundedAt?: string;
+  }>;
+}
+
 /** Webhook event recebido do provider (admin-only). */
 export interface PlanWebhookEvent {
   id: string;

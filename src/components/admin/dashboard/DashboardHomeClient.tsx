@@ -11,7 +11,7 @@ import type {
   DashboardKpisResponse,
   DashboardStatusChartResponse,
 } from "@/lib/types/dashboard";
-import type { PlanListItem, PlanListResponse } from "@/lib/types/plan";
+import type { PlanListResponse } from "@/lib/types/plan";
 import type { SessionUser } from "@/lib/session";
 
 interface DashboardHomeClientProps {
@@ -37,7 +37,7 @@ export function DashboardHomeClient({
 }: DashboardHomeClientProps) {
   void _role;
 
-  const [selectedPlan, setSelectedPlan] = useState<PlanListItem | null>(null);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -61,7 +61,7 @@ export function DashboardHomeClient({
             data={plansInitial.data}
             meta={plansInitial.meta}
             currentFilters={plansFilters}
-            onSelectPlan={setSelectedPlan}
+            onSelectPlan={(plan) => setSelectedPlanId(plan.id)}
           />
         </div>
         <div>
@@ -70,8 +70,8 @@ export function DashboardHomeClient({
       </div>
 
       <PlanDetailDrawer
-        plan={selectedPlan}
-        onClose={() => setSelectedPlan(null)}
+        planId={selectedPlanId}
+        onClose={() => setSelectedPlanId(null)}
       />
     </div>
   );
