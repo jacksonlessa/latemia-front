@@ -45,6 +45,18 @@ export interface PlanListItem {
   createdAt: string;
 }
 
+/**
+ * Minimal plan shape required by the BenefitUsage UI to render context
+ * (pet/client name) and gate behavior by status. Compatible with both
+ * `PlanListItem` and `PlanDetail`.
+ */
+export interface PlanSummary {
+  id: string;
+  status: PlanStatus;
+  petName?: string;
+  clientName?: string;
+}
+
 export interface PlanListMeta {
   total: number;
   page: number;
