@@ -3,14 +3,14 @@ import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { EmergencyBadge } from '@/components/admin/uso-beneficio/atoms/emergency-badge/EmergencyBadge';
-import type { BenefitUsage } from '@/lib/types/benefit-usage';
+import type { BenefitUsageResponse } from '@/lib/types/benefit-usage';
 
-interface BenefitUsageRowProps {
-  usage: BenefitUsage;
+export interface BenefitUsageRowProps {
+  usage: BenefitUsageResponse;
   /** When false, the edit button is hidden. */
   canEdit?: boolean;
   /** Click handler for the edit button. Required when `canEdit` is true. */
-  onEdit?: (usage: BenefitUsage) => void;
+  onEdit?: (usage: BenefitUsageResponse) => void;
   className?: string;
 }
 

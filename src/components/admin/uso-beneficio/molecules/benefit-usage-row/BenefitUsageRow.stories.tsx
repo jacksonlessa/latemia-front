@@ -7,6 +7,7 @@
 
 import type React from 'react';
 import { BenefitUsageRow } from './BenefitUsageRow';
+import type { BenefitUsageRowProps } from './BenefitUsageRow';
 import {
   Table,
   TableBody,
@@ -14,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type { BenefitUsage } from '@/lib/types/benefit-usage';
+import type { BenefitUsageResponse } from '@/lib/types/benefit-usage';
 
 const meta = {
   title: 'Admin - Uso do Benefício/Molecules/BenefitUsageRow',
@@ -24,13 +25,6 @@ const meta = {
 };
 
 export default meta;
-
-interface BenefitUsageRowProps {
-  usage: BenefitUsage;
-  canEdit?: boolean;
-  onEdit?: (usage: BenefitUsage) => void;
-  className?: string;
-}
 
 type Story = {
   render?: (args: BenefitUsageRowProps) => React.ReactElement;
@@ -42,7 +36,7 @@ type Story = {
 // Fixtures
 // ---------------------------------------------------------------------------
 
-const baseUsage: BenefitUsage = {
+const baseUsage: BenefitUsageResponse = {
   id: 'usg_01HZX4K5EXAMPLE',
   planId: 'pln_01HZX4K5EXAMPLE',
   attendedAt: '2026-04-28T14:30:00.000Z',
@@ -50,13 +44,15 @@ const baseUsage: BenefitUsage = {
   isEmergency: false,
   totalValue: '350.00',
   discountApplied: '105.00',
+  createdBy: 'usr_atendente1',
+  updatedBy: null,
   createdAt: '2026-04-28T14:35:00.000Z',
   updatedAt: '2026-04-28T14:35:00.000Z',
   creator: { id: 'usr_atendente1', name: 'Ana Souza' },
   updater: null,
 };
 
-const emergencyUsage: BenefitUsage = {
+const emergencyUsage: BenefitUsageResponse = {
   ...baseUsage,
   id: 'usg_01HZX4K6EXAMPLE',
   attendedAt: '2026-04-29T22:10:00.000Z',
@@ -66,14 +62,14 @@ const emergencyUsage: BenefitUsage = {
   discountApplied: '744.00',
 };
 
-const longDescriptionUsage: BenefitUsage = {
+const longDescriptionUsage: BenefitUsageResponse = {
   ...baseUsage,
   id: 'usg_01HZX4K7EXAMPLE',
   procedureDescription:
     'Consulta clínica completa com exames laboratoriais (hemograma, bioquímico hepático e renal), ultrassonografia abdominal, vacinação anual V10, antiparasitário oral e tópico, e orientação nutricional detalhada para pet idoso com histórico de pancreatite.',
 };
 
-const largeValueUsage: BenefitUsage = {
+const largeValueUsage: BenefitUsageResponse = {
   ...baseUsage,
   id: 'usg_01HZX4K8EXAMPLE',
   procedureDescription: 'Cirurgia ortopédica complexa com internação 3 dias',
