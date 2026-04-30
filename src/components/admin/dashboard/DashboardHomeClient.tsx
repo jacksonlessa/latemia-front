@@ -7,18 +7,18 @@ import { PlansTable } from "@/components/admin/dashboard/PlansTable";
 import { AlertsPanel } from "@/components/admin/dashboard/AlertsPanel";
 import { RecentUsage } from "@/components/admin/dashboard/RecentUsage";
 import { PlanDetailDrawer } from "@/components/admin/dashboard/PlanDetailDrawer";
-import type { Plan } from "@/components/admin/dashboard/PlansTable";
 import type {
   DashboardKpisResponse,
   DashboardStatusChartResponse,
 } from "@/lib/types/dashboard";
-import type { PlanListResponse } from "@/lib/types/plan";
+import type { PlanListItem, PlanListResponse } from "@/lib/types/plan";
 import type { SessionUser } from "@/lib/session";
 
 interface DashboardHomeClientProps {
   kpis: DashboardKpisResponse;
   statusChart: DashboardStatusChartResponse;
   plansInitial: PlanListResponse;
+  plansFilters: { status?: string; search?: string };
   role: SessionUser["role"];
 }
 
@@ -26,23 +26,18 @@ interface DashboardHomeClientProps {
  * Client wrapper for the admin dashboard home page.
  *
  * Owns the `selectedPlan` state and the `PlanDetailDrawer`.
- * Receives all server-fetched data via props so each child component can be
- * independently refactored in tasks 8–12. The interfaces of the underlying
- * components are intentionally preserved for now — wiring of real data into
- * `KPIGrid`, `StatusChart`, `PlansTable` and `PlanDetailDrawer` lands with
- * those tasks.
+ * Receives all server-fetched data via props.
  */
 export function DashboardHomeClient({
   kpis,
   statusChart,
-  plansInitial: _plansInitial,
+  plansInitial,
+  plansFilters,
   role: _role,
 }: DashboardHomeClientProps) {
-  // Suppress unused-warnings until tasks 10–12 wire these props into children.
-  void _plansInitial;
   void _role;
 
-  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<PlanListItem | null>(null);
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -62,7 +57,12 @@ export function DashboardHomeClient({
       {/* Table and Recent Usage */}
       <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <PlansTable onViewPlan={setSelectedPlan} />
+          <PlansTable
+            data={plansInitial.data}
+            meta={plansInitial.meta}
+            currentFilters={plansFilters}
+            onSelectPlan={setSelectedPlan}
+          />
         </div>
         <div>
           <RecentUsage />

@@ -1,8 +1,10 @@
 "use client";
 
-import { Eye, Filter } from "lucide-react";
-import { useState } from "react";
+import { Eye, Filter, Search } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -10,105 +12,165 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { PlanListItem, PlanListMeta, PlanStatus } from "@/lib/types/plan";
 
-export interface Plan {
-  id: string;
-  tutor: string;
-  pet: string;
-  planStatus: "ativo" | "carencia" | "cancelado" | "suspenso";
-  paymentStatus: "confirmado" | "pendente" | "atrasado";
-  validity: string;
-  nextDue: string;
-}
+const planStatusStyles: Record<PlanStatus, string> = {
+  pendente: "bg-[#FEF3C7] text-[#D97706]",
+  carencia: "bg-[#FEF3C7] text-[#D97706]",
+  ativo: "bg-[#EAF4F0] text-[#4E8C75]",
+  inadimplente: "bg-[#FDECEA] text-[#C94040]",
+  cancelado: "bg-[#F0F0F0] text-[#2C2C2E]",
+  estornado: "bg-[#F0F0F0] text-[#2C2C2E]",
+  contestado: "bg-[#F0F0F0] text-[#2C2C2E]",
+};
 
-const mockPlans: Plan[] = [
-  { id: "1", tutor: "João Silva", pet: "Rex", planStatus: "ativo", paymentStatus: "confirmado", validity: "12/04/2026", nextDue: "12/05/2026" },
-  { id: "2", tutor: "Maria Santos", pet: "Luna", planStatus: "carencia", paymentStatus: "confirmado", validity: "08/05/2026", nextDue: "08/05/2026" },
-  { id: "3", tutor: "Carlos Souza", pet: "Bolt", planStatus: "ativo", paymentStatus: "pendente", validity: "20/03/2027", nextDue: "20/04/2026" },
-  { id: "4", tutor: "Ana Paula", pet: "Mel", planStatus: "ativo", paymentStatus: "atrasado", validity: "15/01/2027", nextDue: "13/04/2026" },
-  { id: "5", tutor: "Pedro Lima", pet: "Thor", planStatus: "ativo", paymentStatus: "confirmado", validity: "22/06/2026", nextDue: "22/05/2026" },
-  { id: "6", tutor: "Juliana Costa", pet: "Nina", planStatus: "carencia", paymentStatus: "confirmado", validity: "30/04/2026", nextDue: "30/04/2026" },
-  { id: "7", tutor: "Roberto Alves", pet: "Max", planStatus: "ativo", paymentStatus: "confirmado", validity: "05/08/2026", nextDue: "05/05/2026" },
-  { id: "8", tutor: "Fernanda Rocha", pet: "Laika", planStatus: "suspenso", paymentStatus: "atrasado", validity: "18/02/2027", nextDue: "10/04/2026" },
+const planStatusLabels: Record<PlanStatus, string> = {
+  pendente: "Pendente",
+  carencia: "Carência",
+  ativo: "Ativo",
+  inadimplente: "Inadimplente",
+  cancelado: "Cancelado",
+  estornado: "Estornado",
+  contestado: "Contestado",
+};
+
+const STATUS_OPTIONS: Array<{ value: PlanStatus | "todos"; label: string }> = [
+  { value: "todos", label: "Todos os status" },
+  { value: "pendente", label: "Pendente" },
+  { value: "carencia", label: "Carência" },
+  { value: "ativo", label: "Ativo" },
+  { value: "inadimplente", label: "Inadimplente" },
+  { value: "cancelado", label: "Cancelado" },
+  { value: "estornado", label: "Estornado" },
+  { value: "contestado", label: "Contestado" },
 ];
 
-const planStatusStyles: Record<Plan["planStatus"], string> = {
-  ativo: "bg-[#EAF4F0] text-[#4E8C75]",
-  carencia: "bg-[#FEF3C7] text-[#D97706]",
-  cancelado: "bg-[#FDECEA] text-[#C94040]",
-  suspenso: "bg-[#F0F0F0] text-[#2C2C2E]",
-};
-
-const planStatusLabels: Record<Plan["planStatus"], string> = {
-  ativo: "Ativo",
-  carencia: "Carência",
-  cancelado: "Cancelado",
-  suspenso: "Suspenso",
-};
-
-const paymentStatusStyles: Record<Plan["paymentStatus"], string> = {
-  confirmado: "bg-[#EAF4F0] text-[#4E8C75]",
-  pendente: "bg-[#FEF3C7] text-[#D97706]",
-  atrasado: "bg-[#FDECEA] text-[#C94040]",
-};
-
-const paymentStatusLabels: Record<Plan["paymentStatus"], string> = {
-  confirmado: "Confirmado",
-  pendente: "Pendente",
-  atrasado: "Atrasado",
-};
-
-interface PlansTableProps {
-  onViewPlan: (plan: Plan) => void;
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
 }
 
-export function PlansTable({ onViewPlan }: PlansTableProps) {
-  const [planStatusFilter, setPlanStatusFilter] = useState<string>("todos");
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>("todos");
+export interface PlansTableFilters {
+  status?: string;
+  search?: string;
+}
 
-  const filteredPlans = mockPlans.filter((plan) => {
-    if (planStatusFilter !== "todos" && plan.planStatus !== planStatusFilter)
-      return false;
-    if (paymentStatusFilter !== "todos" && plan.paymentStatus !== paymentStatusFilter)
-      return false;
-    return true;
-  });
+export interface PlansTableProps {
+  data: PlanListItem[];
+  meta: PlanListMeta;
+  currentFilters: PlansTableFilters;
+  onSelectPlan: (plan: PlanListItem) => void;
+}
+
+/**
+ * Operational plans table for the admin dashboard.
+ *
+ * Filters (`status`, `search`) are reflected in the URL query string so the
+ * Server Component above re-fetches the list. The table itself is read-only.
+ */
+export function PlansTable({
+  data,
+  meta,
+  currentFilters,
+  onSelectPlan,
+}: PlansTableProps) {
+  const router = useRouter();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const initialStatus = currentFilters.status ?? "todos";
+  const initialSearch = currentFilters.search ?? "";
+
+  const [searchValue, setSearchValue] = useState(initialSearch);
+
+  useEffect(() => {
+    setSearchValue(currentFilters.search ?? "");
+  }, [currentFilters.search]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  function buildUrl(updates: Record<string, string>): string {
+    const params = new URLSearchParams();
+    if (currentFilters.status && currentFilters.status !== "todos") {
+      params.set("status", currentFilters.status);
+    }
+    if (currentFilters.search) {
+      params.set("search", currentFilters.search);
+    }
+    for (const [key, value] of Object.entries(updates)) {
+      if (value === "" || value === "todos") {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    }
+    const qs = params.toString();
+    return qs ? `?${qs}` : "?";
+  }
+
+  function handleStatusChange(value: string): void {
+    router.push(buildUrl({ status: value }));
+  }
+
+  function handleSearchChange(value: string): void {
+    setSearchValue(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      router.push(buildUrl({ search: value }));
+    }, 300);
+  }
 
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm md:p-6">
+    <div
+      className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm md:p-6"
+      data-testid="plans-table"
+    >
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-base font-semibold text-[#2C2C2E] md:text-lg">
           Consulta operacional de planos
         </h3>
-        <Filter className="h-5 w-5 text-[#6B6B6E]" />
+        <Filter className="h-5 w-5 text-[#6B6B6E]" aria-hidden="true" />
       </div>
 
       {/* Filters */}
       <div className="mb-4 flex flex-col gap-3 sm:flex-row md:gap-4">
-        <Select value={planStatusFilter} onValueChange={setPlanStatusFilter}>
-          <SelectTrigger className="w-48">
+        <Select value={initialStatus} onValueChange={handleStatusChange}>
+          <SelectTrigger
+            className="w-full sm:w-48"
+            aria-label="Filtrar por status do plano"
+          >
             <SelectValue placeholder="Status do plano" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="todos">Todos os status</SelectItem>
-            <SelectItem value="ativo">Ativo</SelectItem>
-            <SelectItem value="carencia">Carência</SelectItem>
-            <SelectItem value="suspenso">Suspenso</SelectItem>
-            <SelectItem value="cancelado">Cancelado</SelectItem>
+            {STATUS_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 
-        <Select value={paymentStatusFilter} onValueChange={setPaymentStatusFilter}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Status de pagamento" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os status</SelectItem>
-            <SelectItem value="confirmado">Confirmado</SelectItem>
-            <SelectItem value="pendente">Pendente</SelectItem>
-            <SelectItem value="atrasado">Atrasado</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="relative flex-1">
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6B6B6E]"
+            aria-hidden="true"
+          />
+          <Input
+            type="search"
+            placeholder="Buscar por tutor ou pet..."
+            value={searchValue}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="pl-9"
+            aria-label="Buscar planos"
+          />
+        </div>
       </div>
 
       {/* Table */}
@@ -117,59 +179,87 @@ export function PlansTable({ onViewPlan }: PlansTableProps) {
           <table className="min-w-full">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="px-4 py-3 text-left text-sm font-medium text-[#6B6B6E]">Tutor</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-[#6B6B6E]">Pet</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-[#6B6B6E]">Status do plano</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-[#6B6B6E]">Status pagamento</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-[#6B6B6E]">Vigência</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-[#6B6B6E]">Próximo vencimento</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-[#6B6B6E]">Ações</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-[#6B6B6E]">
+                  Tutor
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-[#6B6B6E]">
+                  Pet
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-[#6B6B6E]">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-[#6B6B6E]">
+                  Data
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-[#6B6B6E]">
+                  Ações
+                </th>
               </tr>
             </thead>
             <tbody>
-              {filteredPlans.map((plan) => (
-                <tr
-                  key={plan.id}
-                  className="cursor-pointer border-b border-gray-100 transition-colors hover:bg-[#F4F9F7]"
-                  onClick={() => onViewPlan(plan)}
-                >
-                  <td className="px-4 py-3 text-sm text-[#2C2C2E]">{plan.tutor}</td>
-                  <td className="px-4 py-3 text-sm text-[#2C2C2E]">{plan.pet}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-medium ${planStatusStyles[plan.planStatus]}`}
-                    >
-                      {planStatusLabels[plan.planStatus]}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-medium ${paymentStatusStyles[plan.paymentStatus]}`}
-                    >
-                      {paymentStatusLabels[plan.paymentStatus]}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-[#2C2C2E]">{plan.validity}</td>
-                  <td className="px-4 py-3 text-sm text-[#2C2C2E]">{plan.nextDue}</td>
-                  <td className="px-4 py-3">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-[#4E8C75] hover:bg-[#EAF4F0]"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onViewPlan(plan);
-                      }}
-                    >
-                      <Eye className="mr-1 h-4 w-4" />
-                      Ver
-                    </Button>
+              {data.length === 0 ? (
+                <tr data-testid="plans-table-empty">
+                  <td
+                    colSpan={5}
+                    className="px-4 py-8 text-center text-sm text-[#6B6B6E]"
+                  >
+                    Nenhum plano encontrado para os filtros aplicados.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                data.map((plan) => (
+                  <tr
+                    key={plan.id}
+                    data-testid="plans-table-row"
+                    className="cursor-pointer border-b border-gray-100 transition-colors hover:bg-[#F4F9F7]"
+                    onClick={() => onSelectPlan(plan)}
+                  >
+                    <td className="px-4 py-3 text-sm text-[#2C2C2E]">
+                      {plan.clientName}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-[#2C2C2E]">
+                      {plan.petName}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-medium ${planStatusStyles[plan.status]}`}
+                      >
+                        {planStatusLabels[plan.status]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-[#2C2C2E]">
+                      {formatDate(plan.createdAt)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-[#4E8C75] hover:bg-[#EAF4F0]"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectPlan(plan);
+                        }}
+                      >
+                        <Eye className="mr-1 h-4 w-4" />
+                        Ver
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Footer */}
+      <div className="mt-4 flex items-center justify-between text-xs text-[#6B6B6E]">
+        <span data-testid="plans-table-total">
+          {meta.total} {meta.total === 1 ? "plano" : "planos"} no total
+        </span>
+        <span>
+          Página {meta.page} de {Math.max(meta.totalPages, 1)}
+        </span>
       </div>
     </div>
   );

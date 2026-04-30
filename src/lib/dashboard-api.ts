@@ -56,6 +56,8 @@ export async function fetchStatusChart(
 export interface FetchInitialPlansQuery {
   page?: number;
   perPage?: number;
+  status?: string;
+  search?: string;
 }
 
 /**
@@ -73,6 +75,8 @@ export async function fetchInitialPlans(
     page: String(page),
     perPage: String(perPage),
   });
+  if (query.status && query.status !== "todos") qs.set("status", query.status);
+  if (query.search) qs.set("search", query.search);
   const res = await fetch(getApiUrl(`/v1/plans?${qs.toString()}`), {
     headers: authHeaders(token),
     cache: "no-store",

@@ -10,7 +10,18 @@ import {
 import { DashboardErrorState } from "@/components/admin/dashboard/DashboardErrorState";
 import { DashboardHomeClient } from "@/components/admin/dashboard/DashboardHomeClient";
 
-export default async function DashboardPage() {
+interface DashboardPageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+function pickString(
+  value: string | string[] | undefined,
+): string | undefined {
+  if (Array.isArray(value)) return value[0];
+  return value;
+}
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
 
@@ -23,11 +34,16 @@ export default async function DashboardPage() {
     redirect("/admin/login");
   }
 
+  const params = await searchParams;
+  const status = pickString(params.status);
+  const search = pickString(params.search);
+  const plansFilters = { status, search };
+
   try {
     const [kpis, statusChart, plansInitial] = await Promise.all([
       fetchKpis(token),
       fetchStatusChart(token),
-      fetchInitialPlans(token, { page: 1, perPage: 20 }),
+      fetchInitialPlans(token, { page: 1, perPage: 20, status, search }),
     ]);
 
     return (
@@ -35,6 +51,7 @@ export default async function DashboardPage() {
         kpis={kpis}
         statusChart={statusChart}
         plansInitial={plansInitial}
+        plansFilters={plansFilters}
         role={user.role}
       />
     );

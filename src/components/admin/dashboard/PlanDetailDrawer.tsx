@@ -2,10 +2,10 @@
 
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { Plan } from "./PlansTable";
+import type { PlanListItem } from "@/lib/types/plan";
 
 interface PlanDetailDrawerProps {
-  plan: Plan | null;
+  plan: PlanListItem | null;
   onClose: () => void;
 }
 
@@ -13,20 +13,13 @@ export function PlanDetailDrawer({ plan, onClose }: PlanDetailDrawerProps) {
   if (!plan) return null;
 
   const planStatusClass =
-    plan.planStatus === "ativo"
+    plan.status === "ativo"
       ? "bg-[#EAF4F0] text-[#4E8C75]"
-      : plan.planStatus === "carencia"
+      : plan.status === "carencia" || plan.status === "pendente"
         ? "bg-[#FEF3C7] text-[#D97706]"
-        : plan.planStatus === "cancelado"
+        : plan.status === "inadimplente"
           ? "bg-[#FDECEA] text-[#C94040]"
           : "bg-[#F0F0F0] text-[#2C2C2E]";
-
-  const paymentStatusClass =
-    plan.paymentStatus === "confirmado"
-      ? "bg-[#EAF4F0] text-[#4E8C75]"
-      : plan.paymentStatus === "pendente"
-        ? "bg-[#FEF3C7] text-[#D97706]"
-        : "bg-[#FDECEA] text-[#C94040]";
 
   return (
     <>
@@ -64,11 +57,11 @@ export function PlanDetailDrawer({ plan, onClose }: PlanDetailDrawerProps) {
               </div>
               <div className="flex items-start justify-between">
                 <span className="text-sm text-[#6B6B6E]">Tutor</span>
-                <span className="text-sm font-medium text-[#2C2C2E]">{plan.tutor}</span>
+                <span className="text-sm font-medium text-[#2C2C2E]">{plan.clientName}</span>
               </div>
               <div className="flex items-start justify-between">
                 <span className="text-sm text-[#6B6B6E]">Pet</span>
-                <span className="text-sm font-medium text-[#2C2C2E]">{plan.pet}</span>
+                <span className="text-sm font-medium text-[#2C2C2E]">{plan.petName}</span>
               </div>
               <div className="flex items-start justify-between">
                 <span className="text-sm text-[#6B6B6E]">Espécie</span>
@@ -98,7 +91,7 @@ export function PlanDetailDrawer({ plan, onClose }: PlanDetailDrawerProps) {
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-medium ${planStatusClass}`}
                 >
-                  {plan.planStatus.charAt(0).toUpperCase() + plan.planStatus.slice(1)}
+                  {plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}
                 </span>
               </div>
               <div className="flex items-start justify-between">
@@ -107,43 +100,11 @@ export function PlanDetailDrawer({ plan, onClose }: PlanDetailDrawerProps) {
               </div>
               <div className="flex items-start justify-between">
                 <span className="text-sm text-[#6B6B6E]">Vigência até</span>
-                <span className="text-sm font-medium text-[#2C2C2E]">{plan.validity}</span>
+                <span className="text-sm font-medium text-[#2C2C2E]">—</span>
               </div>
               <div className="flex items-start justify-between">
                 <span className="text-sm text-[#6B6B6E]">Tipo de plano</span>
                 <span className="text-sm font-medium text-[#2C2C2E]">Plano Essencial</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-200" />
-
-          {/* Payment Info */}
-          <div>
-            <h3 className="mb-3 text-sm font-medium text-[#6B6B6E]">
-              Informações de Pagamento
-            </h3>
-            <div className="space-y-3">
-              <div className="flex items-start justify-between">
-                <span className="text-sm text-[#6B6B6E]">Status pagamento</span>
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-medium ${paymentStatusClass}`}
-                >
-                  {plan.paymentStatus.charAt(0).toUpperCase() +
-                    plan.paymentStatus.slice(1)}
-                </span>
-              </div>
-              <div className="flex items-start justify-between">
-                <span className="text-sm text-[#6B6B6E]">Valor mensal</span>
-                <span className="text-sm font-medium text-[#2C2C2E]">R$ 180,00</span>
-              </div>
-              <div className="flex items-start justify-between">
-                <span className="text-sm text-[#6B6B6E]">Próximo vencimento</span>
-                <span className="text-sm font-medium text-[#2C2C2E]">{plan.nextDue}</span>
-              </div>
-              <div className="flex items-start justify-between">
-                <span className="text-sm text-[#6B6B6E]">Forma de pagamento</span>
-                <span className="text-sm font-medium text-[#2C2C2E]">Cartão de crédito</span>
               </div>
             </div>
           </div>
@@ -163,7 +124,7 @@ export function PlanDetailDrawer({ plan, onClose }: PlanDetailDrawerProps) {
               <div className="flex items-start justify-between">
                 <span className="text-sm text-[#6B6B6E]">E-mail</span>
                 <span className="text-sm font-medium text-[#2C2C2E]">
-                  {plan.tutor.toLowerCase().replace(" ", ".")}@email.com
+                  {plan.clientName.toLowerCase().replace(/\s+/g, ".")}@email.com
                 </span>
               </div>
               <div className="flex items-start justify-between">
