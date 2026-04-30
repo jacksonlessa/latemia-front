@@ -34,12 +34,11 @@ interface DashboardHomeClientProps {
  */
 export function DashboardHomeClient({
   kpis,
-  statusChart: _statusChart,
+  statusChart,
   plansInitial: _plansInitial,
   role: _role,
 }: DashboardHomeClientProps) {
-  // Suppress unused-warnings until tasks 9–12 wire these props into children.
-  void _statusChart;
+  // Suppress unused-warnings until tasks 10–12 wire these props into children.
   void _plansInitial;
   void _role;
 
@@ -53,7 +52,7 @@ export function DashboardHomeClient({
       {/* Chart and Alerts */}
       <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <StatusChart />
+          <StatusChart data={statusChart.data} />
         </div>
         <div>
           <AlertsPanel />
