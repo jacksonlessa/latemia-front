@@ -5,7 +5,8 @@ import { ExternalLink, X, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import type { DrawerPlanDetail, PlanStatus } from "@/lib/types/plan";
+import { PlanStatusBadge } from "@/components/admin/planos/atoms/plan-status-badge/PlanStatusBadge";
+import type { DrawerPlanDetail } from "@/lib/types/plan";
 
 interface PlanDetailDrawerProps {
   /** When `null`, the drawer is closed; otherwise a fetch is triggered. */
@@ -24,26 +25,6 @@ type FetchState =
   | { status: "loading" }
   | { status: "error"; message: string }
   | { status: "success"; plan: DrawerPlanDetail };
-
-const planStatusClassMap: Record<PlanStatus, string> = {
-  pendente: "bg-[#FEF3C7] text-[#D97706]",
-  carencia: "bg-[#FEF3C7] text-[#D97706]",
-  ativo: "bg-[#EAF4F0] text-[#4E8C75]",
-  inadimplente: "bg-[#FDECEA] text-[#C94040]",
-  cancelado: "bg-[#F0F0F0] text-[#2C2C2E]",
-  estornado: "bg-[#F0F0F0] text-[#2C2C2E]",
-  contestado: "bg-[#F0F0F0] text-[#2C2C2E]",
-};
-
-const planStatusLabelMap: Record<PlanStatus, string> = {
-  pendente: "Pendente",
-  carencia: "Carência",
-  ativo: "Ativo",
-  inadimplente: "Inadimplente",
-  cancelado: "Cancelado",
-  estornado: "Estornado",
-  contestado: "Contestado",
-};
 
 const dateTimeFormatter = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
@@ -260,8 +241,6 @@ function DrawerSuccessContent({
   plan: DrawerPlanDetail;
   planId: string;
 }) {
-  const statusClass = planStatusClassMap[plan.status];
-  const statusLabel = planStatusLabelMap[plan.status];
   const speciesLabel =
     plan.pet.species.charAt(0).toUpperCase() + plan.pet.species.slice(1);
 
@@ -299,11 +278,7 @@ function DrawerSuccessContent({
         </h3>
         <div className="space-y-3">
           <Row label="Status atual">
-            <span
-              className={`rounded-full px-3 py-1 text-xs font-medium ${statusClass}`}
-            >
-              {statusLabel}
-            </span>
+            <PlanStatusBadge status={plan.status} />
           </Row>
           <Row label="Criado em">{formatDateTime(plan.createdAt)}</Row>
           <Row label="Primeira cobrança paga">

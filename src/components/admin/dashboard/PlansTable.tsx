@@ -12,27 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PlanStatusBadge } from "@/components/admin/planos/atoms/plan-status-badge/PlanStatusBadge";
 import type { PlanListItem, PlanListMeta, PlanStatus } from "@/lib/types/plan";
-
-const planStatusStyles: Record<PlanStatus, string> = {
-  pendente: "bg-[#FEF3C7] text-[#D97706]",
-  carencia: "bg-[#FEF3C7] text-[#D97706]",
-  ativo: "bg-[#EAF4F0] text-[#4E8C75]",
-  inadimplente: "bg-[#FDECEA] text-[#C94040]",
-  cancelado: "bg-[#F0F0F0] text-[#2C2C2E]",
-  estornado: "bg-[#F0F0F0] text-[#2C2C2E]",
-  contestado: "bg-[#F0F0F0] text-[#2C2C2E]",
-};
-
-const planStatusLabels: Record<PlanStatus, string> = {
-  pendente: "Pendente",
-  carencia: "Carência",
-  ativo: "Ativo",
-  inadimplente: "Inadimplente",
-  cancelado: "Cancelado",
-  estornado: "Estornado",
-  contestado: "Contestado",
-};
 
 const STATUS_OPTIONS: Array<{ value: PlanStatus | "todos"; label: string }> = [
   { value: "todos", label: "Todos os status" },
@@ -221,11 +202,7 @@ export function PlansTable({
                       {plan.petName}
                     </td>
                     <td className="px-4 py-3">
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-medium ${planStatusStyles[plan.status]}`}
-                      >
-                        {planStatusLabels[plan.status]}
-                      </span>
+                      <PlanStatusBadge status={plan.status} />
                     </td>
                     <td className="px-4 py-3 text-sm text-[#2C2C2E]">
                       {formatDate(plan.createdAt)}
