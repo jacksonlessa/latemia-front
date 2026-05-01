@@ -17,15 +17,15 @@ const statusConfig: Record<PlanStatus, StatusConfig> = {
   // Não-terminais
   pendente: {
     label: 'Pendente',
-    // âmbar
+    // slate — neutro, distingue de carencia (âmbar)
     className:
-      'border-transparent bg-amber-50 text-amber-600 hover:bg-amber-50',
+      'border-transparent bg-slate-100 text-slate-600 hover:bg-slate-100',
   },
   carencia: {
     label: 'Carência',
-    // azul claro
+    // âmbar — alinhado com dashboard (PlansTable / PlanDetailDrawer / StatusChart)
     className:
-      'border-transparent bg-sky-50 text-sky-600 hover:bg-sky-50',
+      'border-transparent bg-amber-50 text-amber-600 hover:bg-amber-50',
   },
   ativo: {
     label: 'Ativo',

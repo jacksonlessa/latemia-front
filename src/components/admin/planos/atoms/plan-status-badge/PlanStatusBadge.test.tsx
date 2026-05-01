@@ -33,16 +33,16 @@ describe('PlanStatusBadge', () => {
     expect(screen.getByLabelText('Status: Ativo')).toBeInTheDocument();
   });
 
-  it('should apply amber color class when status is pendente', () => {
+  it('should apply slate color class when status is pendente', () => {
     const { container } = render(<PlanStatusBadge status="pendente" />);
     const badge = container.firstChild as HTMLElement;
-    expect(badge.className).toContain('amber');
+    expect(badge.className).toContain('slate');
   });
 
-  it('should apply light blue (sky) color class when status is carencia', () => {
+  it('should apply amber color class when status is carencia', () => {
     const { container } = render(<PlanStatusBadge status="carencia" />);
     const badge = container.firstChild as HTMLElement;
-    expect(badge.className).toContain('sky');
+    expect(badge.className).toContain('amber');
   });
 
   it('should apply red color class when status is inadimplente', () => {
