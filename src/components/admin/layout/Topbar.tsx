@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { SessionUser } from "@/lib/session";
+import { HeaderClientSearch } from "./header-client-search/HeaderClientSearch";
 
 interface TopbarProps {
   user: SessionUser;
@@ -39,18 +40,17 @@ export function Topbar({ user }: TopbarProps) {
     <header className="flex h-16 items-center justify-between gap-4 border-b border-gray-200 bg-white px-4 md:px-6">
       {/* Search Bar */}
       <div className="hidden max-w-lg flex-1 md:block">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[#6B6B6E]" />
-          <input
-            type="text"
-            placeholder="Buscar por CPF, nome ou telefone..."
-            className="w-full rounded-lg border border-gray-200 py-2 pl-10 pr-4 text-[#2C2C2E] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#4E8C75]"
-          />
-        </div>
+        <HeaderClientSearch />
       </div>
 
-      {/* Mobile Search Button */}
-      <button className="rounded-lg p-2 transition-colors hover:bg-gray-100 md:hidden">
+      {/* Mobile Search Button — out of scope; signaled as inert for a11y */}
+      <button
+        type="button"
+        aria-disabled="true"
+        tabIndex={-1}
+        title="Em breve"
+        className="rounded-lg p-2 transition-colors hover:bg-gray-100 md:hidden"
+      >
         <Search className="h-5 w-5 text-[#6B6B6E]" />
       </button>
 
