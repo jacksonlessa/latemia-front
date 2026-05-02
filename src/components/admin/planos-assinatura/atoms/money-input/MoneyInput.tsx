@@ -1,13 +1,14 @@
 'use client';
 
-import { useRef, useState, useCallback } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
 interface MoneyInputProps {
-  /** Current value in cents */
+  /** Current value in cents (integer). */
   value: number;
+  /** Called with the updated cents integer on every keystroke. */
   onChange: (cents: number) => void;
   label?: string;
   id?: string;
@@ -17,22 +18,38 @@ interface MoneyInputProps {
   'aria-describedby'?: string;
 }
 
-/** Formats a cents integer to a BRL display string, e.g. 10050 → "100,50" */
-function centsToDisplay(cents: number): string {
-  if (!Number.isFinite(cents) || cents < 0) return '';
-  return (cents / 100).toFixed(2).replace('.', ',');
+const MAX_DIGITS = 13;
+
+const ptBR = new Intl.NumberFormat('pt-BR', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+function extractDigits(input: string): string {
+  return input.replace(/\D/g, '').slice(0, MAX_DIGITS);
 }
 
-/** Parses a BRL display string back to cents, e.g. "100,50" → 10050 */
-function displayToCents(display: string): number {
-  const cleaned = display.replace(/\D/g, '');
-  const parsed = parseInt(cleaned, 10);
-  return Number.isNaN(parsed) ? 0 : parsed;
+function digitsToCents(digits: string): number {
+  if (digits === '') return 0;
+  const n = parseInt(digits, 10);
+  return Number.isNaN(n) ? 0 : n;
+}
+
+function centsToDisplay(cents: number): string {
+  if (!Number.isFinite(cents) || cents <= 0) return '';
+  return ptBR.format(cents / 100);
 }
 
 /**
- * Numeric input that works in cents internally but displays as BRL (R$).
- * The parent always receives/sends integer cents.
+ * Numeric input for monetary values in BRL.
+ *
+ * Input mask grows from the right as the user types: each digit is appended
+ * as the least significant cent, e.g. typing 1→4→5→0→0→0 yields
+ * 0,01 → 0,14 → 1,45 → 14,50 → 145,00 → 1.450,00.
+ *
+ * Non-digit input is rejected; thousand separators and the decimal comma are
+ * inserted automatically. The component works with integer cents internally
+ * and externally — parents always send/receive cents.
  */
 export function MoneyInput({
   value,
@@ -45,27 +62,39 @@ export function MoneyInput({
   'aria-describedby': ariaDescribedBy,
 }: MoneyInputProps) {
   const inputId = id ?? 'money-input';
-  const [displayValue, setDisplayValue] = useState<string>(centsToDisplay(value));
-  const isFocused = useRef(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [display, setDisplay] = useState<string>(() => centsToDisplay(value));
 
-  const handleFocus = useCallback(() => {
-    isFocused.current = true;
-    // Show raw digits without formatting while editing
-    setDisplayValue(centsToDisplay(value));
+  useEffect(() => {
+    setDisplay((current) => {
+      const currentCents = digitsToCents(extractDigits(current));
+      return currentCents === value ? current : centsToDisplay(value);
+    });
   }, [value]);
 
-  const handleBlur = useCallback(() => {
-    isFocused.current = false;
-    const cents = displayToCents(displayValue);
-    setDisplayValue(centsToDisplay(cents));
-    onChange(cents);
-  }, [displayValue, onChange]);
+  useLayoutEffect(() => {
+    const el = inputRef.current;
+    if (!el || document.activeElement !== el) return;
+    const len = el.value.length;
+    el.setSelectionRange(len, len);
+  }, [display]);
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    // Allow only digits and comma
-    const filtered = raw.replace(/[^0-9,]/g, '');
-    setDisplayValue(filtered);
+  const handleChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const digits = extractDigits(event.target.value);
+      const cents = digitsToCents(digits);
+      setDisplay(centsToDisplay(cents));
+      onChange(cents);
+    },
+    [onChange],
+  );
+
+  const handleSelect = useCallback((event: React.SyntheticEvent<HTMLInputElement>) => {
+    const el = event.currentTarget;
+    const len = el.value.length;
+    if (el.selectionStart !== len || el.selectionEnd !== len) {
+      el.setSelectionRange(len, len);
+    }
   }, []);
 
   return (
@@ -83,15 +112,16 @@ export function MoneyInput({
           R$
         </span>
         <Input
+          ref={inputRef}
           id={inputId}
           type="text"
-          inputMode="decimal"
-          value={displayValue}
+          inputMode="numeric"
+          autoComplete="off"
+          value={display}
           placeholder={placeholder}
           disabled={disabled}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
           onChange={handleChange}
+          onSelect={handleSelect}
           aria-describedby={ariaDescribedBy}
           aria-label={label ? undefined : 'Valor em reais'}
           className="pl-9"

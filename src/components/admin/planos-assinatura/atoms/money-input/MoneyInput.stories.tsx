@@ -32,7 +32,7 @@ export const Default: Story = {
     return (
       <MoneyInput
         id="story-default"
-        label="Preço mínimo"
+        label="Preço"
         value={value}
         onChange={setValue}
       />
@@ -40,7 +40,7 @@ export const Default: Story = {
   },
 };
 
-/** Valor zerado */
+/** Valor zerado — placeholder visível */
 export const Empty: Story = {
   name: 'Vazio',
   render: () => {
@@ -57,13 +57,29 @@ export const Empty: Story = {
   },
 };
 
+/** Valor grande — separador de milhar */
+export const LargeValue: Story = {
+  name: 'Valor com milhares',
+  render: () => {
+    const [value, setValue] = useState(145000);
+    return (
+      <MoneyInput
+        id="story-large"
+        label="Valor total"
+        value={value}
+        onChange={setValue}
+      />
+    );
+  },
+};
+
 /** Estado desabilitado */
 export const Disabled: Story = {
   name: 'Desabilitado',
   render: () => (
     <MoneyInput
       id="story-disabled"
-      label="Preço mínimo"
+      label="Preço"
       value={4990}
       onChange={() => undefined}
       disabled
