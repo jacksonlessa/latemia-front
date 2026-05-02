@@ -250,7 +250,7 @@ export function CoverageSection() {
                 </>
               ) : (
                 <>
-                  <strong className="text-ink">Para procedimentos não cobertos, oferecemos 15% de desconto</strong>{' '}
+                  <strong className="text-ink">Para procedimentos não cobertos, oferecemos até 30% de desconto</strong>{' '}
                   em consultas eletivas, exames de imagem e laboratoriais — exclusivo para membros.
                 </>
               )}
