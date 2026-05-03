@@ -84,14 +84,19 @@ export function RegisterUsageButton({ plan, onRegistered }: RegisterUsageButtonP
 
   const tooltipMessage = disabledTooltip[plan.status];
   const isDisabled = !!tooltipMessage;
+  // Stable id for the tooltip text so aria-describedby works across renders
+  const tooltipId = `register-usage-tooltip-${plan.id}`;
 
   const button = (
     <Button
-      onClick={handleButtonClick}
-      disabled={isDisabled}
+      onClick={isDisabled ? undefined : handleButtonClick}
+      // Use aria-disabled instead of HTML disabled so the button remains
+      // focusable and screen readers announce the reason via aria-describedby.
+      aria-disabled={isDisabled || undefined}
+      aria-describedby={isDisabled ? tooltipId : undefined}
       className={
         isDisabled
-          ? undefined
+          ? 'cursor-not-allowed opacity-50'
           : 'bg-[#4E8C75] text-white hover:bg-[#4E8C75]/90'
       }
       aria-label="Registrar uso de benefício"
@@ -104,17 +109,24 @@ export function RegisterUsageButton({ plan, onRegistered }: RegisterUsageButtonP
   return (
     <>
       {isDisabled ? (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            {/* Wrap in span to allow Tooltip on disabled button */}
-            <span className="inline-flex">
-              {button}
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{tooltipMessage}</p>
-          </TooltipContent>
-        </Tooltip>
+        <>
+          {/*
+           * The sr-only span carries the id so that aria-describedby on the
+           * button points to text in the same DOM tree (not a portal).
+           * The visual Tooltip provides the same text for pointer users.
+           */}
+          <span id={tooltipId} className="sr-only">
+            {tooltipMessage}
+          </span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex">{button}</span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{tooltipMessage}</p>
+            </TooltipContent>
+          </Tooltip>
+        </>
       ) : (
         button
       )}

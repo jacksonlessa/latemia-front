@@ -331,8 +331,10 @@ describe('RegisterUsageButton friction behavior', () => {
 
     render(<RegisterUsageButton plan={plan} />);
 
+    // Button uses aria-disabled (not HTML disabled) so it stays keyboard-focusable
+    // and screen readers can announce the reason via aria-describedby.
     const btn = screen.getByRole('button', { name: /registrar uso/i });
-    expect(btn).toBeDisabled();
+    expect(btn).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('should disable the button when plan status is cancelado', async () => {
@@ -345,7 +347,7 @@ describe('RegisterUsageButton friction behavior', () => {
     render(<RegisterUsageButton plan={plan} />);
 
     const btn = screen.getByRole('button', { name: /registrar uso/i });
-    expect(btn).toBeDisabled();
+    expect(btn).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('should show FrictionConfirmDialog first when plan status is inadimplente', async () => {
@@ -383,7 +385,7 @@ describe('RegisterUsageButton friction behavior', () => {
     render(<RegisterUsageButton plan={plan} />);
 
     const btn = screen.getByRole('button', { name: /registrar uso/i });
-    expect(btn).toBeDisabled();
+    expect(btn).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('should disable the button when plan status is contestado', async () => {
@@ -396,6 +398,6 @@ describe('RegisterUsageButton friction behavior', () => {
     render(<RegisterUsageButton plan={plan} />);
 
     const btn = screen.getByRole('button', { name: /registrar uso/i });
-    expect(btn).toBeDisabled();
+    expect(btn).toHaveAttribute('aria-disabled', 'true');
   });
 });

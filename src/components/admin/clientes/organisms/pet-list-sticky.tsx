@@ -22,7 +22,8 @@ export function PetListSticky({
         aria-label="Lista de pets"
         className={cn(
           'flex flex-col rounded-lg border bg-card p-4',
-          'lg:sticky lg:top-4 lg:self-start',
+          // Desktop/tablet (≥768px): sticky; fallback top-0 (no --admin-topbar-height variable defined)
+          'md:sticky md:top-0 md:self-start',
           className,
         )}
       >
@@ -38,8 +39,9 @@ export function PetListSticky({
       aria-label="Lista de pets"
       className={cn(
         'rounded-lg border bg-card',
-        // Desktop/tablet: sticky sidebar, vertical list
-        'lg:sticky lg:top-4 lg:self-start',
+        // Desktop/tablet (≥768px): sticky sidebar
+        // top falls back to 0 since --admin-topbar-height is not defined globally
+        'md:sticky md:top-0 md:self-start',
         className,
       )}
     >
@@ -53,30 +55,34 @@ export function PetListSticky({
         </h2>
       </div>
 
-      {/* List — vertical on desktop/tablet, horizontal on mobile */}
+      {/*
+       * List — vertical on desktop/tablet, horizontal scroll on mobile.
+       *
+       * ARIA: The container is a nav with an accessible label. Individual items
+       * use PetListItem which renders a <button aria-pressed> — the correct
+       * pattern for toggle buttons that select content. We do NOT use
+       * role="listbox"/"option" here because the `option` role must not contain
+       * interactive children (buttons), which would be an ARIA invalid nesting.
+       */}
       <nav aria-label="Navegação entre pets">
         <ul
           className={cn(
-            // Mobile: horizontal scroll
+            // Mobile (<768px): horizontal scroll so all pets are reachable
             'flex overflow-x-auto gap-2 p-3',
-            // Desktop: vertical list
-            'lg:flex-col lg:overflow-x-visible lg:p-2',
+            // Desktop/tablet (≥768px): vertical list, no horizontal scroll
+            'md:flex-col md:overflow-x-visible md:p-2',
           )}
-          role="listbox"
-          aria-label="Selecione um pet"
         >
           {pets.map((pet) => (
             <li
               key={pet.id}
-              role="option"
-              aria-selected={pet.id === selectedPetId}
               className={cn(
-                // Mobile: shrink-0 so items don't compress in horizontal scroll
+                // Mobile: fixed width so cards don't collapse in flex row
                 'shrink-0',
-                'lg:shrink lg:w-full',
+                'md:shrink md:w-full',
               )}
             >
-              <div className="w-48 lg:w-full">
+              <div className="w-48 md:w-full">
                 <PetListItem
                   pet={pet}
                   selected={pet.id === selectedPetId}

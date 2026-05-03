@@ -167,7 +167,8 @@ export function ClientDetailPageClient({
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[280px_1fr]">
+        // Two-column layout from tablet (768px) onwards; single column on mobile
+        <div className="flex flex-col gap-4 md:grid md:grid-cols-[260px_1fr] lg:grid-cols-[280px_1fr]">
           {/* Left: sticky pet list */}
           <PetListSticky
             pets={petListItems}
