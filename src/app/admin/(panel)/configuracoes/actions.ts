@@ -121,7 +121,7 @@ export async function updateNotificationEventConfig(
   if (!auth.ok) return { success: false, error: auth.error };
   try {
     const data = await patchNotificationEvent(auth.token, type, enabled);
-    revalidatePath("/admin/configuracoes");
+    revalidatePath("/admin/configuracoes/notificacoes");
     return { success: true, data };
   } catch (err) {
     return {
@@ -152,7 +152,7 @@ export async function updateQuietHours(
   if (!auth.ok) return { success: false, error: auth.error };
   try {
     const data = await putQuietHours(auth.token, payload);
-    revalidatePath("/admin/configuracoes");
+    revalidatePath("/admin/configuracoes/notificacoes");
     return { success: true, data };
   } catch (err) {
     return {
