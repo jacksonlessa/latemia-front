@@ -34,7 +34,7 @@ vi.mock('next/server', async (importOriginal) => {
 // Import after mocks are set up
 // ---------------------------------------------------------------------------
 
-import { PATCH } from './route';
+import { PATCH, DELETE } from './route';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -201,6 +201,105 @@ describe('PATCH /api/admin/clients/[id]/pets/[petId] — 5xx opaque passthrough'
     const res = await PATCH(makeRequest(), makeCtx());
 
     expect(res.status).toBe(500);
+    const text = await res.text();
+    expect(text).toBe(backendBody);
+  });
+});
+
+// ===========================================================================
+// DELETE /api/admin/clients/[id]/pets/[petId]
+// ===========================================================================
+
+function makeDeleteRequest(): Request {
+  return new Request(
+    'http://localhost/api/admin/clients/client-uuid-1/pets/pet-uuid-1',
+    { method: 'DELETE' },
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 401 — missing session cookie
+// ---------------------------------------------------------------------------
+
+describe('DELETE /api/admin/clients/[id]/pets/[petId] — 401 when cookie absent', () => {
+  it('should return 401 when the session cookie is not set', async () => {
+    mockGetCookie.mockReturnValue(undefined);
+
+    const res = await DELETE(makeDeleteRequest(), makeCtx());
+
+    expect(res.status).toBe(401);
+    const body = await res.json();
+    expect(body.code).toBe('UNAUTHENTICATED');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Authorization header forwarding
+// ---------------------------------------------------------------------------
+
+describe('DELETE /api/admin/clients/[id]/pets/[petId] — Authorization header forwarded', () => {
+  it('should forward Authorization: Bearer <token> to the backend', async () => {
+    mockGetCookie.mockReturnValue({ value: 'session-token-abc' });
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeBackendResponse('', 204));
+
+    await DELETE(makeDeleteRequest(), makeCtx());
+
+    expect(mockFetch).toHaveBeenCalledOnce();
+    const [, init] = mockFetch.mock.calls[0];
+    expect((init as RequestInit).headers).toMatchObject({
+      Authorization: 'Bearer session-token-abc',
+    });
+  });
+
+  it('should call the backend DELETE endpoint with the correct URL including clientId and petId', async () => {
+    mockGetCookie.mockReturnValue({ value: 'token-xyz' });
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeBackendResponse('', 204));
+
+    await DELETE(makeDeleteRequest(), makeCtx('client-uuid-1', 'pet-uuid-1'));
+
+    const [url] = mockFetch.mock.calls[0];
+    expect(String(url)).toContain('/v1/clients/client-uuid-1/pets/pet-uuid-1');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Status passthrough — 204, 404, 409
+// ---------------------------------------------------------------------------
+
+describe('DELETE /api/admin/clients/[id]/pets/[petId] — status passthrough', () => {
+  it('should echo the backend 204 status on successful deactivation', async () => {
+    mockGetCookie.mockReturnValue({ value: 'token-xyz' });
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeBackendResponse('', 204));
+
+    const res = await DELETE(makeDeleteRequest(), makeCtx());
+
+    expect(res.status).toBe(204);
+  });
+
+  it('should echo backend 404 when pet is not found', async () => {
+    mockGetCookie.mockReturnValue({ value: 'token-xyz' });
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(
+      makeBackendResponse('{"code":"NOT_FOUND","message":"Pet não encontrado"}', 404),
+    );
+
+    const res = await DELETE(makeDeleteRequest(), makeCtx());
+
+    expect(res.status).toBe(404);
+  });
+
+  it('should echo backend 409 with PET_HAS_PLANS body', async () => {
+    mockGetCookie.mockReturnValue({ value: 'token-xyz' });
+    const mockFetch = vi.mocked(fetch);
+    const backendBody = '{"code":"PET_HAS_PLANS","message":"Pet possui planos associados."}';
+    mockFetch.mockResolvedValueOnce(makeBackendResponse(backendBody, 409));
+
+    const res = await DELETE(makeDeleteRequest(), makeCtx());
+
+    expect(res.status).toBe(409);
     const text = await res.text();
     expect(text).toBe(backendBody);
   });
