@@ -13,7 +13,8 @@ export interface InactivePlanSummary {
   id: string;
   status: Extract<PlanStatus, 'cancelado' | 'estornado' | 'contestado'>;
   createdAt: string;
-  usagesCount: number;
+  /** Total usages for this plan. `null` when the count is not available (renders as "—"). */
+  usagesCount: number | null;
 }
 
 interface InactivePlansListProps {
@@ -70,9 +71,11 @@ export function InactivePlansList({ plans }: InactivePlansListProps) {
 
             {/* Usages */}
             <span className="text-xs text-muted-foreground">
-              {plan.usagesCount === 1
-                ? '1 uso'
-                : `${plan.usagesCount} usos`}
+              {plan.usagesCount === null
+                ? '—'
+                : plan.usagesCount === 1
+                  ? '1 uso'
+                  : `${plan.usagesCount} usos`}
             </span>
 
             {/* Spacer */}

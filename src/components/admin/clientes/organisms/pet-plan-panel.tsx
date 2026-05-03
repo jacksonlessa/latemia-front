@@ -124,9 +124,8 @@ export function PetPlanPanel({
   onUsageRegistered,
   onEditPet,
 }: PetPlanPanelProps) {
-  const petPlans = allPlans.filter((p) => p.petName === pet.name);
-  // Fallback: filter by petId if PlanListItem exposes it (may not — name is safer)
-  // Plans are filtered by pet name since PlanListItem exposes `petName`, not petId.
+  // Filter by petId for deterministic association (pet names are non-unique per client)
+  const petPlans = allPlans.filter((p) => p.petId === pet.id);
 
   const activePlanItem = pickActivePlan(petPlans);
   const inactivePlans: InactivePlanSummary[] = petPlans
@@ -137,7 +136,7 @@ export function PetPlanPanel({
       id: p.id,
       status: p.status as InactivePlanSummary['status'],
       createdAt: p.createdAt,
-      usagesCount: 0, // count is not in PlanListItem; shown as 0 in history
+      usagesCount: null, // count not available in PlanListItem; rendered as "—" in the list
     }));
 
   // Lazy-fetched plan detail

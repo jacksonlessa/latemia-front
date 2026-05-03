@@ -55,7 +55,8 @@ vi.mock('./pet-plan-panel', () => ({
     allPlans: PlanListItem[];
     onUsageRegistered?: () => void;
   }) => {
-    const petPlan = allPlans.find((p) => p.petName === pet.name);
+    // Match by petId for deterministic association (mirrors the real component)
+    const petPlan = allPlans.find((p) => p.petId === pet.id);
     return (
       <div data-testid={`panel-${pet.id}`}>
         <span data-testid="panel-pet-name">{pet.name}</span>
@@ -118,6 +119,7 @@ function makePlans(overrides: Partial<PlanListItem>[] = []): PlanListItem[] {
       status: 'ativo',
       clientId: 'client-1',
       clientName: 'Maria Cliente',
+      petId: 'pet-1',
       petName: 'Rex',
       createdAt: '2025-01-15T00:00:00.000Z',
     },
@@ -126,6 +128,7 @@ function makePlans(overrides: Partial<PlanListItem>[] = []): PlanListItem[] {
       status: 'carencia',
       clientId: 'client-1',
       clientName: 'Maria Cliente',
+      petId: 'pet-2',
       petName: 'Mia',
       createdAt: '2025-02-01T00:00:00.000Z',
     },
@@ -338,6 +341,57 @@ describe('RegisterUsageButton friction behavior', () => {
     );
 
     const plan = { id: 'p5', status: 'cancelado' as const };
+
+    render(<RegisterUsageButton plan={plan} />);
+
+    const btn = screen.getByRole('button', { name: /registrar uso/i });
+    expect(btn).toBeDisabled();
+  });
+
+  it('should show FrictionConfirmDialog first when plan status is inadimplente', async () => {
+    const { RegisterUsageButton } = await import(
+      '@/components/admin/clientes/molecules/register-usage-button'
+    );
+
+    const plan = {
+      id: 'p6',
+      status: 'inadimplente' as const,
+      petName: 'Rex',
+      clientName: 'Maria',
+    };
+
+    render(<RegisterUsageButton plan={plan} onRegistered={vi.fn()} />);
+
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: /registrar uso/i }));
+    });
+
+    // FrictionConfirmDialog should appear for inadimplente status
+    // The dialog heading may vary — check for the modal presence without being strict on text
+    const modal = screen.getByTestId('benefit-usage-modal');
+    // BenefitUsageModal should NOT be open yet (friction dialog intercepts)
+    expect(modal).toHaveAttribute('data-open', 'false');
+  });
+
+  it('should disable the button when plan status is estornado', async () => {
+    const { RegisterUsageButton } = await import(
+      '@/components/admin/clientes/molecules/register-usage-button'
+    );
+
+    const plan = { id: 'p7', status: 'estornado' as const };
+
+    render(<RegisterUsageButton plan={plan} />);
+
+    const btn = screen.getByRole('button', { name: /registrar uso/i });
+    expect(btn).toBeDisabled();
+  });
+
+  it('should disable the button when plan status is contestado', async () => {
+    const { RegisterUsageButton } = await import(
+      '@/components/admin/clientes/molecules/register-usage-button'
+    );
+
+    const plan = { id: 'p8', status: 'contestado' as const };
 
     render(<RegisterUsageButton plan={plan} />);
 

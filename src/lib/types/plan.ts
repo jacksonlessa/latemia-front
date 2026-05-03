@@ -41,6 +41,7 @@ export interface PlanListItem {
   status: PlanStatus;
   clientId: string;
   clientName: string;
+  petId: string;
   petName: string;
   createdAt: string;
 }

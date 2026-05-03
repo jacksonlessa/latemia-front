@@ -51,6 +51,7 @@ const mockPlan: PlanListItem = {
   status: 'ativo',
   clientId: 'client-uuid-exemplo-1',
   clientName: 'Maria da Silva',
+  petId: 'pet-uuid-exemplo-1',
   petName: 'Rex',
   createdAt: '2026-04-01T10:00:00.000Z',
 };
