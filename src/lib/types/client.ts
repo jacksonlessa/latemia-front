@@ -87,3 +87,14 @@ export interface PaginatedClients {
 
 /** Output returned by RegisterClientUseCase on success. */
 export type RegisterClientResult = ClientDetail;
+
+/**
+ * Payload sent to PATCH /v1/clients/:id.
+ * CPF is intentionally excluded — it is immutable.
+ */
+export interface UpdateClientPayload {
+  name?: string;
+  phone?: string;
+  email?: string;
+  address?: Partial<AddressDetail>;
+}

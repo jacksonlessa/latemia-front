@@ -51,3 +51,19 @@ export interface PetDetail {
 
 /** Output returned by RegisterPetUseCase on success. */
 export type RegisterPetResult = PetDetail;
+
+/**
+ * Payload sent to PATCH /v1/clients/:clientId/pets/:petId.
+ * All fields are optional — partial updates are supported.
+ */
+export interface UpdatePetPayload {
+  name?: string;
+  species?: PetSpecies;
+  breed?: string;
+  /** ISO 8601 date string, e.g. "2021-03-15T00:00:00.000Z". */
+  birthDate?: string;
+  sex?: PetSex;
+  /** Weight in kg, must be between 0.1 and 100. */
+  weight?: number;
+  castrated?: boolean;
+}
