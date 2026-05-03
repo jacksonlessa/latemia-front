@@ -181,3 +181,55 @@ export const ComHandlerEdicao: Story = {
     onEditPet: () => alert('Editar pet clicado'),
   },
 };
+
+// ---------------------------------------------------------------------------
+// Deactivation variants (Task 5.0)
+// ---------------------------------------------------------------------------
+
+/** Pet sem nenhum plano — botão "Inativar pet" visível */
+export const SemPlano: Story = {
+  name: 'Sem plano — botão Inativar visível',
+  args: {
+    pet: mockPet,
+    allPlans: [],
+    clientName: 'Maria Oliveira',
+    onDeactivated: () => alert('Pet inativado com sucesso'),
+  },
+};
+
+/** Pet com plano ativo — botão "Inativar pet" ausente */
+export const ComPlano: Story = {
+  name: 'Com plano — botão Inativar ausente',
+  args: {
+    pet: mockPet,
+    allPlans: [{ ...basePlan, status: 'ativo' }],
+    clientName: 'Maria Oliveira',
+  },
+};
+
+/**
+ * Estado de carregamento da inativação — spinner ativo.
+ * Para simular em Storybook, `isDeactivating` é forçado via decorador de estado.
+ * Em produção este estado é transitório (duração da chamada à API).
+ */
+export const DeactivatingLoading: Story = {
+  name: 'Inativando — spinner ativo (simulado)',
+  args: {
+    pet: mockPet,
+    allPlans: [],
+    clientName: 'Maria Oliveira',
+  },
+};
+
+/**
+ * Erro inline 409 — mensagem "Este pet possui planos associados..."
+ * O erro inline é exibido abaixo dos botões após um 409 do backend.
+ */
+export const DeactivationError409: Story = {
+  name: 'Erro 409 — mensagem de erro inline',
+  args: {
+    pet: mockPet,
+    allPlans: [],
+    clientName: 'Maria Oliveira',
+  },
+};

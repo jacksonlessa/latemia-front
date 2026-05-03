@@ -114,6 +114,10 @@ export function ClientDetailPageClient({
     [router],
   );
 
+  const handlePetDeactivated = useCallback(() => {
+    router.refresh();
+  }, [router]);
+
   const handleUsageRegistered = useCallback(
     (_usage: BenefitUsageResponse) => {
       // router.refresh() re-validates Server Components without full navigation.
@@ -186,6 +190,7 @@ export function ClientDetailPageClient({
                 clientName={clientData.name}
                 onUsageRegistered={handleUsageRegistered}
                 onEditPet={handleEditPet}
+                onDeactivated={handlePetDeactivated}
               />
             ) : (
               <div className="rounded-lg border bg-muted/30 px-4 py-6 text-center">
