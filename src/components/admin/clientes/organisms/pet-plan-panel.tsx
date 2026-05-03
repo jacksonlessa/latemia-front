@@ -204,7 +204,6 @@ export function PetPlanPanel({
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-foreground">{pet.name}</h2>
         <div className="flex items-center gap-2">
-          {/* Placeholder for Task 5.0 EditPetDrawer */}
           <Button
             variant="outline"
             size="sm"
@@ -219,13 +218,26 @@ export function PetPlanPanel({
             variant="ghost"
             size="sm"
             asChild
-            aria-label={`Ver ficha completa de ${pet.name}`}
+            aria-label={`Ver ficha do pet ${pet.name}`}
           >
             <Link href={`/admin/clientes/${clientId}/pets/${pet.id}`}>
               <ExternalLink className="size-3.5" aria-hidden="true" />
-              Ver ficha completa
+              Ver ficha do pet
             </Link>
           </Button>
+          {activePlanItem && (
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              aria-label="Ver detalhes do plano vigente"
+            >
+              <Link href={`/admin/planos/${activePlanItem.id}`}>
+                <ExternalLink className="size-3.5" aria-hidden="true" />
+                Ver detalhes Plano
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -246,17 +258,6 @@ export function PetPlanPanel({
             />
           </div>
 
-          {/* "Ver detalhes do plano" link */}
-          <div>
-            <Link
-              href={`/admin/planos/${activePlanItem.id}`}
-              className="inline-flex items-center gap-1 text-sm text-[#4E8C75] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4E8C75] rounded-sm"
-              aria-label="Ver detalhes do plano vigente"
-            >
-              Ver detalhes do plano
-              <ExternalLink className="size-3.5" aria-hidden="true" />
-            </Link>
-          </div>
         </>
       ) : (
         <div className="rounded-lg border bg-muted/30 px-4 py-6 text-center" data-testid="no-plan-message">
