@@ -66,6 +66,7 @@ export const Active: Story = {
     <PaymentUpdateLinkSection
       planId={mockPlanId}
       currentToken={{
+        token: 'abc123-active-token',
         status: 'active',
         expiresAt: '2026-05-10T12:00:00.000Z',
         usedAt: null,
@@ -82,6 +83,7 @@ export const Used: Story = {
     <PaymentUpdateLinkSection
       planId={mockPlanId}
       currentToken={{
+        token: 'def456-used-token',
         status: 'used',
         expiresAt: '2026-05-10T12:00:00.000Z',
         usedAt: '2026-05-04T09:30:00.000Z',
@@ -98,6 +100,7 @@ export const Expired: Story = {
     <PaymentUpdateLinkSection
       planId={mockPlanId}
       currentToken={{
+        token: 'ghi789-expired-token',
         status: 'expired',
         expiresAt: '2026-04-30T12:00:00.000Z',
         usedAt: null,
@@ -108,24 +111,18 @@ export const Expired: Story = {
 };
 
 /**
- * Loading — simula o estado de carregamento após clique no botão de gerar.
- * Em produção este estado é transitório; aqui é renderizado diretamente
- * ajustando a prop de loading via wrapper.
+ * Loading — demonstra o botão no estado de carregamento ("Gerando...").
+ * Usa a prop `isLoading` para forçar o estado visual permanentemente,
+ * sem necessidade de simular uma ação assíncrona.
  */
 export const Loading: Story = {
   name: 'Gerando link (loading)',
   render: () => (
-    <div className="space-y-2">
-      <p className="text-xs text-[#6B6B6E] italic">
-        Nota: O estado de loading é transitório. Esta story representa o
-        visual durante a chamada ao backend.
-      </p>
-      {/* We render a disabled button variant to illustrate the loading state */}
-      <PaymentUpdateLinkSection
-        planId={mockPlanId}
-        currentToken={null}
-        onGenerated={noop}
-      />
-    </div>
+    <PaymentUpdateLinkSection
+      planId={mockPlanId}
+      currentToken={null}
+      onGenerated={noop}
+      isLoading={true}
+    />
   ),
 };

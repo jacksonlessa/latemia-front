@@ -121,6 +121,7 @@ export interface PlanDetail {
    * Used by `PaymentUpdateLinkSection` to display the current link status.
    */
   paymentUpdateToken?: {
+    token: string;
     status: 'active' | 'used' | 'expired';
     expiresAt: string;
     usedAt: string | null;

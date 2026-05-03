@@ -19,6 +19,8 @@ interface PaymentUpdateLinkSectionProps {
   planId: string;
   currentToken: PlanDetail['paymentUpdateToken'];
   onGenerated?: (token: GenerateTokenResponse) => void;
+  /** Optional external isLoading override — used by Storybook to freeze the loading state. */
+  isLoading?: boolean;
 }
 
 type TokenState = NonNullable<PlanDetail['paymentUpdateToken']>;
@@ -139,19 +141,24 @@ export function PaymentUpdateLinkSection({
   planId,
   currentToken,
   onGenerated,
+  isLoading: isLoadingProp,
 }: PaymentUpdateLinkSectionProps) {
   // Local token state — starts from prop, updated optimistically after generation.
   const [tokenState, setTokenState] = useState<TokenState | null | undefined>(
     currentToken,
   );
-  const [generatedUrl, setGeneratedUrl] = useState<string | null>(
-    currentToken?.status === 'active' ? null : null,
-  );
-  const [isLoading, setIsLoading] = useState(false);
+  const [generatedUrl, setGeneratedUrl] = useState<string | null>(() => {
+    if (currentToken?.status === 'active') {
+      return `${process.env.NEXT_PUBLIC_APP_URL}/atualizar-pagamento?token=${currentToken.token}`;
+    }
+    return null;
+  });
+  const [isLoadingInternal, setIsLoadingInternal] = useState(false);
+  const isLoading = isLoadingProp ?? isLoadingInternal;
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function handleGenerate() {
-    setIsLoading(true);
+    setIsLoadingInternal(true);
     setErrorMessage(null);
 
     try {
@@ -159,6 +166,7 @@ export function PaymentUpdateLinkSection({
 
       // Update local state to reflect new active token without a page reload.
       setTokenState({
+        token: result.token,
         status: 'active',
         expiresAt: result.expiresAt,
         usedAt: null,
@@ -175,7 +183,7 @@ export function PaymentUpdateLinkSection({
         setErrorMessage('Ocorreu um erro ao gerar o link. Tente novamente.');
       }
     } finally {
-      setIsLoading(false);
+      setIsLoadingInternal(false);
     }
   }
 
