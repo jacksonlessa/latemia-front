@@ -14,6 +14,7 @@ import {
 import { PlanPaymentsList } from '@/components/admin/planos/organisms/plan-payments-list/PlanPaymentsList';
 import { PlanWebhookEventsList } from '@/components/admin/planos/organisms/plan-webhook-events-list/PlanWebhookEventsList';
 import { BenefitUsageSection } from '@/components/admin/uso-beneficio/organisms/benefit-usage-section/BenefitUsageSection';
+import { PaymentUpdateLinkSection } from '@/components/admin/planos/organisms/payment-update-link-section/PaymentUpdateLinkSection';
 import type { PlanDetail, PlanWebhookEvent } from '@/lib/types/plan';
 import type { BenefitUsageResponse } from '@/lib/types/benefit-usage';
 
@@ -216,6 +217,12 @@ export function PlanDetailPageClient({
         onRegisterUsageClick={handleRegisterUsageClick}
       />
       <PlanMetricsStrip plan={plan} benefitUsages={benefitUsages} />
+      {plan.status === 'inadimplente' ? (
+        <PaymentUpdateLinkSection
+          planId={plan.id}
+          currentToken={plan.paymentUpdateToken ?? null}
+        />
+      ) : null}
       <PlanDetailTabs
         tabs={tabs}
         activeTab={activeTab}
