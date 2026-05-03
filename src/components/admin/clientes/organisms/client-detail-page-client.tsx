@@ -1,31 +1,22 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ClientHeaderCard } from '@/components/admin/clientes/organisms/client-header-card';
-import {
-  PetListSticky,
-} from '@/components/admin/clientes/organisms/pet-list-sticky';
+import { PetListSticky } from '@/components/admin/clientes/organisms/pet-list-sticky';
 import { PetPlanPanel } from '@/components/admin/clientes/organisms/pet-plan-panel';
+import { EditClientDrawer } from '@/components/admin/clientes/organisms/edit-client-drawer';
+import { EditPetDrawer } from '@/components/admin/clientes/organisms/edit-pet-drawer';
 import type { ClientDetail } from '@/lib/types/client';
 import type { PlanListItem, PlanStatus } from '@/lib/types/plan';
 import type { PetListItemData } from '@/components/admin/clientes/molecules/pet-list-item';
 import type { BenefitUsageResponse } from '@/lib/types/benefit-usage';
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
+import type { PetDetail } from '@/lib/types/pet';
 
 interface ClientDetailPageClientProps {
   client: ClientDetail;
   plans: PlanListItem[];
-  // Optional: EditClientDrawer — Task 5.0 placeholder (not yet implemented)
-  // onEditClient?: () => void
 }
-
-// ---------------------------------------------------------------------------
-// Heuristic: pick the best initial pet
-// ---------------------------------------------------------------------------
 
 /** Priority order for vigente plan statuses. */
 const VIGENTE_PRIORITY: PlanStatus[] = [
@@ -37,50 +28,44 @@ const VIGENTE_PRIORITY: PlanStatus[] = [
 
 /**
  * Given the client's pets and all plans, select the initial pet to display.
- * Prefers the pet with the highest-priority vigente plan, then falls back to
- * the first pet.
+ * Prefers the pet with the highest-priority vigente plan (matched by petId),
+ * then falls back to the first pet.
  */
 function selectInitialPetId(
   pets: ClientDetail['pets'],
   plans: PlanListItem[],
 ): string | null {
   if (pets.length === 0) return null;
-
   for (const status of VIGENTE_PRIORITY) {
     const plan = plans.find((p) => p.status === status);
     if (plan) {
-      // Find the pet whose name matches this plan's petName
-      const pet = pets.find((pt) => pt.name === plan.petName);
+      // Match by petId for deterministic association (pet name is non-unique per client)
+      const pet = pets.find((pt) => pt.id === plan.petId);
       if (pet) return pet.id;
     }
   }
-
   return pets[0]?.id ?? null;
 }
 
 /**
  * Returns the plan status for a given pet (highest-priority vigente status, or
- * undefined when no vigente plan exists).
+ * undefined when no vigente plan exists). Uses petId for deterministic matching.
  */
 function getPetPlanStatus(
-  petName: string,
+  petId: string,
   plans: PlanListItem[],
 ): PlanStatus | undefined {
-  const petPlans = plans.filter((p) => p.petName === petName);
+  const petPlans = plans.filter((p) => p.petId === petId);
   for (const status of VIGENTE_PRIORITY) {
     if (petPlans.some((p) => p.status === status)) return status;
   }
   return undefined;
 }
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
 /**
  * ClientDetailPageClient — Client Component that owns:
  * - `selectedPetId` state
- * - Slots for EditClientDrawer and EditPetDrawer (Task 5.0 placeholders)
+ * - EditClientDrawer and EditPetDrawer (wired to Task 5.0 organisms)
  * - `router.refresh()` after mutations
  *
  * Renders the two-column layout:
@@ -93,62 +78,85 @@ export function ClientDetailPageClient({
 }: ClientDetailPageClientProps) {
   const router = useRouter();
 
-  const initialPetId = useMemo(
-    () => selectInitialPetId(client.pets, plans),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
-
+  // Lazy initializer — runs once before first render; avoids useMemo([]) anti-pattern
   const [selectedPetId, setSelectedPetId] = useState<string | null>(
-    initialPetId,
+    () => selectInitialPetId(client.pets, plans),
   );
-
-  // Placeholder: open state for drawers (Task 5.0)
-  // const [editClientOpen, setEditClientOpen] = useState(false);
-  // const [editPetOpen, setEditPetOpen] = useState(false);
+  const [clientData, setClientData] = useState<ClientDetail>(client);
+  const [editClientOpen, setEditClientOpen] = useState(false);
+  const [editPetOpen, setEditPetOpen] = useState(false);
 
   const handleSelectPet = useCallback((petId: string) => {
     setSelectedPetId(petId);
   }, []);
 
   const handleEditClient = useCallback(() => {
-    // TODO (Task 5.0): setEditClientOpen(true)
-    // Placeholder: no-op until EditClientDrawer is implemented
+    setEditClientOpen(true);
   }, []);
 
   const handleEditPet = useCallback(() => {
-    // TODO (Task 5.0): setEditPetOpen(true)
-    // Placeholder: no-op until EditPetDrawer is implemented
+    setEditPetOpen(true);
   }, []);
+
+  const handleClientSaved = useCallback(
+    (updated: ClientDetail) => {
+      setClientData(updated);
+      router.refresh();
+    },
+    [router],
+  );
+
+  const handlePetSaved = useCallback(
+    (_updated: PetDetail) => {
+      // router.refresh() re-validates Server Components to pick up the new pet data
+      router.refresh();
+    },
+    [router],
+  );
 
   const handleUsageRegistered = useCallback(
     (_usage: BenefitUsageResponse) => {
       // router.refresh() re-validates Server Components without full navigation.
-      // This is acceptable for now; local optimistic update happens in PetPlanPanel.
       router.refresh();
     },
     [router],
   );
 
   // Build PetListItemData array with planStatus derived from the plans list
-  const petListItems: PetListItemData[] = client.pets.map((pet) => ({
+  const petListItems: PetListItemData[] = clientData.pets.map((pet) => ({
     id: pet.id,
     name: pet.name,
     species: pet.species,
     breed: pet.breed,
     birthDate: pet.birthDate,
-    planStatus: getPetPlanStatus(pet.name, plans),
+    planStatus: getPetPlanStatus(pet.id, plans),
   }));
 
-  const selectedPet = client.pets.find((p) => p.id === selectedPetId) ?? null;
+  const selectedPet = clientData.pets.find((p) => p.id === selectedPetId) ?? null;
+
+  // Build PetDetail-compatible shape for the EditPetDrawer from the selected PetListItem
+  const selectedPetDetail: PetDetail | null = selectedPet
+    ? {
+        id: selectedPet.id,
+        clientId: clientData.id,
+        name: selectedPet.name,
+        species: selectedPet.species,
+        breed: selectedPet.breed,
+        birthDate: selectedPet.birthDate,
+        sex: (selectedPet as PetDetail & { sex?: PetDetail['sex'] }).sex ?? 'male',
+        weight: selectedPet.weight,
+        castrated: selectedPet.castrated,
+        createdAt: selectedPet.createdAt,
+      }
+    : null;
 
   return (
     <>
       {/* Client header — always visible */}
-      <ClientHeaderCard client={client} onEditClient={handleEditClient} />
+      <ClientHeaderCard client={clientData} onEditClient={handleEditClient} />
 
       {/* Main area: pet list + plan panel */}
-      {client.pets.length === 0 ? (
+      {clientData.pets.length === 0 ? (
         // Empty state — no pets
         <div
           className="rounded-lg border bg-muted/30 px-4 py-10 text-center"
@@ -173,7 +181,7 @@ export function ClientDetailPageClient({
               <PetPlanPanel
                 pet={selectedPet}
                 allPlans={plans}
-                clientName={client.name}
+                clientName={clientData.name}
                 onUsageRegistered={handleUsageRegistered}
                 onEditPet={handleEditPet}
               />
@@ -188,22 +196,24 @@ export function ClientDetailPageClient({
         </div>
       )}
 
-      {/*
-        Task 5.0 placeholders:
-        <EditClientDrawer
-          open={editClientOpen}
-          onOpenChange={setEditClientOpen}
-          client={client}
-          onSuccess={() => { setEditClientOpen(false); router.refresh(); }}
-        />
+      {/* Edit client drawer — wired from Task 5.0 */}
+      <EditClientDrawer
+        client={clientData}
+        open={editClientOpen}
+        onOpenChange={setEditClientOpen}
+        onSaved={handleClientSaved}
+      />
+
+      {/* Edit pet drawer — wired from Task 5.0; only rendered when a pet is selected */}
+      {selectedPetDetail && (
         <EditPetDrawer
+          pet={selectedPetDetail}
+          clientId={clientData.id}
           open={editPetOpen}
           onOpenChange={setEditPetOpen}
-          pet={selectedPet}
-          clientId={client.id}
-          onSuccess={() => { setEditPetOpen(false); router.refresh(); }}
+          onSaved={handlePetSaved}
         />
-      */}
+      )}
     </>
   );
 }
