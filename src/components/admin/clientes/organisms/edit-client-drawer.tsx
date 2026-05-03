@@ -33,12 +33,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { ClientDetail, AddressDetail } from '@/lib/types/client';
-import {
-  ApiValidationError,
-  ApiConflictError,
-  ApiNotFoundError,
-} from '@/domain/client/update-client.use-case';
-import { ApiError } from '@/lib/api-errors';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -91,7 +85,7 @@ function clientToFormValues(client: ClientDetail): FormValues {
     street: addr.street ?? '',
     number: addr.number ?? '',
     complement: addr.complement ?? '',
-    neighborhood: (addr as AddressDetail & { neighborhood?: string }).neighborhood ?? '',
+    neighborhood: addr.neighborhood ?? '',
     city: addr.city ?? '',
     state: addr.state ?? '',
     cep: addr.cep ?? '',

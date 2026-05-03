@@ -119,3 +119,99 @@ export const Closed: Story = {
     />
   ),
 };
+
+// ---------------------------------------------------------------------------
+// WithValidationErrors — form open with pre-existing field errors
+// Simulates the state after the user submits an invalid form
+// ---------------------------------------------------------------------------
+export const WithValidationErrors: Story = {
+  name: 'Com erros de validação',
+  render: () => {
+    const [open, setOpen] = useState(true);
+    // Use a client with an invalid state to trigger validation errors on submit
+    const clientWithBadData: ClientDetail = {
+      ...CLIENT_WITH_ADDRESS,
+      name: '',
+      email: 'invalid-email',
+      addresses: [
+        {
+          ...CLIENT_WITH_ADDRESS.addresses[0],
+          state: 'INVALID',
+          cep: '123',
+        },
+      ],
+    };
+    return (
+      <div className="min-h-screen bg-muted/20 p-8">
+        <p className="mb-4 text-sm text-muted-foreground">
+          Clique em &quot;Salvar&quot; para ver os erros de validação.
+        </p>
+        <button
+          onClick={() => setOpen(true)}
+          className="rounded border px-3 py-1 text-sm"
+        >
+          Abrir drawer
+        </button>
+        <EditClientDrawer
+          client={clientWithBadData}
+          open={open}
+          onOpenChange={setOpen}
+          onSaved={() => setOpen(false)}
+        />
+      </div>
+    );
+  },
+};
+
+// ---------------------------------------------------------------------------
+// With409EmailError — simulates a 409 CLIENT_EMAIL_TAKEN response
+// Network calls fail in Storybook; use this variant to preview the error UI
+// ---------------------------------------------------------------------------
+export const With409EmailError: Story = {
+  name: 'Erro 409 e-mail duplicado',
+  render: () => {
+    // We cannot mock fetch here without Storybook addons,
+    // but we document the expected visual by showing the drawer open
+    // with a note about the error state.
+    const [open, setOpen] = useState(true);
+    return (
+      <div className="min-h-screen bg-muted/20 p-8">
+        <p className="mb-4 text-sm text-muted-foreground">
+          Altere o e-mail para um já cadastrado e clique em &quot;Salvar&quot; para ver o erro inline
+          no campo e-mail (requer backend ativo com e-mail duplicado).
+        </p>
+        <EditClientDrawer
+          client={CLIENT_WITH_ADDRESS}
+          open={open}
+          onOpenChange={setOpen}
+          onSaved={() => setOpen(false)}
+        />
+      </div>
+    );
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Loading — botão Salvar em estado de submissão (isSubmitting = true)
+// In Storybook without mocks we simulate by clicking submit; document intent.
+// ---------------------------------------------------------------------------
+export const Loading: Story = {
+  name: 'Salvando (loading)',
+  render: () => {
+    const [open, setOpen] = useState(true);
+    return (
+      <div className="min-h-screen bg-muted/20 p-8">
+        <p className="mb-4 text-sm text-muted-foreground">
+          Clique em &quot;Salvar&quot; para ver o estado de loading no botão (requer backend ativo
+          ou request lento).
+        </p>
+        <EditClientDrawer
+          client={CLIENT_WITH_ADDRESS}
+          open={open}
+          onOpenChange={setOpen}
+          onSaved={() => setOpen(false)}
+        />
+      </div>
+    );
+  },
+};

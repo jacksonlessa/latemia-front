@@ -143,7 +143,7 @@ export function ClientDetailPageClient({
         species: selectedPet.species,
         breed: selectedPet.breed,
         birthDate: selectedPet.birthDate,
-        sex: (selectedPet as PetDetail & { sex?: PetDetail['sex'] }).sex ?? 'male',
+        sex: selectedPet.sex,
         weight: selectedPet.weight,
         castrated: selectedPet.castrated,
         createdAt: selectedPet.createdAt,

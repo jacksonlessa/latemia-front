@@ -118,3 +118,65 @@ export const Closed: Story = {
     />
   ),
 };
+
+// ---------------------------------------------------------------------------
+// WithValidationErrors — form open with invalid data to trigger field errors
+// ---------------------------------------------------------------------------
+export const WithValidationErrors: Story = {
+  name: 'Com erros de validação',
+  render: () => {
+    const [open, setOpen] = useState(true);
+    const petWithBadData: PetDetail = {
+      ...DOG_PET,
+      name: '',
+      weight: -1,
+      // future birthDate to trigger validation
+      birthDate: '2099-01-01T00:00:00.000Z',
+    };
+    return (
+      <div className="min-h-screen bg-muted/20 p-8">
+        <p className="mb-4 text-sm text-muted-foreground">
+          Clique em &quot;Salvar&quot; para ver os erros de validação.
+        </p>
+        <button
+          onClick={() => setOpen(true)}
+          className="rounded border px-3 py-1 text-sm"
+        >
+          Abrir drawer
+        </button>
+        <EditPetDrawer
+          pet={petWithBadData}
+          clientId="client-1"
+          open={open}
+          onOpenChange={setOpen}
+          onSaved={() => setOpen(false)}
+        />
+      </div>
+    );
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Loading — botão Salvar em estado de submissão
+// ---------------------------------------------------------------------------
+export const Loading: Story = {
+  name: 'Salvando (loading)',
+  render: () => {
+    const [open, setOpen] = useState(true);
+    return (
+      <div className="min-h-screen bg-muted/20 p-8">
+        <p className="mb-4 text-sm text-muted-foreground">
+          Clique em &quot;Salvar&quot; para ver o estado de loading no botão (requer backend ativo
+          ou request lento).
+        </p>
+        <EditPetDrawer
+          pet={DOG_PET}
+          clientId="client-1"
+          open={open}
+          onOpenChange={setOpen}
+          onSaved={() => setOpen(false)}
+        />
+      </div>
+    );
+  },
+};

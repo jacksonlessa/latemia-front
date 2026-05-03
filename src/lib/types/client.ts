@@ -37,6 +37,7 @@ export interface AddressDetail {
   street: string;
   number: string;
   complement?: string;
+  neighborhood?: string;
   city: string;
   state: string;
   createdAt: string;
@@ -48,6 +49,7 @@ export interface PetListItem {
   species: "canino" | "felino";
   breed: string;
   birthDate: string;
+  sex: "male" | "female";
   weight: number;
   castrated: boolean;
   createdAt: string;
