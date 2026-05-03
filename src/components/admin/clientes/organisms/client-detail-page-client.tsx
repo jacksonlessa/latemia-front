@@ -181,6 +181,7 @@ export function ClientDetailPageClient({
             {selectedPet ? (
               <PetPlanPanel
                 pet={selectedPet}
+                clientId={clientData.id}
                 allPlans={plans}
                 clientName={clientData.name}
                 onUsageRegistered={handleUsageRegistered}

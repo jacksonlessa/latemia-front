@@ -23,6 +23,7 @@ import type { BenefitUsageResponse } from '@/lib/types/benefit-usage';
 
 interface PetPlanPanelProps {
   pet: PetListItem;
+  clientId: string;
   /** All plans for the client — the panel filters and picks the active plan. */
   allPlans: PlanListItem[];
   /** Client name, used to populate PlanSummary for BenefitUsageModal. */
@@ -119,6 +120,7 @@ async function fetchUsagesCount(
  */
 export function PetPlanPanel({
   pet,
+  clientId,
   allPlans,
   clientName,
   onUsageRegistered,
@@ -219,7 +221,7 @@ export function PetPlanPanel({
             asChild
             aria-label={`Ver ficha completa de ${pet.name}`}
           >
-            <Link href={`/admin/pets/${pet.id}`}>
+            <Link href={`/admin/clientes/${clientId}/pets/${pet.id}`}>
               <ExternalLink className="size-3.5" aria-hidden="true" />
               Ver ficha completa
             </Link>

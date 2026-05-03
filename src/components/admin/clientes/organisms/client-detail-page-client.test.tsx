@@ -95,6 +95,7 @@ function makeClient(overrides: Partial<ClientDetail> = {}): ClientDetail {
         birthDate: '2022-03-15T00:00:00.000Z',
         weight: 25,
         castrated: false,
+        sex: 'male',
         createdAt: '2025-01-01T00:00:00.000Z',
       },
       {
@@ -105,6 +106,7 @@ function makeClient(overrides: Partial<ClientDetail> = {}): ClientDetail {
         birthDate: '2021-06-10T00:00:00.000Z',
         weight: 4,
         castrated: true,
+        sex: 'female',
         createdAt: '2025-01-01T00:00:00.000Z',
       },
     ],
