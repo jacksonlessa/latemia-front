@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import {
   generatePaymentUpdateLinkUseCase,
   type GenerateTokenResponse,
-  PlanNotInadimplenteError,
+  PlanIneligibleForPaymentUpdateError,
 } from '@/domain/plan/generate-payment-update-link.use-case';
 import type { PlanDetail } from '@/lib/types/plan';
 
@@ -125,7 +125,11 @@ function CopyUrlButton({ url }: CopyUrlButtonProps) {
  * PaymentUpdateLinkSection — Organism
  *
  * Renders the payment-update link management section inside
- * `/admin/planos/[id]`. Should only be rendered when `plan.status === 'inadimplente'`.
+ * `/admin/planos/[id]`. Should be rendered only when the plan status is one
+ * of the eligible statuses (`ativo`, `carencia`, `pendente`, `inadimplente`)
+ * — visibility is gated by the parent via
+ * `canGeneratePaymentUpdateLink(plan.status)`. Hidden (no placeholder) for
+ * terminal statuses (`cancelado`, `estornado`, `contestado`).
  *
  * States:
  * - `no-link`  (currentToken is null/undefined): shows "Gerar link" button only.
@@ -136,6 +140,11 @@ function CopyUrlButton({ url }: CopyUrlButtonProps) {
  *
  * On generate: calls `generatePaymentUpdateLinkUseCase`, updates local state
  * without reloading the page, and calls `onGenerated` if provided.
+ *
+ * Defense-in-depth: a 422 from the backend (e.g. plan transitioned to a
+ * terminal status between page render and click, or admin forced the
+ * request via DevTools) surfaces an inline error message that does not
+ * incorrectly state the plan must be `inadimplente`.
  */
 export function PaymentUpdateLinkSection({
   planId,
@@ -175,9 +184,13 @@ export function PaymentUpdateLinkSection({
 
       onGenerated?.(result);
     } catch (err) {
-      if (err instanceof PlanNotInadimplenteError) {
+      if (err instanceof PlanIneligibleForPaymentUpdateError) {
+        // Backend 422 — plan is in a terminal status (cancelado / estornado /
+        // contestado). Surface a message aligned with the new eligibility rule
+        // and avoid mentioning only "inadimplente".
         setErrorMessage(
-          'Este plano não está inadimplente. O link não pode ser gerado.',
+          err.message ||
+            'Este plano não está elegível para atualização de pagamento. O link não pode ser gerado.',
         );
       } else {
         setErrorMessage('Ocorreu um erro ao gerar o link. Tente novamente.');

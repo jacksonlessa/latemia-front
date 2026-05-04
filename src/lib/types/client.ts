@@ -3,6 +3,15 @@
  * These mirror the backend API interfaces defined in the TechSpec.
  */
 
+import type { Touchpoint } from "@/domain/touchpoints/touchpoints.types";
+
+/**
+ * Re-exported here for callers that consume the client domain types
+ * (e.g. checkout flow) without having to depend on the touchpoints module
+ * directly. The canonical definition lives in `domain/touchpoints/`.
+ */
+export type { Touchpoint };
+
 export interface AddressData {
   cep: string;
   street: string;
@@ -29,6 +38,18 @@ export interface CreateClientPayload {
   phone: string;
   email: string;
   address: AddressData;
+  /**
+   * Optional attribution bundle persisted alongside the client record
+   * (PRD seo-analytics-lgpd-utm §1.3–§1.6). When omitted, the backend
+   * creates the client with no `client_touchpoints` rows. Each side is
+   * also optional so we never send `null` for a missing touchpoint —
+   * the field is simply omitted from the payload (backend uses
+   * `@IsOptional` validation).
+   */
+  touchpoints?: {
+    first?: Touchpoint;
+    last?: Touchpoint;
+  };
 }
 
 export interface AddressDetail {

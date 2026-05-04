@@ -1,23 +1,49 @@
 import { CircleCheck } from 'lucide-react';
 
+/**
+ * Success outcomes that map to a dedicated success screen.
+ * `charge_failed` is intentionally excluded — that case stays inline on
+ * the form so the customer can try another card with the same token.
+ */
+export type PaymentUpdateSuccessOutcome =
+  | 'card_updated_no_charge'
+  | 'charge_paid'
+  | 'charge_pending';
+
 export interface PaymentUpdateSuccessProps {
-  chargesBehavior: 'immediate' | 'next_cycle';
+  outcome: PaymentUpdateSuccessOutcome;
 }
 
-const MESSAGES: Record<'immediate' | 'next_cycle', string> = {
-  immediate:
-    'Dados atualizados com sucesso! Uma nova tentativa de cobrança será realizada em breve.',
-  next_cycle:
-    'Dados atualizados com sucesso! Seu novo cartão será utilizado na próxima cobrança.',
+interface SuccessMessage {
+  title: string;
+  body: string;
+}
+
+const OUTCOME_MESSAGES: Record<PaymentUpdateSuccessOutcome, SuccessMessage> = {
+  card_updated_no_charge: {
+    title: 'Cartão atualizado!',
+    body: 'A próxima cobrança seguirá o calendário normal do seu plano.',
+  },
+  charge_paid: {
+    title: 'Pagamento aprovado!',
+    body: 'Seu cartão foi atualizado e a cobrança foi processada com sucesso.',
+  },
+  charge_pending: {
+    title: 'Recebemos seu pagamento',
+    body: 'Estamos processando — você receberá a confirmação em instantes.',
+  },
 };
 
 /**
  * Success screen displayed after the payment card is updated.
+ * Title and body vary by `outcome` to reflect what actually happened
+ * (card-only update vs. retry approved vs. retry pending).
+ *
  * Mirrors the visual style of StepSucesso in /contratar.
  */
-export function PaymentUpdateSuccess({
-  chargesBehavior,
-}: PaymentUpdateSuccessProps) {
+export function PaymentUpdateSuccess({ outcome }: PaymentUpdateSuccessProps) {
+  const { title, body } = OUTCOME_MESSAGES[outcome];
+
   return (
     <div className="flex flex-col items-center gap-6 py-6 text-center">
       <CircleCheck
@@ -28,12 +54,8 @@ export function PaymentUpdateSuccess({
       />
 
       <div className="space-y-2">
-        <h2 className="font-display text-2xl text-forest">
-          Cartão atualizado!
-        </h2>
-        <p className="text-base text-foreground max-w-sm mx-auto">
-          {MESSAGES[chargesBehavior]}
-        </p>
+        <h2 className="font-display text-2xl text-forest">{title}</h2>
+        <p className="text-base text-foreground max-w-sm mx-auto">{body}</p>
       </div>
 
       <div className="rounded-lg border border-border bg-muted/30 p-4 max-w-sm w-full text-sm text-muted-foreground">

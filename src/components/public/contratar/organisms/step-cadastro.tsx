@@ -8,11 +8,26 @@ import { CpfInput } from '@/components/ui/cpf-input';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { CepInput } from '@/components/ui/cep-input';
 import { isServicedCity } from '@/domain/client/serviced-cities';
-import type { RegisterClientInput, AddressData } from '@/lib/types/client';
+import { useTouchpoints } from '@/domain/touchpoints/touchpoint-provider';
+import type {
+  RegisterClientInput,
+  AddressData,
+  Touchpoint,
+} from '@/lib/types/client';
 import type { CepResult } from '@/lib/cep';
 
 const INVALID_CITY_MESSAGE =
   'No momento atendemos apenas Camboriú, Balneário Camboriú, Itapema e Itajaí.';
+
+/**
+ * Bundle emitted by `onTouchpointsResolved`. Each side is `undefined` when
+ * the visitor has no captured attribution — we never emit `null`, mirroring
+ * the wire contract enforced by `ClientEntity.toApiPayload`.
+ */
+export interface StepCadastroTouchpointBundle {
+  first?: Touchpoint;
+  last?: Touchpoint;
+}
 
 export interface StepCadastroProps {
   data: Partial<RegisterClientInput>;
@@ -20,6 +35,17 @@ export interface StepCadastroProps {
   onChange: (field: string, value: string) => void;
   onAddressLookup: (result: CepResult | null) => void;
   onNext: () => void;
+  /**
+   * Optional sink for the touchpoint bundle captured by the public
+   * `TouchpointProvider`. Invoked exactly once per "Avançar" click — before
+   * `onNext()` — so the parent can persist the bundle in state and forward it
+   * to `RegisterClientUseCase.execute(input, { touchpoints })` later in the
+   * checkout pipeline (PRD seo-analytics-lgpd-utm §1.3 — task 7.0).
+   *
+   * Each field is omitted (not `null`) when the visitor has no captured
+   * attribution — backend uses `@IsOptional`.
+   */
+  onTouchpointsResolved?: (bundle: StepCadastroTouchpointBundle) => void;
   /** When true, disables the "Avançar" button and shows a loading indicator. */
   isLoading?: boolean;
 }
@@ -30,8 +56,13 @@ export function StepCadastro({
   onChange,
   onAddressLookup,
   onNext,
+  onTouchpointsResolved,
   isLoading = false,
 }: StepCadastroProps) {
+  // Read attribution captured by the public TouchpointProvider. Outside of the
+  // public layout (e.g. unit tests or non-public routes) the hook returns
+  // `{ firstTouch: null, lastTouch: null }` and the bundle below is empty.
+  const { firstTouch, lastTouch } = useTouchpoints();
   const address: Partial<AddressData> = data.address ?? {};
 
   /**
@@ -88,6 +119,21 @@ export function StepCadastro({
     },
     [onChange],
   );
+
+  /**
+   * Forward attribution to the parent (when subscribed) and then advance.
+   * We filter `null` values into omitted keys so the eventual API payload
+   * never carries `null` touchpoints (see `ClientEntity.toApiPayload`).
+   */
+  const handleAdvance = useCallback(() => {
+    if (onTouchpointsResolved) {
+      const bundle: StepCadastroTouchpointBundle = {};
+      if (firstTouch) bundle.first = firstTouch;
+      if (lastTouch) bundle.last = lastTouch;
+      onTouchpointsResolved(bundle);
+    }
+    onNext();
+  }, [firstTouch, lastTouch, onNext, onTouchpointsResolved]);
 
   return (
     <div className="space-y-6">
@@ -353,7 +399,7 @@ export function StepCadastro({
         <div className="flex justify-end">
         <Button
           type="button"
-          onClick={onNext}
+          onClick={handleAdvance}
           disabled={isLoading}
           style={{ backgroundColor: '#4E8C75', color: '#fff' }}
           className="hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"

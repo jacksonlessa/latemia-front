@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
+import { getSeoMetadata } from '@/config/seo';
 
-export const metadata: Metadata = {
-  title: 'Termos de Uso — Late & Mia Clínica Veterinária',
-  description: 'Leia os Termos de Uso do Plano Emergência Veterinária Late & Mia.',
-};
+export const metadata: Metadata = getSeoMetadata('/termos');
 
 export default function TermosPage() {
   return (

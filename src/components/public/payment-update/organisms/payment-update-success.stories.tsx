@@ -4,10 +4,18 @@
  * NOTE: Storybook is not yet configured in this project.
  * These stories follow the CSF (Component Story Format) convention and will
  * be picked up automatically once Storybook is installed.
+ *
+ * The component covers 3 of the 4 backend outcomes — `charge_failed` is
+ * intentionally NOT a success state: it stays inline on the form so the
+ * customer can try another card with the same (still-active) token.
+ * See `payment-update-form.stories.tsx` for the failed-charge variant.
  */
 
 import type React from 'react';
-import { PaymentUpdateSuccess } from './payment-update-success';
+import {
+  PaymentUpdateSuccess,
+  type PaymentUpdateSuccessOutcome,
+} from './payment-update-success';
 
 // ---------------------------------------------------------------------------
 // Meta
@@ -22,9 +30,11 @@ const meta = {
     docs: {
       description: {
         component:
-          'Tela de confirmação exibida após a atualização bem-sucedida do cartão de pagamento. ' +
-          'A mensagem varia conforme chargesBehavior: "immediate" informa tentativa imediata de cobrança; ' +
-          '"next_cycle" informa uso na próxima cobrança.',
+          'Tela de confirmação exibida após o consumo bem-sucedido do token. ' +
+          'A mensagem varia conforme o `outcome` retornado pelo backend: ' +
+          '`card_updated_no_charge` (apenas atualização), `charge_paid` (retry aprovado) e ' +
+          '`charge_pending` (retry em processamento). O outcome `charge_failed` ' +
+          'NÃO é representado aqui — fica inline no formulário para nova tentativa.',
       },
     },
   },
@@ -38,7 +48,7 @@ export default meta;
 
 type Story = {
   render?: (args: React.ComponentProps<typeof PaymentUpdateSuccess>) => React.ReactElement;
-  args?: Partial<React.ComponentProps<typeof PaymentUpdateSuccess>>;
+  args?: { outcome: PaymentUpdateSuccessOutcome };
   name?: string;
 };
 
@@ -46,18 +56,26 @@ type Story = {
 // Stories
 // ---------------------------------------------------------------------------
 
-/** Estado padrão — cartão com cobrança imediata (assinatura inadimplente) */
-export const Default: Story = {
-  name: 'Padrão (cobrança imediata)',
+/** Cartão atualizado sem cobrança — plano ativo/carência */
+export const CardUpdatedNoCharge: Story = {
+  name: 'Cartão atualizado (sem cobrança)',
   args: {
-    chargesBehavior: 'immediate',
+    outcome: 'card_updated_no_charge',
   },
 };
 
-/** Variante de próximo ciclo — cartão será usado na próxima cobrança */
-export const NextCycle: Story = {
-  name: 'Próximo ciclo',
+/** Cobrança aprovada — plano pendente/inadimplente, retry paid */
+export const ChargePaid: Story = {
+  name: 'Pagamento aprovado',
   args: {
-    chargesBehavior: 'next_cycle',
+    outcome: 'charge_paid',
+  },
+};
+
+/** Cobrança em processamento — plano pendente/inadimplente, retry pending */
+export const ChargePending: Story = {
+  name: 'Pagamento em processamento',
+  args: {
+    outcome: 'charge_pending',
   },
 };

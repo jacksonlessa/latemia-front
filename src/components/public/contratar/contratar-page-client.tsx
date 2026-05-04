@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { Events, track } from '@/lib/analytics/events';
 import { ContratarStepper } from '@/components/public/contratar/atoms/contratar-stepper';
 import {
   StepCadastro,
@@ -25,10 +26,15 @@ import { navigateToFieldStep } from '@/domain/client/field-to-step';
 import { CONTRACT_VERSION } from '@/content/contrato';
 import { publicSite } from '@/config/public-site';
 import { loadDraft, saveDraft, clearDraft } from '@/lib/contratar-draft-storage';
-import type { AddressData, RegisterClientInput } from '@/lib/types/client';
+import type {
+  AddressData,
+  RegisterClientInput,
+  Touchpoint,
+} from '@/lib/types/client';
 import type { RegisterPetInput } from '@/lib/types/pet';
 import type { CheckoutSummary } from '@/domain/checkout/checkout.types';
 import type { CepResult } from '@/lib/cep';
+import type { StepCadastroTouchpointBundle } from '@/components/public/contratar/organisms/step-cadastro';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -64,6 +70,13 @@ interface ContratarState {
   clearCvvOnError: boolean;
   /** Estado de resume entre tentativas (idempotência — RF10). */
   checkoutResume: CheckoutResumeState;
+  /**
+   * Snapshot do bundle de touchpoints capturado pelo `TouchpointProvider`
+   * no momento em que o usuário avançou do passo 1. Cada lado é `undefined`
+   * quando o visitante não tinha atribuição capturada — nunca emitimos
+   * `null` para a API (PRD seo-analytics-lgpd-utm §1.7 — task 7.0).
+   */
+  touchpoints?: { first?: Touchpoint; last?: Touchpoint };
 }
 
 const INITIAL_STATE: ContratarState = {
@@ -84,6 +97,7 @@ const INITIAL_STATE: ContratarState = {
   errorMessage: undefined,
   clearCvvOnError: false,
   checkoutResume: {},
+  touchpoints: undefined,
 };
 
 const em = (word: string) => (
@@ -149,6 +163,14 @@ export function ContratarPageClient() {
   }, []);
 
   // -------------------------------------------------------------------------
+  // Analytics — `begin_checkout` (PRD §5.3). Fires once per mount; consent
+  // gating is delegated to `track()`/Consent Mode (no-ops without consent).
+  // -------------------------------------------------------------------------
+  useEffect(() => {
+    track(Events.BeginCheckout);
+  }, []);
+
+  // -------------------------------------------------------------------------
   // 5.1b Focus the first invalid field after automatic step navigation
   // When fieldErrors is set and step changes (navigateToFieldStep), move keyboard
   // focus to the first element with aria-invalid="true" so screen-reader users
@@ -182,6 +204,24 @@ export function ContratarPageClient() {
   // -------------------------------------------------------------------------
   function setStep(s: 0 | 1 | 2 | 3): void {
     setState((prev) => ({ ...prev, step: s as WizardStep }));
+  }
+
+  // -------------------------------------------------------------------------
+  // handleTouchpointsResolved — invoked by StepCadastro right before onNext.
+  // Persists the bundle in component state so we can forward it to
+  // FinalizeCheckoutUseCase → RegisterClientUseCase at stage 3.
+  // -------------------------------------------------------------------------
+  function handleTouchpointsResolved(
+    bundle: StepCadastroTouchpointBundle,
+  ): void {
+    // Persist only when there is something to send. Empty object means the
+    // visitor had no captured attribution — keep state as `undefined` so
+    // FinalizeCheckoutUseCase omits the field entirely from the wire.
+    const hasData = Boolean(bundle.first) || Boolean(bundle.last);
+    setState((prev) => ({
+      ...prev,
+      touchpoints: hasData ? bundle : undefined,
+    }));
   }
 
   // -------------------------------------------------------------------------
@@ -337,6 +377,7 @@ export function ContratarPageClient() {
           contractAcceptedAt: state.contractAcceptedAt,
           contractVersion: CONTRACT_VERSION,
           resume: resumed,
+          touchpoints: state.touchpoints,
         },
         onStageChange,
       );
@@ -512,6 +553,7 @@ export function ContratarPageClient() {
           clientName={state.summary.clientName}
           pets={state.summary.pets}
           planIds={state.planIds}
+          totalCents={state.summary.totalCents}
         />
       </main>
     );
@@ -529,6 +571,7 @@ export function ContratarPageClient() {
             onChange={handleClientChange}
             onAddressLookup={handleAddressLookup}
             onNext={handleNext}
+            onTouchpointsResolved={handleTouchpointsResolved}
             isLoading={state.isValidating}
           />
         </>

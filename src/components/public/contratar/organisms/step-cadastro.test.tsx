@@ -8,6 +8,17 @@ vi.mock('@/lib/cep', () => ({
   lookupCep: vi.fn(),
 }));
 
+// Mock useTouchpoints so we can drive the bundle returned by the public
+// TouchpointProvider deterministically in unit tests (task 7.0).
+import type { TouchpointContextValue } from '@/domain/touchpoints/touchpoints.types';
+const mockUseTouchpoints = vi.fn<() => TouchpointContextValue>(() => ({
+  firstTouch: null,
+  lastTouch: null,
+}));
+vi.mock('@/domain/touchpoints/touchpoint-provider', () => ({
+  useTouchpoints: () => mockUseTouchpoints(),
+}));
+
 import { lookupCep } from '@/lib/cep';
 
 const mockLookupCep = lookupCep as ReturnType<typeof vi.fn>;
@@ -33,6 +44,7 @@ function buildData(overrides: Record<string, unknown> = {}) {
 describe('StepCadastro', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseTouchpoints.mockReturnValue({ firstTouch: null, lastTouch: null });
   });
 
   it('should populate address fields after successful CEP lookup for a serviced city', async () => {
@@ -273,6 +285,139 @@ describe('StepCadastro', () => {
     );
 
     expect(screen.getByText('CEP é obrigatório.')).toBeInTheDocument();
+  });
+
+  // -------------------------------------------------------------------------
+  // Touchpoints integration (task 7.0 — seo-analytics-lgpd-utm)
+  // -------------------------------------------------------------------------
+
+  it('should call onTouchpointsResolved with both first and last when useTouchpoints returns both', () => {
+    const firstTouch = {
+      utmSource: 'instagram',
+      utmMedium: 'social',
+      utmCampaign: 'first-campaign',
+      utmContent: null,
+      utmTerm: null,
+      gclid: null,
+      fbclid: null,
+      referrer: null,
+      referralCode: null,
+      capturedAt: '2026-05-04T10:00:00.000Z',
+    };
+    const lastTouch = {
+      ...firstTouch,
+      utmCampaign: 'last-campaign',
+      capturedAt: '2026-05-04T11:00:00.000Z',
+    };
+    mockUseTouchpoints.mockReturnValue({ firstTouch, lastTouch });
+
+    const onTouchpointsResolved = vi.fn();
+    const onNext = vi.fn();
+    render(
+      <StepCadastro
+        data={buildData()}
+        errors={{}}
+        onChange={vi.fn()}
+        onAddressLookup={vi.fn()}
+        onNext={onNext}
+        onTouchpointsResolved={onTouchpointsResolved}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /avançar/i }));
+
+    expect(onTouchpointsResolved).toHaveBeenCalledTimes(1);
+    expect(onTouchpointsResolved).toHaveBeenCalledWith({
+      first: firstTouch,
+      last: lastTouch,
+    });
+    expect(onNext).toHaveBeenCalledTimes(1);
+  });
+
+  it('should call onTouchpointsResolved with an empty bundle when useTouchpoints returns nulls', () => {
+    mockUseTouchpoints.mockReturnValue({ firstTouch: null, lastTouch: null });
+
+    const onTouchpointsResolved = vi.fn();
+    const onNext = vi.fn();
+    render(
+      <StepCadastro
+        data={buildData()}
+        errors={{}}
+        onChange={vi.fn()}
+        onAddressLookup={vi.fn()}
+        onNext={onNext}
+        onTouchpointsResolved={onTouchpointsResolved}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /avançar/i }));
+
+    expect(onTouchpointsResolved).toHaveBeenCalledWith({});
+    expect(onNext).toHaveBeenCalledTimes(1);
+  });
+
+  it('should omit `last` (no null) when only firstTouch is captured', () => {
+    const firstTouch = {
+      utmSource: 'podcast',
+      utmMedium: 'audio',
+      utmCampaign: null,
+      utmContent: null,
+      utmTerm: null,
+      gclid: null,
+      fbclid: null,
+      referrer: null,
+      referralCode: 'podcastXYZ',
+      capturedAt: '2026-05-04T10:00:00.000Z',
+    };
+    mockUseTouchpoints.mockReturnValue({ firstTouch, lastTouch: null });
+
+    const onTouchpointsResolved = vi.fn();
+    render(
+      <StepCadastro
+        data={buildData()}
+        errors={{}}
+        onChange={vi.fn()}
+        onAddressLookup={vi.fn()}
+        onNext={vi.fn()}
+        onTouchpointsResolved={onTouchpointsResolved}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /avançar/i }));
+
+    const bundle = onTouchpointsResolved.mock.calls[0][0];
+    expect(bundle.first).toEqual(firstTouch);
+    expect('last' in bundle).toBe(false);
+  });
+
+  it('should still call onNext when onTouchpointsResolved is not provided (backwards-compatible)', () => {
+    const firstTouch = {
+      utmSource: 'instagram',
+      utmMedium: 'social',
+      utmCampaign: 'x',
+      utmContent: null,
+      utmTerm: null,
+      gclid: null,
+      fbclid: null,
+      referrer: null,
+      referralCode: null,
+      capturedAt: '2026-05-04T10:00:00.000Z',
+    };
+    mockUseTouchpoints.mockReturnValue({ firstTouch, lastTouch: null });
+
+    const onNext = vi.fn();
+    render(
+      <StepCadastro
+        data={buildData()}
+        errors={{}}
+        onChange={vi.fn()}
+        onAddressLookup={vi.fn()}
+        onNext={onNext}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /avançar/i }));
+    expect(onNext).toHaveBeenCalledTimes(1);
   });
 
   it('should have aria-invalid and aria-describedby on CEP field when there is an error', async () => {

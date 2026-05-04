@@ -22,7 +22,7 @@ import { ValidationError } from '@/lib/validation-error';
 import { RegisterClientUseCase } from '@/domain/client/register-client.use-case';
 import { RegisterPetUseCase } from '@/domain/pet/register-pet.use-case';
 import { RegisterContractUseCase } from '@/domain/contract/register-contract.use-case';
-import type { RegisterClientInput } from '@/lib/types/client';
+import type { RegisterClientInput, Touchpoint } from '@/lib/types/client';
 import type { RegisterPetInput } from '@/lib/types/pet';
 import type { CardFormValue } from '@/components/public/contratar/organisms/card-form';
 
@@ -44,6 +44,16 @@ export interface FinalizeCheckoutInput {
   cardInput: CardFormValue;
   contractAcceptedAt: string;
   contractVersion: string;
+  /**
+   * Optional UTM/click-id attribution captured upstream by the
+   * TouchpointProvider. Forwarded to `RegisterClientUseCase` at stage 3 only;
+   * each side is omitted from the wire when undefined (PRD
+   * seo-analytics-lgpd-utm §1.7 — task 7.0).
+   */
+  touchpoints?: {
+    first?: Touchpoint;
+    last?: Touchpoint;
+  };
   /**
    * IDs já criados em uma tentativa anterior — usado para retomar de onde
    * parou e para o painel pré-marcar etapas concluídas (RF10).
@@ -347,7 +357,12 @@ export class FinalizeCheckoutUseCase {
     if (!clientId) {
       onStageChange({ stage: 3 });
       try {
-        const registered = await this.clientUseCase.execute(input.clientInput);
+        const registered = await this.clientUseCase.execute(
+          input.clientInput,
+          input.touchpoints
+            ? { touchpoints: input.touchpoints }
+            : undefined,
+        );
         clientId = registered.id;
       } catch (err) {
         throw mapDomainError(err, 3);
