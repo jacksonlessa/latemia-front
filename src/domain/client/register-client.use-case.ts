@@ -14,7 +14,23 @@ import type {
   CreateClientPayload,
   RegisterClientInput,
   RegisterClientResult,
+  Touchpoint,
 } from "@/lib/types/client";
+
+/**
+ * Optional second-argument options for `RegisterClientUseCase.execute`.
+ *
+ * `touchpoints.first`/`touchpoints.last` are emitted to the backend only
+ * when defined — `null` and `undefined` are filtered out at the entity
+ * boundary (`ClientEntity.toApiPayload`). This matches the backend DTO
+ * (`@IsOptional`) and PRD seo-analytics-lgpd-utm §1.7.
+ */
+export interface RegisterClientOptions {
+  touchpoints?: {
+    first?: Touchpoint;
+    last?: Touchpoint;
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Shared serialiser — reused by validate-client.use-case
@@ -24,15 +40,22 @@ import type {
  * Converts raw RegisterClientInput into the canonical API payload.
  * Normalises CPF mask, strips non-digit phone characters, trims fields.
  *
+ * Optionally appends the touchpoint bundle. We filter `null`/`undefined`
+ * inside `ClientEntity.toApiPayload` so the wire payload never carries
+ * empty attribution fields.
+ *
  * Exported so that validate-client.use-case can reuse it without duplicating
  * the serialisation logic.
  */
-export function toApiPayload(input: RegisterClientInput): CreateClientPayload {
+export function toApiPayload(
+  input: RegisterClientInput,
+  opts?: RegisterClientOptions,
+): CreateClientPayload {
   // We delegate full normalisation to ClientEntity; if caller passes
   // already-normalised data (e.g. from validate-client after entity validate),
   // this is a no-op for already clean values.
   const entity = ClientEntity.validate(input);
-  return entity.toApiPayload();
+  return entity.toApiPayload(opts?.touchpoints);
 }
 
 // ---------------------------------------------------------------------------
@@ -138,11 +161,17 @@ export class RegisterClientUseCase {
    *   - Known API business errors (CPF_EMAIL_MISMATCH, EMAIL_ALREADY_REGISTERED)
    *
    * @param input - Raw registration form data.
+   * @param opts - Optional bundle (currently `touchpoints`) propagated to the
+   *               request body. When neither `first` nor `last` is provided
+   *               the field is omitted entirely from the wire payload.
    */
-  async execute(input: RegisterClientInput): Promise<RegisterClientResult> {
+  async execute(
+    input: RegisterClientInput,
+    opts?: RegisterClientOptions,
+  ): Promise<RegisterClientResult> {
     // 1. Domain validation — may throw ValidationError
     // toApiPayload internally calls ClientEntity.validate so we get normalised data.
-    const payload = toApiPayload(input);
+    const payload = toApiPayload(input, opts);
 
     // 2. Call API
     let res: Response;

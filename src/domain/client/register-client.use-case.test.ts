@@ -351,6 +351,97 @@ describe("RegisterClientUseCase.execute — API error mapping", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Touchpoints propagation (task 7.0 — seo-analytics-lgpd-utm)
+// ---------------------------------------------------------------------------
+
+describe("RegisterClientUseCase.execute — touchpoints", () => {
+  const baseTouchpoint = {
+    utmSource: "instagram",
+    utmMedium: "social",
+    utmCampaign: "lancamento",
+    utmContent: null,
+    utmTerm: null,
+    gclid: null,
+    fbclid: null,
+    referrer: null,
+    referralCode: null,
+    capturedAt: "2026-05-04T10:00:00.000Z",
+  };
+
+  it("should not include `touchpoints` in the request body when no opts are passed", async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse(successResponse, 201));
+
+    const useCase = new RegisterClientUseCase();
+    await useCase.execute(validInput());
+
+    const [, init] = mockFetch.mock.calls[0];
+    const sent = JSON.parse(String((init as RequestInit).body)) as Record<
+      string,
+      unknown
+    >;
+    expect(sent).not.toHaveProperty("touchpoints");
+  });
+
+  it("should not include `touchpoints` when opts.touchpoints is empty", async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse(successResponse, 201));
+
+    const useCase = new RegisterClientUseCase();
+    await useCase.execute(validInput(), { touchpoints: {} });
+
+    const [, init] = mockFetch.mock.calls[0];
+    const sent = JSON.parse(String((init as RequestInit).body)) as Record<
+      string,
+      unknown
+    >;
+    expect(sent).not.toHaveProperty("touchpoints");
+  });
+
+  it("should include `touchpoints.first` only when only first is provided", async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse(successResponse, 201));
+
+    const useCase = new RegisterClientUseCase();
+    await useCase.execute(validInput(), {
+      touchpoints: { first: { ...baseTouchpoint } },
+    });
+
+    const [, init] = mockFetch.mock.calls[0];
+    const sent = JSON.parse(String((init as RequestInit).body)) as {
+      touchpoints?: { first?: unknown; last?: unknown };
+    };
+    expect(sent.touchpoints?.first).toBeDefined();
+    expect(sent.touchpoints?.last).toBeUndefined();
+    // never `null` on the wire
+    expect("last" in (sent.touchpoints ?? {})).toBe(false);
+  });
+
+  it("should include both `first` and `last` when both are provided", async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse(successResponse, 201));
+
+    const useCase = new RegisterClientUseCase();
+    await useCase.execute(validInput(), {
+      touchpoints: {
+        first: { ...baseTouchpoint, utmCampaign: "first-campaign" },
+        last: { ...baseTouchpoint, utmCampaign: "last-campaign" },
+      },
+    });
+
+    const [, init] = mockFetch.mock.calls[0];
+    const sent = JSON.parse(String((init as RequestInit).body)) as {
+      touchpoints: {
+        first: { utmCampaign: string };
+        last: { utmCampaign: string };
+      };
+    };
+    expect(sent.touchpoints.first.utmCampaign).toBe("first-campaign");
+    expect(sent.touchpoints.last.utmCampaign).toBe("last-campaign");
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Network failure
 // ---------------------------------------------------------------------------
 

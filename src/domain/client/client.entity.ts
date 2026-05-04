@@ -11,6 +11,7 @@ import type {
   AddressData,
   CreateClientPayload,
   RegisterClientInput,
+  Touchpoint,
 } from "@/lib/types/client";
 import { ValidationError } from "@/lib/validation-error";
 
@@ -179,14 +180,33 @@ export class ClientEntity {
     );
   }
 
-  /** Returns the payload to be sent to POST /v1/register/client. */
-  toApiPayload(): CreateClientPayload {
-    return {
+  /**
+   * Returns the payload to be sent to POST /v1/register/client.
+   *
+   * The optional `touchpoints` bundle is included only when at least one of
+   * `first`/`last` is defined. We never emit `null`/`undefined` values to the
+   * wire — backend DTO uses `@IsOptional`, so omitting the field is the safe
+   * contract (PRD seo-analytics-lgpd-utm §1.7 — task 7.0).
+   */
+  toApiPayload(touchpoints?: {
+    first?: Touchpoint;
+    last?: Touchpoint;
+  }): CreateClientPayload {
+    const payload: CreateClientPayload = {
       name: this.name,
       cpf: this.cpf,
       phone: this.phone,
       email: this.email,
       address: this.address,
     };
+
+    if (touchpoints?.first || touchpoints?.last) {
+      const bundle: { first?: Touchpoint; last?: Touchpoint } = {};
+      if (touchpoints.first) bundle.first = touchpoints.first;
+      if (touchpoints.last) bundle.last = touchpoints.last;
+      payload.touchpoints = bundle;
+    }
+
+    return payload;
   }
 }
