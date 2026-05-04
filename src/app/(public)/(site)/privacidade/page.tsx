@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
+import { getSeoMetadata } from '@/config/seo';
 
-export const metadata: Metadata = {
-  title: 'Política de Privacidade — Late & Mia Clínica Veterinária',
-  description: 'Saiba como a Late & Mia Clínica Veterinária coleta, usa e protege seus dados pessoais.',
-};
+export const metadata: Metadata = getSeoMetadata('/privacidade');
 
 export default function PrivacidadePage() {
   return (
