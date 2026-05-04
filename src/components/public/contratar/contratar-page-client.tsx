@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { Events, track } from '@/lib/analytics/events';
 import { ContratarStepper } from '@/components/public/contratar/atoms/contratar-stepper';
 import {
   StepCadastro,
@@ -146,6 +147,14 @@ export function ContratarPageClient() {
       }));
     }
     hydratedRef.current = true;
+  }, []);
+
+  // -------------------------------------------------------------------------
+  // Analytics — `begin_checkout` (PRD §5.3). Fires once per mount; consent
+  // gating is delegated to `track()`/Consent Mode (no-ops without consent).
+  // -------------------------------------------------------------------------
+  useEffect(() => {
+    track(Events.BeginCheckout);
   }, []);
 
   // -------------------------------------------------------------------------
@@ -512,6 +521,7 @@ export function ContratarPageClient() {
           clientName={state.summary.clientName}
           pets={state.summary.pets}
           planIds={state.planIds}
+          totalCents={state.summary.totalCents}
         />
       </main>
     );

@@ -9,12 +9,27 @@
  *
  * Consent gating is performed implicitly: when consent is denied,
  * `consent-mode-init.tsx` keeps `gtag` queued in `dataLayer` with denied
- * defaults, and the GA4/Meta Pixel scripts themselves are not injected (see
- * task 6.0). Either way, this helper is safe to call from any UI handler.
+ * defaults, and `fbq('consent', 'revoke')` keeps the pixel queue muted until
+ * the visitor opts in. Either way, this helper is safe to call from any UI
+ * handler.
  *
  * LGPD: do NOT pass personally identifiable data in `params`. Use opaque
  * IDs and aggregated values (CPF, e-mail, telefone are forbidden).
  */
+
+/**
+ * Canonical event names used across the public funnel. Centralizing them
+ * here avoids drift between callers (e.g. `step-sucesso` and `analytics`
+ * dashboards) and makes it trivial to rename a single event.
+ */
+export const Events = {
+  PageView: 'page_view',
+  PageviewLanding: 'pageview_landing',
+  BeginCheckout: 'begin_checkout',
+  RegisterContractCompleted: 'register_contract_completed',
+} as const;
+
+export type EventName = (typeof Events)[keyof typeof Events];
 
 export function track(
   eventName: string,

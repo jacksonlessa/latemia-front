@@ -1,16 +1,46 @@
+'use client';
+
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { CircleCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { PetSpecies } from '@/lib/types/pet';
 import { PET_SPECIES_LABEL } from '@/lib/pet-labels';
+import { Events, track } from '@/lib/analytics/events';
 
 export interface StepSucessoProps {
   clientName: string;
   pets: Array<{ name: string; species: PetSpecies }>;
   planIds?: string[];
+  /**
+   * Total amount in BRL minor units (cents) used to populate the
+   * `register_contract_completed` analytics event payload. Optional — when
+   * omitted the event still fires with `value: undefined`, allowing storybook
+   * fixtures and legacy callers to continue working.
+   */
+  totalCents?: number;
 }
 
-export function StepSucesso({ clientName, pets, planIds = [] }: StepSucessoProps) {
+export function StepSucesso({
+  clientName,
+  pets,
+  planIds = [],
+  totalCents,
+}: StepSucessoProps) {
+  // Analytics — `register_contract_completed` (PRD §5.3). Fires once per
+  // success-screen mount. Currency is fixed to BRL because the platform only
+  // bills in Brazilian reais; revisit if multi-currency lands.
+  const eventEmittedRef = useRef<boolean>(false);
+  useEffect(() => {
+    if (eventEmittedRef.current) return;
+    eventEmittedRef.current = true;
+    track(Events.RegisterContractCompleted, {
+      value: totalCents !== undefined ? totalCents / 100 : undefined,
+      currency: 'BRL',
+      items_count: pets.length,
+    });
+  }, [pets.length, totalCents]);
+
   return (
     <div className="flex flex-col items-center gap-6 py-6 text-center">
       {/* Success icon */}
