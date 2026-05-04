@@ -27,7 +27,7 @@ function makeResponse(body: unknown, status: number): Response {
 const tokenContext: TokenContext = {
   petName: 'Rex',
   planStatus: 'inadimplente',
-  chargesBehavior: 'immediate',
+  chargesBehavior: 'overdue_charge',
 };
 
 // ---------------------------------------------------------------------------

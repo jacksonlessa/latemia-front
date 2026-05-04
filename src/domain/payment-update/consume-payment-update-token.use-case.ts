@@ -4,13 +4,21 @@
  * Submits a Pagar.me card token to the public Route Handler
  * POST /api/public/payment-update/:token, which proxies to the backend.
  *
- * The backend will update the subscription's payment method and mark the
- * token as used on success.
+ * The backend will update the subscription's payment method and, when the
+ * plan is `pendente`/`inadimplente`, also retry the open charge synchronously.
  *
- * Returns ConsumeResult on success (200).
+ * Returns ConsumeResult on success (200). The `outcome` field describes the
+ * effective result:
+ *   - `card_updated_no_charge` — `ativo`/`carencia`: card updated, no charge.
+ *   - `charge_paid`            — retry approved.
+ *   - `charge_pending`         — retry accepted, still processing.
+ *   - `charge_failed`          — retry refused; token remains ACTIVE so the
+ *                                client may try another card without a new link.
+ *                                `failureMessage` may carry a gateway message.
+ *
  * Throws TokenInvalidError on 404.
- * Throws a ConsumePaymentError with a user-friendly message on 400 (gateway
- * errors such as card declined).
+ * Throws ConsumePaymentError on 400 (validation/gateway errors prior to retry)
+ *   and on other non-ok responses.
  *
  * PCI: the `cardToken` parameter is a Pagar.me tokenized reference — PAN
  * and CVV never appear here.

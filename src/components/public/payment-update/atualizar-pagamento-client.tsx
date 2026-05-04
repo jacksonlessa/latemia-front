@@ -10,8 +10,10 @@
  *   invalid    — token invalid/expired/used
  *   form       — shows petName, planStatus and card form
  *   submitting — card is being tokenized and submitted
- *   error      — gateway error; form remains active for retry
- *   success    — payment method updated
+ *   error      — gateway error OR `charge_failed` outcome; form remains
+ *                active for retry, token stays alive on the backend
+ *   success    — card updated; renders one of 3 success outcomes
+ *                (card_updated_no_charge | charge_paid | charge_pending)
  *
  * LGPD: displays only petName and planStatus — no CPF, phone, or email.
  * PCI:  card data (PAN, CVV) never leave the PaymentCardForm component;
@@ -21,11 +23,20 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { PaymentCardForm } from './molecules/payment-card-form';
-import { PaymentUpdateSuccess } from './organisms/payment-update-success';
+import {
+  PaymentUpdateSuccess,
+  type PaymentUpdateSuccessOutcome,
+} from './organisms/payment-update-success';
 import { PaymentUpdateInvalid } from './organisms/payment-update-invalid';
-import { validatePaymentUpdateToken, TokenInvalidError } from '@/domain/payment-update/validate-payment-update-token.use-case';
-import { consumePaymentUpdateToken, ConsumePaymentError } from '@/domain/payment-update/consume-payment-update-token.use-case';
-import type { TokenContext } from '@/domain/payment-update/types';
+import {
+  validatePaymentUpdateToken,
+  TokenInvalidError,
+} from '@/domain/payment-update/validate-payment-update-token.use-case';
+import {
+  consumePaymentUpdateToken,
+  ConsumePaymentError,
+} from '@/domain/payment-update/consume-payment-update-token.use-case';
+import type { ChargesBehavior, TokenContext } from '@/domain/payment-update/types';
 
 // ---------------------------------------------------------------------------
 // State machine
@@ -37,7 +48,7 @@ type PageState =
   | { kind: 'form'; context: TokenContext }
   | { kind: 'submitting'; context: TokenContext }
   | { kind: 'error'; context: TokenContext; message: string }
-  | { kind: 'success'; chargesBehavior: 'immediate' | 'next_cycle' };
+  | { kind: 'success'; outcome: PaymentUpdateSuccessOutcome };
 
 // ---------------------------------------------------------------------------
 // PT-BR plan status labels (LGPD — no personal data)
@@ -54,6 +65,22 @@ const STATUS_LABEL: Record<string, string> = {
 function planStatusLabel(status: string): string {
   return STATUS_LABEL[status] ?? status;
 }
+
+// ---------------------------------------------------------------------------
+// Subtitles for the validation screen — derived from chargesBehavior, which
+// the backend computes from the plan status at token-generation time.
+// ---------------------------------------------------------------------------
+
+const BEHAVIOR_SUBTITLES: Record<ChargesBehavior, string> = {
+  next_cycle:
+    'O novo cartão será usado na próxima cobrança do seu plano.',
+  first_charge:
+    'A primeira cobrança será processada agora com o novo cartão.',
+  overdue_charge:
+    'A cobrança em atraso será processada agora com o novo cartão.',
+};
+
+const FAILED_CHARGE_FALLBACK = 'Cartão recusado. Tente outro cartão.';
 
 // ---------------------------------------------------------------------------
 // Component
@@ -104,10 +131,19 @@ export function AtualizarPagamentoClient() {
 
     try {
       const result = await consumePaymentUpdateToken(token, cardToken);
-      setState({
-        kind: 'success',
-        chargesBehavior: result.chargesBehavior,
-      });
+
+      // `charge_failed` is NOT a success state — keep the form alive so the
+      // customer can try another card. Token remains active on the backend.
+      if (result.outcome === 'charge_failed') {
+        setState({
+          kind: 'error',
+          context,
+          message: result.failureMessage ?? FAILED_CHARGE_FALLBACK,
+        });
+        return;
+      }
+
+      setState({ kind: 'success', outcome: result.outcome });
     } catch (err) {
       let message = 'Não foi possível atualizar o cartão. Tente novamente.';
       if (err instanceof TokenInvalidError) {
@@ -151,15 +187,14 @@ export function AtualizarPagamentoClient() {
   }
 
   if (state.kind === 'success') {
-    return (
-      <PaymentUpdateSuccess chargesBehavior={state.chargesBehavior} />
-    );
+    return <PaymentUpdateSuccess outcome={state.outcome} />;
   }
 
   // form | submitting | error
   const context = state.context;
   const isSubmitting = state.kind === 'submitting';
   const errorMessage = state.kind === 'error' ? state.message : undefined;
+  const subtitle = BEHAVIOR_SUBTITLES[context.chargesBehavior];
 
   return (
     <div className="space-y-6">
@@ -174,6 +209,7 @@ export function AtualizarPagamentoClient() {
             {planStatusLabel(context.planStatus)}
           </span>
         </div>
+        <p className="text-sm text-muted-foreground">{subtitle}</p>
       </div>
 
       {/* Error banner — inline, form stays active */}
