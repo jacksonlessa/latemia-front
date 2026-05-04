@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { AnalyticsSlot } from '@/components/public/slots/analytics-slot';
-import { CookieBannerSlot } from '@/components/public/slots/cookie-banner-slot';
+import { ConsentProvider } from '@/components/public/consent/consent-provider';
+import { ConsentModeInit } from '@/components/public/consent/consent-mode-init';
+import { CookieBanner } from '@/components/public/consent/cookie-banner';
 import { TouchpointProvider } from '@/domain/touchpoints/touchpoint-provider';
 
 export const metadata: Metadata = {
@@ -16,10 +18,15 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-cream min-h-screen">
-      <AnalyticsSlot />
-      <TouchpointProvider>{children}</TouchpointProvider>
-      <CookieBannerSlot />
-    </div>
+    <ConsentProvider>
+      <TouchpointProvider>
+        <ConsentModeInit />
+        <div className="bg-cream min-h-screen">
+          <AnalyticsSlot />
+          {children}
+        </div>
+        <CookieBanner />
+      </TouchpointProvider>
+    </ConsentProvider>
   );
 }

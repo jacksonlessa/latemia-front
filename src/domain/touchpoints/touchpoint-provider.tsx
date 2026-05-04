@@ -40,6 +40,7 @@ import type {
   Touchpoint,
   TouchpointContextValue,
 } from './touchpoints.types';
+import { useConsent } from '@/components/public/consent/consent-provider';
 
 const TouchpointContext = createContext<TouchpointContextValue | null>(null);
 
@@ -52,6 +53,8 @@ export function TouchpointProvider({
 }: TouchpointProviderProps): React.ReactElement {
   const [firstTouch, setFirstTouchState] = useState<Touchpoint | null>(null);
   const [lastTouch, setLastTouchState] = useState<Touchpoint | null>(null);
+  const { state: consentState } = useConsent();
+  const marketingGranted = consentState.marketing === 'granted';
 
   const value = useMemo<TouchpointContextValue>(
     () => ({ firstTouch, lastTouch }),
@@ -64,6 +67,7 @@ export function TouchpointProvider({
         <TouchpointCaptureEffect
           onFirstTouchChange={setFirstTouchState}
           onLastTouchChange={setLastTouchState}
+          marketingGranted={marketingGranted}
         />
       </Suspense>
       {children}
@@ -74,6 +78,12 @@ export function TouchpointProvider({
 interface TouchpointCaptureEffectProps {
   onFirstTouchChange: (value: Touchpoint | null) => void;
   onLastTouchChange: (value: Touchpoint | null) => void;
+  /**
+   * When `false`, the capture stays in memory only — no `localStorage` /
+   * `sessionStorage` writes. PRD §1.7 (LGPD): UTMs are read from URL always,
+   * but cross-session persistence requires marketing consent.
+   */
+  marketingGranted: boolean;
 }
 
 /**
@@ -84,10 +94,16 @@ interface TouchpointCaptureEffectProps {
 function TouchpointCaptureEffect({
   onFirstTouchChange,
   onLastTouchChange,
+  marketingGranted,
 }: TouchpointCaptureEffectProps): null {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const lastSignatureRef = useRef<string | null>(null);
+  // In-memory holders for the no-consent path. We keep both touchpoints so
+  // a converted client still posts attribution data without ever writing to
+  // browser storage.
+  const memoryFirstRef = useRef<Touchpoint | null>(null);
+  const memoryLastRef = useRef<Touchpoint | null>(null);
 
   const capture = useCallback((): void => {
     if (typeof window === 'undefined') return;
@@ -97,42 +113,61 @@ function TouchpointCaptureEffect({
       typeof document !== 'undefined' ? document.referrer : '';
     const touchpoint = captureTouchpointFromUrl(search, referrer, new Date());
 
-    // TODO 5.0: gate by consent.marketing — only persist to localStorage /
-    // sessionStorage when marketing consent is granted. For now, persist
-    // unconditionally (PRD §1.7 says we always read from URL; storage gating
-    // ships with the consent provider in task 5.0).
-
-    const storedFirst = getFirstTouch();
-    if (storedFirst !== null) {
-      onFirstTouchChange(storedFirst);
-    } else {
-      setFirstTouch(touchpoint);
-      onFirstTouchChange(touchpoint);
-    }
-
-    if (hasAttributionData(touchpoint)) {
-      setLastTouch(touchpoint);
-      onLastTouchChange(touchpoint);
-    } else {
-      const storedLast = getLastTouch();
-      if (storedLast !== null) {
-        onLastTouchChange(storedLast);
+    if (marketingGranted) {
+      // Cross-session persistence path (storage-backed).
+      const storedFirst = getFirstTouch();
+      if (storedFirst !== null) {
+        onFirstTouchChange(storedFirst);
       } else {
+        setFirstTouch(touchpoint);
+        onFirstTouchChange(touchpoint);
+      }
+
+      if (hasAttributionData(touchpoint)) {
         setLastTouch(touchpoint);
         onLastTouchChange(touchpoint);
+      } else {
+        const storedLast = getLastTouch();
+        if (storedLast !== null) {
+          onLastTouchChange(storedLast);
+        } else {
+          setLastTouch(touchpoint);
+          onLastTouchChange(touchpoint);
+        }
       }
+      return;
     }
-  }, [onFirstTouchChange, onLastTouchChange]);
+
+    // No marketing consent → in-memory only (PRD §1.7).
+    if (memoryFirstRef.current === null) {
+      memoryFirstRef.current = touchpoint;
+    }
+    onFirstTouchChange(memoryFirstRef.current);
+
+    if (hasAttributionData(touchpoint)) {
+      memoryLastRef.current = touchpoint;
+      onLastTouchChange(touchpoint);
+    } else if (memoryLastRef.current !== null) {
+      onLastTouchChange(memoryLastRef.current);
+    } else {
+      memoryLastRef.current = touchpoint;
+      onLastTouchChange(touchpoint);
+    }
+  }, [onFirstTouchChange, onLastTouchChange, marketingGranted]);
 
   useEffect(() => {
     const search = searchParams !== null ? searchParams.toString() : '';
-    const signature = `${pathname ?? ''}?${search}`;
+    // Include `marketingGranted` in the signature so a consent change after
+    // the initial capture (e.g. ConsentProvider hydrates from localStorage
+    // inside its own useEffect) re-runs the capture and follows the right
+    // persistence path.
+    const signature = `${marketingGranted ? '1' : '0'}|${pathname ?? ''}?${search}`;
     if (lastSignatureRef.current === signature) {
       return;
     }
     lastSignatureRef.current = signature;
     capture();
-  }, [pathname, searchParams, capture]);
+  }, [pathname, searchParams, capture, marketingGranted]);
 
   return null;
 }

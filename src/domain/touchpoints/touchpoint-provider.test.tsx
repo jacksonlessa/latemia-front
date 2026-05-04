@@ -4,11 +4,14 @@
  * `next/navigation` is mocked so we control `usePathname` / `useSearchParams`
  * without spinning up the Next.js router. Browser globals (`window.location`,
  * `document.referrer`) are mocked per-test.
+ *
+ * Tests cover both consent paths:
+ *   - marketing GRANTED → values flow into localStorage / sessionStorage
+ *   - marketing DENIED  → values stay in memory only (PRD §1.7 LGPD)
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
-import { ReadonlyURLSearchParams } from 'next/navigation';
 import {
   TouchpointProvider,
   useTouchpoints,
@@ -17,6 +20,11 @@ import {
   TOUCHPOINT_STORAGE_KEYS,
   __resetTouchpointMemoryStoreForTests,
 } from './touchpoint-storage';
+import {
+  ConsentProvider,
+  CONSENT_STORAGE_KEY,
+  CONSENT_VERSION,
+} from '@/components/public/consent/consent-provider';
 
 const navigationState = {
   pathname: '/',
@@ -47,6 +55,20 @@ function setLocation(pathname: string, search: string): void {
   });
 }
 
+function seedMarketingConsent(granted: boolean): void {
+  // Pre-populate localStorage so ConsentProvider hydrates with the desired
+  // consent state on mount, avoiding the "needs decision" branch.
+  window.localStorage.setItem(
+    CONSENT_STORAGE_KEY,
+    JSON.stringify({
+      analytics: granted ? 'granted' : 'denied',
+      marketing: granted ? 'granted' : 'denied',
+      version: CONSENT_VERSION,
+      decidedAt: '2026-05-04T00:00:00.000Z',
+    }),
+  );
+}
+
 function ConsumerProbe(): React.ReactElement {
   const { firstTouch, lastTouch } = useTouchpoints();
   return (
@@ -54,6 +76,18 @@ function ConsumerProbe(): React.ReactElement {
       <span data-testid="first-source">{firstTouch?.utmSource ?? ''}</span>
       <span data-testid="last-source">{lastTouch?.utmSource ?? ''}</span>
     </div>
+  );
+}
+
+function renderWithConsent(
+  granted: boolean,
+  ui: React.ReactElement,
+): ReturnType<typeof render> {
+  seedMarketingConsent(granted);
+  return render(
+    <ConsentProvider>
+      <TouchpointProvider>{ui}</TouchpointProvider>
+    </ConsentProvider>,
   );
 }
 
@@ -73,29 +107,16 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('TouchpointProvider', () => {
-  it('should expose null first/last touch before mount captures complete (server render)', () => {
-    // Just sanity-check the type signature — the component itself runs the
-    // capture inside useEffect, so a synchronous render will already have
-    // captured by the time queries run in jsdom. We mainly assert no throws.
+describe('TouchpointProvider — marketing consent granted', () => {
+  it('should not throw on initial render', () => {
     setLocation('/', '');
-    expect(() =>
-      render(
-        <TouchpointProvider>
-          <ConsumerProbe />
-        </TouchpointProvider>,
-      ),
-    ).not.toThrow();
+    expect(() => renderWithConsent(true, <ConsumerProbe />)).not.toThrow();
   });
 
   it('should capture UTM params on mount and expose them via the hook', () => {
     setLocation('/', 'utm_source=instagram&utm_campaign=lancamento');
 
-    render(
-      <TouchpointProvider>
-        <ConsumerProbe />
-      </TouchpointProvider>,
-    );
+    renderWithConsent(true, <ConsumerProbe />);
 
     expect(screen.getByTestId('first-source').textContent).toBe('instagram');
     expect(screen.getByTestId('last-source').textContent).toBe('instagram');
@@ -106,10 +127,13 @@ describe('TouchpointProvider', () => {
 
   it('should preserve firstTouch (first wins) when route changes carry new UTMs', () => {
     setLocation('/', 'utm_source=instagram');
+    seedMarketingConsent(true);
     const view = render(
-      <TouchpointProvider>
-        <ConsumerProbe />
-      </TouchpointProvider>,
+      <ConsentProvider>
+        <TouchpointProvider>
+          <ConsumerProbe />
+        </TouchpointProvider>
+      </ConsentProvider>,
     );
 
     expect(screen.getByTestId('first-source').textContent).toBe('instagram');
@@ -119,9 +143,11 @@ describe('TouchpointProvider', () => {
       setLocation('/contratar', 'utm_source=meta&utm_campaign=ads');
     });
     view.rerender(
-      <TouchpointProvider>
-        <ConsumerProbe />
-      </TouchpointProvider>,
+      <ConsentProvider>
+        <TouchpointProvider>
+          <ConsumerProbe />
+        </TouchpointProvider>
+      </ConsentProvider>,
     );
 
     expect(screen.getByTestId('first-source').textContent).toBe('instagram');
@@ -130,10 +156,13 @@ describe('TouchpointProvider', () => {
 
   it('should not overwrite lastTouch with an empty pageview when navigating to a route without params', () => {
     setLocation('/', 'utm_source=instagram');
+    seedMarketingConsent(true);
     const view = render(
-      <TouchpointProvider>
-        <ConsumerProbe />
-      </TouchpointProvider>,
+      <ConsentProvider>
+        <TouchpointProvider>
+          <ConsumerProbe />
+        </TouchpointProvider>
+      </ConsentProvider>,
     );
 
     expect(screen.getByTestId('last-source').textContent).toBe('instagram');
@@ -142,9 +171,11 @@ describe('TouchpointProvider', () => {
       setLocation('/privacidade', '');
     });
     view.rerender(
-      <TouchpointProvider>
-        <ConsumerProbe />
-      </TouchpointProvider>,
+      <ConsentProvider>
+        <TouchpointProvider>
+          <ConsumerProbe />
+        </TouchpointProvider>
+      </ConsentProvider>,
     );
 
     // last-touch retains the previous attribution.
@@ -173,11 +204,7 @@ describe('TouchpointProvider — referrer', () => {
       value: 'https://t.co/abc',
     });
 
-    render(
-      <TouchpointProvider>
-        <ConsumerProbe />
-      </TouchpointProvider>,
-    );
+    renderWithConsent(true, <ConsumerProbe />);
 
     // No UTM, but referrer counts as attribution data.
     const stored = window.sessionStorage.getItem(
@@ -185,5 +212,62 @@ describe('TouchpointProvider — referrer', () => {
     );
     expect(stored).not.toBeNull();
     expect(stored).toContain('t.co');
+  });
+});
+
+describe('TouchpointProvider — marketing consent denied (PRD §1.7)', () => {
+  it('should expose touchpoints in memory without persisting to localStorage/sessionStorage', () => {
+    setLocation('/', 'utm_source=instagram&utm_campaign=lancamento');
+
+    renderWithConsent(false, <ConsumerProbe />);
+
+    // Touchpoint is still available to the in-memory consumer (the converted
+    // client can still post attribution).
+    expect(screen.getByTestId('first-source').textContent).toBe('instagram');
+    expect(screen.getByTestId('last-source').textContent).toBe('instagram');
+
+    // But NEITHER storage was written to.
+    expect(
+      window.localStorage.getItem(TOUCHPOINT_STORAGE_KEYS.first),
+    ).toBeNull();
+    expect(
+      window.sessionStorage.getItem(TOUCHPOINT_STORAGE_KEYS.last),
+    ).toBeNull();
+  });
+
+  it('should preserve in-memory firstTouch when navigating with new params', () => {
+    setLocation('/', 'utm_source=instagram');
+    seedMarketingConsent(false);
+    const view = render(
+      <ConsentProvider>
+        <TouchpointProvider>
+          <ConsumerProbe />
+        </TouchpointProvider>
+      </ConsentProvider>,
+    );
+
+    expect(screen.getByTestId('first-source').textContent).toBe('instagram');
+
+    act(() => {
+      setLocation('/contratar', 'utm_source=meta');
+    });
+    view.rerender(
+      <ConsentProvider>
+        <TouchpointProvider>
+          <ConsumerProbe />
+        </TouchpointProvider>
+      </ConsentProvider>,
+    );
+
+    // First-wins still holds in memory, last reflects the new attribution.
+    expect(screen.getByTestId('first-source').textContent).toBe('instagram');
+    expect(screen.getByTestId('last-source').textContent).toBe('meta');
+    // And no storage was written.
+    expect(
+      window.localStorage.getItem(TOUCHPOINT_STORAGE_KEYS.first),
+    ).toBeNull();
+    expect(
+      window.sessionStorage.getItem(TOUCHPOINT_STORAGE_KEYS.last),
+    ).toBeNull();
   });
 });

@@ -86,9 +86,10 @@ export function getFirstTouch(): Touchpoint | null {
  * Persists the first-touch value following the "first wins" rule:
  * if a value already exists, it is preserved.
  *
- * TODO 5.0: gate by consent.marketing — when the consent flag is `false`,
- * skip persistence to localStorage and keep the value only in memory for the
- * current session.
+ * Consent gating: callers must only invoke this when marketing consent is
+ * granted. The `TouchpointProvider` already enforces that — without consent,
+ * the provider keeps the touchpoint in memory and never reaches this writer
+ * (PRD §1.7 LGPD).
  */
 export function setFirstTouch(touchpoint: Touchpoint): void {
   const existing = getFirstTouch();
@@ -103,8 +104,8 @@ export function getLastTouch(): Touchpoint | null {
 /**
  * Persists the last-touch value (always overwrites, scoped to the session).
  *
- * TODO 5.0: gate by consent.marketing — when the consent flag is `false`,
- * skip persistence to sessionStorage and keep the value only in memory.
+ * Consent gating: same contract as `setFirstTouch` — only call when marketing
+ * consent is granted; otherwise the provider keeps the value in memory.
  */
 export function setLastTouch(touchpoint: Touchpoint): void {
   safeWrite('session', LAST_TOUCH_KEY, serializeTouchpoint(touchpoint));
