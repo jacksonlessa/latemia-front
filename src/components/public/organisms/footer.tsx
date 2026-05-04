@@ -1,6 +1,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { publicSite } from '@/config/public-site';
+import { ConsentLink } from '@/components/public/consent/consent-link';
+
+const FOOTER_NAV_LINK_CLASS =
+  'text-[12.5px] font-medium text-white/40 transition-colors hover:text-white/70';
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -18,13 +22,17 @@ export function Footer() {
           {publicSite.siteName} Clínica Veterinária
         </span>
       </Link>
-      <nav className="flex gap-5">
-        <Link href="/privacidade" className="text-[12.5px] font-medium text-white/40 transition-colors hover:text-white/70">
+      <nav className="flex flex-wrap justify-center gap-x-5 gap-y-2">
+        <Link href="/privacidade" className={FOOTER_NAV_LINK_CLASS}>
           Política de Privacidade
         </Link>
-        <Link href="/termos" className="text-[12.5px] font-medium text-white/40 transition-colors hover:text-white/70">
+        <Link href="/termos" className={FOOTER_NAV_LINK_CLASS}>
           Termos de Uso
         </Link>
+        <Link href="/lgpd" className={FOOTER_NAV_LINK_CLASS}>
+          Direitos do titular
+        </Link>
+        <ConsentLink className={FOOTER_NAV_LINK_CLASS} label="Preferências de cookies" />
       </nav>
       <p className="text-[11.5px] text-white/25">
         © {year} {publicSite.siteName}. Todos os direitos reservados.
