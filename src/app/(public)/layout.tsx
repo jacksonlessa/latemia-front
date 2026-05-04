@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { AnalyticsSlot } from '@/components/public/slots/analytics-slot';
 import { CookieBannerSlot } from '@/components/public/slots/cookie-banner-slot';
+import { TouchpointProvider } from '@/domain/touchpoints/touchpoint-provider';
 
 export const metadata: Metadata = {
   title: 'Plano de Emergência Veterinária — Late & Mia',
@@ -17,7 +18,7 @@ export default function PublicLayout({
   return (
     <div className="bg-cream min-h-screen">
       <AnalyticsSlot />
-      {children}
+      <TouchpointProvider>{children}</TouchpointProvider>
       <CookieBannerSlot />
     </div>
   );
