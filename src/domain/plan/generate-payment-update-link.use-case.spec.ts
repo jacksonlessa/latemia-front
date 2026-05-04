@@ -8,6 +8,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   generatePaymentUpdateLinkUseCase,
+  PlanIneligibleForPaymentUpdateError,
   PlanNotInadimplenteError,
   type GenerateTokenResponse,
 } from './generate-payment-update-link.use-case';
@@ -64,13 +65,13 @@ describe('generatePaymentUpdateLinkUseCase — success', () => {
 });
 
 describe('generatePaymentUpdateLinkUseCase — error handling', () => {
-  it('should throw PlanNotInadimplenteError when API returns 422', async () => {
+  it('should throw PlanIneligibleForPaymentUpdateError when API returns 422', async () => {
     const mockFetch = vi.mocked(fetch);
     mockFetch.mockResolvedValueOnce(
       makeFetchResponse(
         {
-          code: 'PLAN_NOT_INADIMPLENTE',
-          message: 'O link só pode ser gerado para planos inadimplentes.',
+          message:
+            'Não é possível gerar link de atualização para planos cancelados, estornados ou contestados.',
         },
         422,
       ),
@@ -78,16 +79,16 @@ describe('generatePaymentUpdateLinkUseCase — error handling', () => {
 
     await expect(
       generatePaymentUpdateLinkUseCase('plan-uuid-1'),
-    ).rejects.toThrow(PlanNotInadimplenteError);
+    ).rejects.toThrow(PlanIneligibleForPaymentUpdateError);
   });
 
-  it('should throw PlanNotInadimplenteError with correct code when API returns 422', async () => {
+  it('should expose stable code and status on the 422 error', async () => {
     const mockFetch = vi.mocked(fetch);
     mockFetch.mockResolvedValueOnce(
       makeFetchResponse(
         {
-          code: 'PLAN_NOT_INADIMPLENTE',
-          message: 'O link só pode ser gerado para planos inadimplentes.',
+          message:
+            'Não é possível gerar link de atualização para planos cancelados, estornados ou contestados.',
         },
         422,
       ),
@@ -97,9 +98,35 @@ describe('generatePaymentUpdateLinkUseCase — error handling', () => {
       await generatePaymentUpdateLinkUseCase('plan-uuid-1');
       expect.fail('should have thrown');
     } catch (err) {
-      expect(err).toBeInstanceOf(PlanNotInadimplenteError);
-      expect((err as PlanNotInadimplenteError).code).toBe('PLAN_NOT_INADIMPLENTE');
-      expect((err as PlanNotInadimplenteError).status).toBe(422);
+      expect(err).toBeInstanceOf(PlanIneligibleForPaymentUpdateError);
+      const typed = err as PlanIneligibleForPaymentUpdateError;
+      expect(typed.code).toBe('PLAN_NOT_ELIGIBLE_FOR_PAYMENT_UPDATE');
+      expect(typed.status).toBe(422);
+      // Error message must reflect the new eligibility rule and not mention
+      // only "inadimplente" — surface the backend message verbatim.
+      expect(typed.message).toContain('cancelados');
+    }
+  });
+
+  it('should preserve PlanNotInadimplenteError as a backward-compatible alias', () => {
+    // The class export PlanNotInadimplenteError is kept as an alias to avoid
+    // breaking external consumers; both names refer to the same constructor.
+    expect(PlanNotInadimplenteError).toBe(PlanIneligibleForPaymentUpdateError);
+  });
+
+  it('should fall back to a default message when the 422 body is empty', async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse({}, 422));
+
+    try {
+      await generatePaymentUpdateLinkUseCase('plan-uuid-1');
+      expect.fail('should have thrown');
+    } catch (err) {
+      expect(err).toBeInstanceOf(PlanIneligibleForPaymentUpdateError);
+      // Default message must mention the terminal statuses (not "inadimplente").
+      expect((err as Error).message).toMatch(
+        /cancelados|estornados|contestados/i,
+      );
     }
   });
 

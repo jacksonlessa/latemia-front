@@ -3,13 +3,15 @@
  *
  * Calls POST /api/admin/plans/:planId/payment-update-token (the internal
  * Next.js Route Handler) to generate a tokenized payment-update URL for a
- * plan in `inadimplente` status.
+ * plan in an eligible status (`ativo`, `carencia`, `pendente`, `inadimplente`).
  *
  * The Route Handler proxies the request to the backend, attaching the JWT
  * bearer token from the httpOnly session cookie.
  *
  * On success, returns the generated token data including the shareable URL.
- * On backend 422 the plan is not inadimplente — throws `PlanNotInadimplenteError`.
+ * On backend 422 the plan is in a terminal status (`cancelado`, `estornado`,
+ * `contestado`) and a link cannot be generated — throws
+ * `PlanIneligibleForPaymentUpdateError`.
  * On other failures throws `ApiError`.
  *
  * LGPD: no personal data is logged — only planId and error codes.
@@ -25,24 +27,40 @@ export interface GenerateTokenResponse {
 }
 
 /**
- * Thrown when the backend returns 422, meaning the plan is not currently
- * in `inadimplente` status and a link cannot be generated.
+ * Thrown when the backend returns 422, meaning the plan is in a terminal
+ * status (`cancelado`, `estornado` or `contestado`) and a payment-update
+ * link cannot be generated.
+ *
+ * The admin UI normally hides the section for terminal statuses (see
+ * `canGeneratePaymentUpdateLink`), so this error is only expected when
+ * an operator forces the request via DevTools / direct API call, or when
+ * the plan transitions to a terminal status between page render and click.
  */
-export class PlanNotInadimplenteError extends Error {
-  readonly code = 'PLAN_NOT_INADIMPLENTE';
+export class PlanIneligibleForPaymentUpdateError extends Error {
+  readonly code = 'PLAN_NOT_ELIGIBLE_FOR_PAYMENT_UPDATE';
   readonly status = 422;
 
-  constructor(message = 'O link só pode ser gerado para planos inadimplentes.') {
+  constructor(
+    message = 'O link de atualização de pagamento não pode ser gerado para planos cancelados, estornados ou contestados.',
+  ) {
     super(message);
-    this.name = 'PlanNotInadimplenteError';
+    this.name = 'PlanIneligibleForPaymentUpdateError';
   }
 }
+
+/**
+ * @deprecated Use `PlanIneligibleForPaymentUpdateError` — kept as an alias
+ * for backward compatibility with existing callers/tests. Will be removed
+ * in a follow-up.
+ */
+export const PlanNotInadimplenteError = PlanIneligibleForPaymentUpdateError;
+export type PlanNotInadimplenteError = PlanIneligibleForPaymentUpdateError;
 
 /**
  * Generates a payment-update link for the given plan.
  *
  * Throws:
- * - `PlanNotInadimplenteError` when the backend returns 422.
+ * - `PlanIneligibleForPaymentUpdateError` when the backend returns 422.
  * - `ApiError` for any other non-2xx response.
  */
 export async function generatePaymentUpdateLinkUseCase(
@@ -70,9 +88,7 @@ export async function generatePaymentUpdateLinkUseCase(
   const code = body.code ?? 'UNKNOWN_ERROR';
 
   if (res.status === 422) {
-    throw new PlanNotInadimplenteError(
-      body.message ?? 'O link só pode ser gerado para planos inadimplentes.',
-    );
+    throw new PlanIneligibleForPaymentUpdateError(body.message);
   }
 
   throw new ApiError(res.status, code, body.message ?? `HTTP ${res.status}`);

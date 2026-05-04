@@ -9,6 +9,8 @@
 import type React from 'react';
 import { PaymentUpdateLinkSection } from './PaymentUpdateLinkSection';
 import type { GenerateTokenResponse } from '@/domain/plan/generate-payment-update-link.use-case';
+import { canGeneratePaymentUpdateLink } from '@/lib/plans/eligibility';
+import type { PlanStatus } from '@/lib/types/plan';
 
 // ---------------------------------------------------------------------------
 // Meta
@@ -43,8 +45,34 @@ function noop(_token: GenerateTokenResponse): void {
   // no-op — used in stories where we don't care about the callback
 }
 
+/**
+ * Reproduces the parent-page gating used in `PlanDetailPageClient`:
+ * the section is rendered only when the plan status is in the
+ * `PAYMENT_UPDATE_ELIGIBLE_STATUSES` allow-list, otherwise nothing is
+ * rendered (no placeholder).
+ */
+function GatedByStatus({ status }: { status: PlanStatus }): React.ReactElement {
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-[#6B6B6E]">
+        Status do plano: <span className="font-mono">{status}</span> —{' '}
+        {canGeneratePaymentUpdateLink(status)
+          ? 'visível (elegível)'
+          : 'oculta (status terminal)'}
+      </p>
+      {canGeneratePaymentUpdateLink(status) ? (
+        <PaymentUpdateLinkSection
+          planId={mockPlanId}
+          currentToken={null}
+          onGenerated={noop}
+        />
+      ) : null}
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
-// Stories
+// Stories — Token state (component-level)
 // ---------------------------------------------------------------------------
 
 /** Nenhum link gerado ainda — exibe apenas o botão de gerar */
@@ -125,4 +153,41 @@ export const Loading: Story = {
       isLoading={true}
     />
   ),
+};
+
+// ---------------------------------------------------------------------------
+// Stories — Visibility by plan status (page-level gating)
+// ---------------------------------------------------------------------------
+
+/** Plano ativo — seção visível, cliente pediu troca preventiva de cartão. */
+export const VisibleStatusAtivo: Story = {
+  name: 'Visível · status ativo',
+  render: () => <GatedByStatus status="ativo" />,
+};
+
+/** Plano em carência — seção visível, primeiros 6 meses pós-contratação. */
+export const VisibleStatusCarencia: Story = {
+  name: 'Visível · status carência',
+  render: () => <GatedByStatus status="carencia" />,
+};
+
+/** Plano pendente — primeira cobrança ainda não confirmada; seção visível. */
+export const VisibleStatusPendente: Story = {
+  name: 'Visível · status pendente',
+  render: () => <GatedByStatus status="pendente" />,
+};
+
+/** Plano inadimplente — caso histórico; seção segue visível. */
+export const VisibleStatusInadimplente: Story = {
+  name: 'Visível · status inadimplente',
+  render: () => <GatedByStatus status="inadimplente" />,
+};
+
+/**
+ * Plano cancelado — status terminal; a seção não é renderizada (sem
+ * placeholder), apenas a linha de contexto demonstrando o gating.
+ */
+export const HiddenStatusCancelado: Story = {
+  name: 'Oculta · status cancelado',
+  render: () => <GatedByStatus status="cancelado" />,
 };
