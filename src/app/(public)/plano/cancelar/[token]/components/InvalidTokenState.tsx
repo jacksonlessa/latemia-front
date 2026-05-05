@@ -9,8 +9,18 @@ interface InvalidTokenStateProps {
 interface StateConfig {
   icon: React.ReactNode;
   title: string;
-  message: string;
+  message: React.ReactNode;
 }
+
+/**
+ * WhatsApp support link.
+ * Configure NEXT_PUBLIC_SUPPORT_WHATSAPP in your environment (e.g. "5511999999999").
+ * Falls back to a placeholder href if the variable is not set.
+ */
+const SUPPORT_WHATSAPP_HREF = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP
+  ? `https://wa.me/${process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP}`
+  : // TODO: replace placeholder with the real support number in NEXT_PUBLIC_SUPPORT_WHATSAPP
+    'https://wa.me/5500000000000';
 
 function buildConfig(reason: InvalidTokenReason): StateConfig {
   switch (reason) {
@@ -25,8 +35,20 @@ function buildConfig(reason: InvalidTokenReason): StateConfig {
           />
         ),
         title: 'Link expirado',
-        message:
-          'Este link expirou. Entre em contato com o atendimento para um novo link.',
+        message: (
+          <>
+            Este link expirou.{' '}
+            <a
+              href={SUPPORT_WHATSAPP_HREF}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline text-[#4E8C75] hover:text-[#3a6e5c]"
+            >
+              Entre em contato pelo WhatsApp
+            </a>{' '}
+            para solicitar um novo link.
+          </>
+        ),
       };
     case 'used':
       return {
@@ -62,6 +84,8 @@ function buildConfig(reason: InvalidTokenReason): StateConfig {
 /**
  * Displayed when the cancellation token is expired, already used, or not found.
  * Each reason shows a distinct message so the client knows what happened.
+ * For the "expired" case, a WhatsApp support link is shown so the client can
+ * request a new link (configured via NEXT_PUBLIC_SUPPORT_WHATSAPP env var).
  */
 export function InvalidTokenState({ reason }: InvalidTokenStateProps) {
   const { icon, title, message } = buildConfig(reason);
@@ -76,7 +100,16 @@ export function InvalidTokenState({ reason }: InvalidTokenStateProps) {
       </div>
 
       <div className="rounded-lg border border-border bg-muted/30 p-4 max-w-sm w-full text-sm text-muted-foreground">
-        Em caso de dúvidas, entre em contato com nossa equipe pelo WhatsApp.
+        Em caso de dúvidas,{' '}
+        <a
+          href={SUPPORT_WHATSAPP_HREF}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline text-[#4E8C75] hover:text-[#3a6e5c]"
+        >
+          entre em contato com nossa equipe pelo WhatsApp
+        </a>
+        .
       </div>
     </div>
   );

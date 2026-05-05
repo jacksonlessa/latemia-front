@@ -32,6 +32,7 @@ import {
   PaymentProviderUnavailableError,
 } from '@/domain/plan/cancel-plan-with-token.use-case';
 import type { CancelPlanPreview } from '@/domain/plan/preview-cancel-plan.use-case';
+import { formatDateBR } from '@/lib/format/date';
 import { CancellationSuccess } from './CancellationSuccess';
 
 // ---------------------------------------------------------------------------
@@ -60,15 +61,6 @@ const PLAN_STATUS_LABELS: Record<string, string> = {
 
 function planStatusLabel(status: string): string {
   return PLAN_STATUS_LABELS[status] ?? status;
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'America/Sao_Paulo',
-  });
 }
 
 // ---------------------------------------------------------------------------
@@ -161,7 +153,7 @@ export function PublicCancelPlanForm({ preview, token }: PublicCancelPlanFormPro
                 Coberto até
               </span>
               <span className="text-sm font-semibold text-foreground">
-                {formatDate(preview.coveredUntil)}
+                {formatDateBR(preview.coveredUntil)}
               </span>
             </div>
           )}
@@ -189,7 +181,7 @@ export function PublicCancelPlanForm({ preview, token }: PublicCancelPlanFormPro
             <p>
               Sua cobertura permanecerá ativa até{' '}
               <span className="font-semibold">
-                {formatDate(preview.coveredUntil)}
+                {formatDateBR(preview.coveredUntil)}
               </span>
               .
             </p>

@@ -36,6 +36,9 @@ export default async function CancelarPlanoPage({
 }) {
   const { token } = await params;
 
+  // LGPD / Security: token is always masked in server logs — only first 4 chars exposed.
+  console.log(`[plan-cancellation] preview requested token=${token.slice(0, 4)}…`);
+
   try {
     const preview = await previewCancelPlanUseCase(token);
     return (

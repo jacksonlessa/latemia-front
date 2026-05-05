@@ -1,16 +1,8 @@
 import { CircleCheck } from 'lucide-react';
+import { formatDateBR } from '@/lib/format/date';
 
 interface CancellationSuccessProps {
   coveredUntil: string | null;
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'America/Sao_Paulo',
-  });
 }
 
 /**
@@ -38,7 +30,7 @@ export function CancellationSuccess({ coveredUntil }: CancellationSuccessProps) 
           <p className="text-sm text-muted-foreground max-w-sm mx-auto">
             Sua cobertura permanece ativa até{' '}
             <span className="font-semibold text-foreground">
-              {formatDate(coveredUntil)}
+              {formatDateBR(coveredUntil)}
             </span>
             .
           </p>
