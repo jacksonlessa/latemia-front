@@ -20,6 +20,12 @@ interface PlanDetailHeaderProps {
    * and opens the registration modal.
    */
   onRegisterUsageClick: () => void;
+  /**
+   * When provided, the "Cancelar plano" button becomes actionable and calls
+   * this callback on click. When omitted the button remains disabled (e.g.
+   * for plans in terminal status).
+   */
+  onCancelClick?: () => void;
 }
 
 const REGISTER_BLOCKED_STATUSES: ReadonlySet<PlanStatus> = new Set<PlanStatus>([
@@ -40,6 +46,7 @@ function blockedReason(status: PlanStatus): string | null {
 export function PlanDetailHeader({
   plan,
   onRegisterUsageClick,
+  onCancelClick,
 }: PlanDetailHeaderProps) {
   const [copied, setCopied] = useState(false);
 
@@ -125,28 +132,41 @@ export function PlanDetailHeader({
           </Button>
         ) : null}
 
-        <TooltipProvider delayDuration={0}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span tabIndex={0}>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="destructive"
-                  disabled
-                  aria-disabled="true"
-                  aria-label="Cancelar plano (em breve)"
-                >
-                  <X aria-hidden="true" />
-                  Cancelar plano
-                </Button>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" align="end">
-              Em breve
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        {onCancelClick ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="destructive"
+            onClick={onCancelClick}
+            aria-label="Cancelar plano"
+          >
+            <X aria-hidden="true" />
+            Cancelar plano
+          </Button>
+        ) : (
+          <TooltipProvider delayDuration={0}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span tabIndex={0}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="destructive"
+                    disabled
+                    aria-disabled="true"
+                    aria-label="Cancelar plano (indisponível)"
+                  >
+                    <X aria-hidden="true" />
+                    Cancelar plano
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" align="end">
+                Indisponível para planos neste status
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </div>
     </header>
   );
