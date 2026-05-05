@@ -155,12 +155,12 @@ describe('PetPlanPanel — deactivation button visibility', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('should not show deactivate button when pet has only cancelled plans', () => {
+  it('should show deactivate button when pet has only cancelled plans', () => {
     renderPanel([cancelledPlan]);
 
     expect(
-      screen.queryByTestId('deactivate-pet-button'),
-    ).not.toBeInTheDocument();
+      screen.getByTestId('deactivate-pet-button'),
+    ).toBeInTheDocument();
   });
 });
 

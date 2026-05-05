@@ -170,9 +170,12 @@ export function PetPlanPanel({
   const [isDeactivating, setIsDeactivating] = useState(false);
   const [deactivateInlineError, setDeactivateInlineError] = useState<string | null>(null);
 
-  // Determine whether the deactivate button should be visible:
-  // visible only when this pet has no plans at all (any status).
-  const petHasNoPlans = petPlans.length === 0;
+  // Deactivate button is visible when the pet has no active (non-cancelled) plans.
+  // The backend allows deactivation of pets whose only plans are cancelled.
+  const petHasActivePlans = petPlans.some(
+    (p) => !INACTIVE_STATUSES.includes(p.status),
+  );
+  const canDeactivate = !petHasActivePlans;
 
   useEffect(() => {
     // Cancel any in-flight request from the previous pet
@@ -299,7 +302,7 @@ export function PetPlanPanel({
               </Link>
             </Button>
           )}
-          {petHasNoPlans && (
+          {canDeactivate && (
             <AlertDialog
               open={deactivateDialogOpen}
               onOpenChange={setDeactivateDialogOpen}
