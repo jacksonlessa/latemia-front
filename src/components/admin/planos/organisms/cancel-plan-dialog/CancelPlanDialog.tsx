@@ -187,7 +187,7 @@ export function CancelPlanDialog({
         onOpenChange(next);
       }}
     >
-      <AlertDialogContent className="max-w-lg overflow-hidden">
+      <AlertDialogContent className="max-w-lg">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2 text-destructive">
             <AlertTriangle className="h-5 w-5 shrink-0" aria-hidden="true" />
@@ -316,21 +316,22 @@ export function CancelPlanDialog({
             ) : null}
 
             {generatedLink ? (
-              <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2 min-w-0">
-                <span
-                  className="flex-1 min-w-0 truncate text-xs text-foreground font-mono"
-                  title={generatedLink}
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={generatedLink}
                   data-testid="generated-link"
-                >
-                  {generatedLink}
-                </span>
+                  className="flex-1 min-w-0 rounded-md border border-border bg-muted/40 px-3 py-1.5 text-xs font-mono text-foreground cursor-text focus:outline-none focus:ring-2 focus:ring-ring"
+                  onFocus={(e) => e.target.select()}
+                />
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   onClick={handleCopy}
                   aria-label="Copiar link"
-                  className="h-7 shrink-0 px-2"
+                  className="h-8 shrink-0 px-2"
                 >
                   {copied ? (
                     <Check className="h-4 w-4 text-green-600" aria-hidden="true" />
