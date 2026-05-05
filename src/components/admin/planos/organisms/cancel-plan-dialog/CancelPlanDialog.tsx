@@ -187,7 +187,7 @@ export function CancelPlanDialog({
         onOpenChange(next);
       }}
     >
-      <AlertDialogContent className="max-w-lg">
+      <AlertDialogContent className="max-w-lg overflow-hidden">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2 text-destructive">
             <AlertTriangle className="h-5 w-5 shrink-0" aria-hidden="true" />
@@ -316,9 +316,9 @@ export function CancelPlanDialog({
             ) : null}
 
             {generatedLink ? (
-              <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2">
+              <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2 min-w-0">
                 <span
-                  className="flex-1 truncate text-xs text-foreground"
+                  className="flex-1 min-w-0 truncate text-xs text-foreground font-mono"
                   title={generatedLink}
                   data-testid="generated-link"
                 >
