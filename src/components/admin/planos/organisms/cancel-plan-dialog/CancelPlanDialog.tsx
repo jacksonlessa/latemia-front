@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, Loader2 } from 'lucide-react';
+import { AlertTriangle, Check, Copy, Link2, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -17,6 +17,7 @@ import {
   PlanAlreadyCancelledError,
   PaymentProviderUnavailableError,
 } from '@/domain/plan/cancel-plan.use-case';
+import { generateCancellationTokenUseCase } from '@/domain/plan/generate-cancellation-token.use-case';
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -97,6 +98,12 @@ export function CancelPlanDialog({
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Token link generation state
+  const [generatingLink, setGeneratingLink] = useState(false);
+  const [generatedLink, setGeneratedLink] = useState<string | null>(null);
+  const [linkError, setLinkError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Reset internal state each time the dialog opens.
@@ -106,6 +113,10 @@ export function CancelPlanDialog({
       setAcknowledged(false);
       setSubmitting(false);
       setErrorMessage(null);
+      setGeneratingLink(false);
+      setGeneratedLink(null);
+      setLinkError(null);
+      setCopied(false);
       // Auto-focus the textarea for keyboard users.
       setTimeout(() => textareaRef.current?.focus(), 50);
     }
@@ -115,6 +126,28 @@ export function CancelPlanDialog({
     reason.length >= MIN_REASON_LENGTH && acknowledged && !submitting;
 
   const formattedCoveredUntil = formatDate(coveredUntil);
+
+  async function handleGenerateLink() {
+    setGeneratingLink(true);
+    setLinkError(null);
+    setGeneratedLink(null);
+    setCopied(false);
+    try {
+      const { url } = await generateCancellationTokenUseCase(planId);
+      setGeneratedLink(url);
+    } catch {
+      setLinkError('Não foi possível gerar o link. Tente novamente.');
+    } finally {
+      setGeneratingLink(false);
+    }
+  }
+
+  async function handleCopy() {
+    if (!generatedLink) return;
+    await navigator.clipboard.writeText(generatedLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   async function handleConfirm() {
     if (!canSubmit) return;
@@ -245,6 +278,70 @@ export function CancelPlanDialog({
               {errorMessage}
             </p>
           ) : null}
+
+          {/* Divider */}
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="flex-1 border-t border-border" />
+            <span>ou prefere que o cliente confirme?</span>
+            <span className="flex-1 border-t border-border" />
+          </div>
+
+          {/* Token link section */}
+          <div className="flex flex-col gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={generatingLink || submitting}
+              onClick={handleGenerateLink}
+              className="w-full"
+            >
+              {generatingLink ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  Gerando link…
+                </>
+              ) : (
+                <>
+                  <Link2 className="h-4 w-4" aria-hidden="true" />
+                  Gerar link de cancelamento para o cliente
+                </>
+              )}
+            </Button>
+
+            {linkError ? (
+              <p role="alert" className="text-xs text-destructive">
+                {linkError}
+              </p>
+            ) : null}
+
+            {generatedLink ? (
+              <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2">
+                <span
+                  className="flex-1 truncate text-xs text-foreground"
+                  title={generatedLink}
+                  data-testid="generated-link"
+                >
+                  {generatedLink}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCopy}
+                  aria-label="Copiar link"
+                  className="h-7 shrink-0 px-2"
+                >
+                  {copied ? (
+                    <Check className="h-4 w-4 text-green-600" aria-hidden="true" />
+                  ) : (
+                    <Copy className="h-4 w-4" aria-hidden="true" />
+                  )}
+                  <span className="ml-1 text-xs">{copied ? 'Copiado!' : 'Copiar'}</span>
+                </Button>
+              </div>
+            ) : null}
+          </div>
         </div>
 
         <AlertDialogFooter>
