@@ -1,0 +1,113 @@
+import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+
+import { SESSION_COOKIE } from '@/lib/session';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+
+interface RouteContext {
+  params: Promise<{ id: string; petId: string }>;
+}
+
+/**
+ * DELETE /api/admin/clients/:id/pets/:petId
+ *
+ * Internal Route Handler that proxies the request to
+ * `DELETE /v1/clients/:clientId/pets/:petId` on the backend, attaching the
+ * JWT bearer token read from the `latemia_session` httpOnly cookie. Used by
+ * the deactivatePetUseCase (Client Component) which cannot read the httpOnly
+ * cookie.
+ *
+ * - Returns 401 when the session cookie is absent.
+ * - Echoes the backend status code and response body verbatim.
+ * - In case of backend 5xx, the body is forwarded opaquely (no internal
+ *   details are added or removed).
+ *
+ * LGPD: no personal data is transmitted beyond the pet UUID, which is an
+ * internal identifier and is never logged here.
+ */
+export async function DELETE(_req: Request, ctx: RouteContext) {
+  const { id: clientId, petId } = await ctx.params;
+
+  const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE)?.value;
+
+  if (!token) {
+    return NextResponse.json(
+      { code: 'UNAUTHENTICATED', message: 'Sessão expirada.' },
+      { status: 401 },
+    );
+  }
+
+  const backendRes = await fetch(
+    `${API_URL}/v1/clients/${encodeURIComponent(clientId)}/pets/${encodeURIComponent(petId)}`,
+    {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+
+  const responseText = await backendRes.text();
+  return new NextResponse(responseText || null, {
+    status: backendRes.status,
+    headers: {
+      'Content-Type':
+        backendRes.headers.get('content-type') ?? 'application/json',
+    },
+  });
+}
+
+/**
+ * PATCH /api/admin/clients/:id/pets/:petId
+ *
+ * Internal Route Handler that proxies the request to
+ * `PATCH /v1/clients/:clientId/pets/:petId` on the backend, attaching the
+ * JWT bearer token read from the `latemia_session` httpOnly cookie. Used by
+ * the EditPetDrawer (Client Component) which cannot read the httpOnly cookie.
+ *
+ * - Returns 401 when the session cookie is absent.
+ * - Echoes the backend status code and response body verbatim.
+ * - In case of backend 5xx, the body is forwarded opaquely (no internal
+ *   details are added or removed).
+ *
+ * LGPD: the request body may contain pet data (name, birthDate, weight, etc.).
+ * It is forwarded directly to the backend and is never logged here.
+ */
+export async function PATCH(req: Request, ctx: RouteContext) {
+  const { id: clientId, petId } = await ctx.params;
+
+  const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE)?.value;
+
+  if (!token) {
+    return NextResponse.json(
+      { code: 'UNAUTHENTICATED', message: 'Sessão expirada.' },
+      { status: 401 },
+    );
+  }
+
+  const body = await req.text();
+
+  const backendRes = await fetch(
+    `${API_URL}/v1/clients/${encodeURIComponent(clientId)}/pets/${encodeURIComponent(petId)}`,
+    {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body,
+    },
+  );
+
+  const responseText = await backendRes.text();
+  return new NextResponse(responseText, {
+    status: backendRes.status,
+    headers: {
+      'Content-Type':
+        backendRes.headers.get('content-type') ?? 'application/json',
+    },
+  });
+}
