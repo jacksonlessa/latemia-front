@@ -37,6 +37,7 @@ export interface DashboardKpisResponse {
   delinquentPlans: KpiValue;
   clientsAttendedToday: KpiValue;
   monthlyRevenue: MonthlyRevenueKpi;
+  totalPlans: KpiValue;
   /** ISO timestamp produced server-side. */
   generatedAt: string;
   /** Labels of KPIs that lack a comparison snapshot. */

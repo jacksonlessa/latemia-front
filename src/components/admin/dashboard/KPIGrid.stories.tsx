@@ -62,6 +62,10 @@ const baseKpis: DashboardKpisResponse = {
     comparison: { previous: 11000, deltaAbsolute: 1345, deltaPercent: 12.2 },
     masked: false,
   },
+  totalPlans: {
+    value: 200,
+    comparison: { previous: 190, deltaAbsolute: 10, deltaPercent: 5.3 },
+  },
   generatedAt: new Date().toISOString(),
   snapshotMissingFor: [],
 };
