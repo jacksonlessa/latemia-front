@@ -12,14 +12,14 @@ export function SegmentedProgressBar({ ativos, carencia, inadimplentes, total }:
   const safe = total > 0 ? total : 1;
   const pctAtivos = Math.max(0, Math.min(100, Math.round((ativos / safe) * 100)));
   const pctCarencia = Math.max(0, Math.min(100, Math.round((carencia / safe) * 100)));
-  const pctInadimplentes = Math.max(0, Math.min(100, Math.round((inadimplentes / safe) * 100)));
+  const pctInadimplentes = Math.max(0, 100 - pctAtivos - pctCarencia);
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <div
           role="img"
-          aria-label={`${ativos} ativos, ${carencia} carência, ${inadimplentes} inadimplentes`}
+          aria-label={`${ativos} ativos · ${carencia} carência · ${inadimplentes} inadimplentes`}
           className="flex h-2 w-full overflow-hidden rounded-full bg-gray-100 cursor-help"
         >
           <div className="h-2 bg-[#4E8C75] transition-all duration-300" style={{ width: `${pctAtivos}%` }} />

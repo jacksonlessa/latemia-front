@@ -4,6 +4,10 @@
  * NOTE: Storybook is not yet configured in this project.
  * These stories follow the CSF (Component Story Format) convention and will
  * be picked up automatically once Storybook is installed.
+ *
+ * Variants not applicable: loading (component is purely presentational — it
+ * receives already-resolved data), error (no error state surface), disabled
+ * (not interactive). Empty state is covered by TotalZero.
  */
 
 import type React from "react";
@@ -12,6 +16,8 @@ import { SegmentedProgressBar } from "./SegmentedProgressBar";
 const meta = {
   title: "Admin/Dashboard/SegmentedProgressBar",
   component: SegmentedProgressBar,
+  tags: ["autodocs"],
+  parameters: { layout: "padded" },
 };
 export default meta;
 
