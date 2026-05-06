@@ -6,6 +6,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  SegmentedProgressBar,
+  type SegmentedProgressBarProps,
+} from "@/components/admin/dashboard/SegmentedProgressBar";
 
 export interface KPICardComparison {
   /** Absolute delta vs comparison period. */
@@ -33,6 +37,8 @@ interface KPICardProps {
   masked?: boolean;
   /** Renders a progress bar with absolute numbers in tooltip. */
   progress?: KPICardProgress;
+  /** Renders a segmented progress bar (ativos/carencia/inadimplentes). Mutually exclusive with `progress`. */
+  segmentedProgress?: SegmentedProgressBarProps;
   /** Render state — when not "default", switches to a placeholder body. */
   state?: KPICardState;
   /** Custom error message for the `state="error"` variant. */
@@ -112,6 +118,7 @@ export function KPICard({
   comparison,
   masked = false,
   progress,
+  segmentedProgress,
   state = "default",
   errorMessage,
 }: KPICardProps) {
@@ -161,6 +168,7 @@ export function KPICard({
           </div>
 
           {progress && <ProgressBar progress={progress} />}
+          {segmentedProgress && <SegmentedProgressBar {...segmentedProgress} />}
         </>
       )}
     </div>

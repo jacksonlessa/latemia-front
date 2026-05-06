@@ -107,3 +107,14 @@ export const NegativeTrend: Story = {
     comparison: { delta: -2, deltaPercent: -40 },
   },
 };
+
+/** Com barra segmentada (ativos / carência / inadimplentes). */
+export const WithSegmentedProgress: Story = {
+  name: "Com barra segmentada",
+  args: {
+    title: "Planos ativos",
+    value: "92%",
+    comparison: { delta: 6, deltaPercent: 3.4 },
+    segmentedProgress: { ativos: 184, carencia: 12, inadimplentes: 4, total: 200 },
+  },
+};
