@@ -118,7 +118,6 @@ export const SemComparativos: Story = {
         "Planos novos no mês",
         "Planos em carência",
         "Planos ativos",
-        "Planos inadimplentes",
         "Clientes consultados hoje",
         "Total de planos",
       ],
