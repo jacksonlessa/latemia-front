@@ -42,6 +42,10 @@ function makeKpis(
       comparison: { previous: 11000, deltaAbsolute: 1345, deltaPercent: 12.2 },
       masked: false,
     },
+    totalPlans: {
+      value: 200,
+      comparison: { previous: 190, deltaAbsolute: 10, deltaPercent: 5.3 },
+    },
     generatedAt: "2026-04-30T12:00:00.000Z",
     snapshotMissingFor: [],
     ...overrides,
@@ -55,7 +59,7 @@ describe("KPIGrid", () => {
     expect(cards).toHaveLength(8);
   });
 
-  it("should render KPIs in the expected 4+4 order when role is admin", () => {
+  it("should render KPIs in the new 4+4 semantic order", () => {
     render(<KPIGrid kpis={makeKpis()} />);
     const titles = screen
       .getAllByTestId("kpi-card")
@@ -63,14 +67,27 @@ describe("KPIGrid", () => {
 
     expect(titles).toEqual([
       "Tutores ativos",
-      "Planos ativos",
-      "Planos inadimplentes",
-      "Clientes consultados hoje",
       "Pets cadastrados",
-      "Planos novos no mês",
-      "Planos em carência",
+      "Clientes consultados hoje",
       "Receita do mês",
+      "Total de planos",
+      "Planos novos no mês",
+      "Planos ativos",
+      "Planos em carência",
     ]);
+  });
+
+  it("should not render the 'Planos inadimplentes' card in the grid", () => {
+    render(<KPIGrid kpis={makeKpis()} />);
+    const titles = screen
+      .getAllByTestId("kpi-card")
+      .map((card) => within(card).getByRole("heading", { level: 3 }).textContent);
+    expect(titles).not.toContain("Planos inadimplentes");
+  });
+
+  it("should render the 'Total de planos' card in the grid", () => {
+    render(<KPIGrid kpis={makeKpis()} />);
+    expect(screen.getByText("Total de planos")).toBeInTheDocument();
   });
 
   it("should mask the monthly revenue value when monthlyRevenue.masked is true", () => {
@@ -105,11 +122,11 @@ describe("KPIGrid", () => {
     ).toBeInTheDocument();
   });
 
-  it("should render the active plans card with a progress bar", () => {
+  it("should render the active plans card with a segmented progress bar", () => {
     render(<KPIGrid kpis={makeKpis()} />);
-    const progressBar = screen.getByRole("progressbar");
-    expect(progressBar).toHaveAttribute("aria-valuemin", "0");
-    expect(progressBar).toHaveAttribute("aria-valuemax", "200");
-    expect(progressBar).toHaveAttribute("aria-valuenow", "184");
+    const segmentedBar = screen.getByRole("img", {
+      name: /ativos · \d+ carência · \d+ inadimplentes/,
+    });
+    expect(segmentedBar).toBeInTheDocument();
   });
 });

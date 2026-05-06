@@ -111,6 +111,7 @@ export const SemComparativos: Story = {
       },
       delinquentPlans: { value: 3, comparison: null },
       clientsAttendedToday: { value: 47, comparison: null },
+      totalPlans: { value: 200, comparison: null },
       snapshotMissingFor: [
         "Tutores ativos",
         "Pets cadastrados",
@@ -119,6 +120,7 @@ export const SemComparativos: Story = {
         "Planos ativos",
         "Planos inadimplentes",
         "Clientes consultados hoje",
+        "Total de planos",
       ],
     },
   },

@@ -25,74 +25,48 @@ function formatBRL(value: number): string {
 /**
  * Renders the 8 dashboard KPIs in a 4+4 responsive grid.
  *
- * Row 1 (highlight): Tutores ativos · Planos ativos · Planos inadimplentes · Clientes consultados hoje
- * Row 2 (complementary): Pets cadastrados · Planos novos no mês · Planos em carência · Receita do mês
+ * Row 1 (base de clientes): Tutores ativos · Pets cadastrados · Clientes consultados hoje · Receita do mês
+ * Row 2 (carteira de planos): Total de planos · Planos novos no mês · Planos ativos · Planos em carência
  */
 export function KPIGrid({ kpis }: KPIGridProps) {
   const {
     activeTutors,
-    activePlans,
-    delinquentPlans,
-    clientsAttendedToday,
     registeredPets,
-    newPlansThisMonth,
-    plansInGracePeriod,
+    clientsAttendedToday,
     monthlyRevenue,
+    totalPlans,
+    newPlansThisMonth,
+    activePlans,
+    plansInGracePeriod,
+    delinquentPlans,
   } = kpis;
 
   return (
     <div className="space-y-4 md:space-y-6" data-testid="kpi-grid">
-      {/* Row 1: highlight KPIs */}
+      {/* Linha 1: base de clientes */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-4">
-        <KPICard
-          title="Tutores ativos"
-          value={activeTutors.value}
-          comparison={toComparison(activeTutors)}
-        />
+        <KPICard title="Tutores ativos" value={activeTutors.value} comparison={toComparison(activeTutors)} />
+        <KPICard title="Pets cadastrados" value={registeredPets.value} comparison={toComparison(registeredPets)} />
+        <KPICard title="Clientes consultados hoje" value={clientsAttendedToday.value} comparison={toComparison(clientsAttendedToday)} />
+        <KPICard title="Receita do mês" value={formatBRL(monthlyRevenue.value)} comparison={toComparison(monthlyRevenue)} masked={monthlyRevenue.masked} />
+      </div>
+
+      {/* Linha 2: carteira de planos */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-4">
+        <KPICard title="Total de planos" value={totalPlans.value} comparison={toComparison(totalPlans)} />
+        <KPICard title="Planos novos no mês" value={newPlansThisMonth.value} comparison={toComparison(newPlansThisMonth)} />
         <KPICard
           title="Planos ativos"
           value={`${Math.round(activePlans.activePercent)}%`}
           comparison={toComparison(activePlans)}
-          progress={{
-            current: activePlans.value,
+          segmentedProgress={{
+            ativos: activePlans.value,
+            carencia: plansInGracePeriod.value,
+            inadimplentes: delinquentPlans.value,
             total: activePlans.totalNonCancelled,
           }}
         />
-        <KPICard
-          title="Planos inadimplentes"
-          value={delinquentPlans.value}
-          comparison={toComparison(delinquentPlans)}
-        />
-        <KPICard
-          title="Clientes consultados hoje"
-          value={clientsAttendedToday.value}
-          comparison={toComparison(clientsAttendedToday)}
-        />
-      </div>
-
-      {/* Row 2: complementary KPIs */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-4">
-        <KPICard
-          title="Pets cadastrados"
-          value={registeredPets.value}
-          comparison={toComparison(registeredPets)}
-        />
-        <KPICard
-          title="Planos novos no mês"
-          value={newPlansThisMonth.value}
-          comparison={toComparison(newPlansThisMonth)}
-        />
-        <KPICard
-          title="Planos em carência"
-          value={plansInGracePeriod.value}
-          comparison={toComparison(plansInGracePeriod)}
-        />
-        <KPICard
-          title="Receita do mês"
-          value={formatBRL(monthlyRevenue.value)}
-          comparison={toComparison(monthlyRevenue)}
-          masked={monthlyRevenue.masked}
-        />
+        <KPICard title="Planos em carência" value={plansInGracePeriod.value} comparison={toComparison(plansInGracePeriod)} />
       </div>
     </div>
   );
