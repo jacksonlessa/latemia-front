@@ -4,6 +4,9 @@
  * Mocks the global fetch to test the use-case in isolation.
  * PCI: cardToken is a Pagar.me tokenized reference — no real PAN/CVV is used in tests.
  * LGPD: no PII is used in fixtures or assertions.
+ *
+ * Model: 1 client = 1 subscription with N items (pivô subscription consolidada).
+ * chargesBehavior is now `immediate | next_cycle` (aggregated across all plans).
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -43,23 +46,23 @@ const cardUpdatedNoCharge: ConsumeResult = {
 
 const chargePaid: ConsumeResult = {
   outcome: 'charge_paid',
-  chargesBehavior: 'overdue_charge',
+  chargesBehavior: 'immediate',
 };
 
 const chargePending: ConsumeResult = {
   outcome: 'charge_pending',
-  chargesBehavior: 'first_charge',
+  chargesBehavior: 'immediate',
 };
 
 const chargeFailedWithMessage: ConsumeResult = {
   outcome: 'charge_failed',
-  chargesBehavior: 'overdue_charge',
+  chargesBehavior: 'immediate',
   failureMessage: 'Cartão sem limite disponível.',
 };
 
 const chargeFailedWithoutMessage: ConsumeResult = {
   outcome: 'charge_failed',
-  chargesBehavior: 'first_charge',
+  chargesBehavior: 'immediate',
 };
 
 // ---------------------------------------------------------------------------
@@ -80,7 +83,7 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 
 describe('consumePaymentUpdateToken — success outcomes', () => {
-  it('should return outcome=card_updated_no_charge for ativo/carencia plans', async () => {
+  it('should return outcome=card_updated_no_charge with chargesBehavior=next_cycle for ativo/carencia plans', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(makeResponse(cardUpdatedNoCharge, 200));
 
     const result = await consumePaymentUpdateToken('valid-token', CARD_TOKEN);
@@ -90,22 +93,22 @@ describe('consumePaymentUpdateToken — success outcomes', () => {
     expect(result.failureMessage).toBeUndefined();
   });
 
-  it('should return outcome=charge_paid when retry is approved', async () => {
+  it('should return outcome=charge_paid with chargesBehavior=immediate when retry is approved', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(makeResponse(chargePaid, 200));
 
     const result = await consumePaymentUpdateToken('valid-token', CARD_TOKEN);
 
     expect(result.outcome).toBe('charge_paid');
-    expect(result.chargesBehavior).toBe('overdue_charge');
+    expect(result.chargesBehavior).toBe('immediate');
   });
 
-  it('should return outcome=charge_pending when retry is still processing', async () => {
+  it('should return outcome=charge_pending with chargesBehavior=immediate when retry is still processing', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(makeResponse(chargePending, 200));
 
     const result = await consumePaymentUpdateToken('valid-token', CARD_TOKEN);
 
     expect(result.outcome).toBe('charge_pending');
-    expect(result.chargesBehavior).toBe('first_charge');
+    expect(result.chargesBehavior).toBe('immediate');
   });
 
   it('should call POST /api/public/payment-update/:token with cardToken in body', async () => {
@@ -139,7 +142,7 @@ describe('consumePaymentUpdateToken — charge_failed (200, inline retry)', () =
 
     expect(result.outcome).toBe('charge_failed');
     expect(result.failureMessage).toBe('Cartão sem limite disponível.');
-    expect(result.chargesBehavior).toBe('overdue_charge');
+    expect(result.chargesBehavior).toBe('immediate');
   });
 
   it('should return outcome=charge_failed without failureMessage when gateway omits it', async () => {

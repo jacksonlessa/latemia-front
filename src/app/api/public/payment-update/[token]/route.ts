@@ -12,11 +12,15 @@ interface RouteContext {
  * Public Route Handler — no auth required.
  * Proxies to `GET /v1/payment-update/:token` on the backend.
  *
- * Returns `{ petName, planStatus, chargesBehavior }` on 200, where
- *   `chargesBehavior` ∈ { next_cycle | first_charge | overdue_charge }.
+ * Returns `{ tutorMaskedName, petsCovered, chargesBehavior }` on 200, where
+ *   `tutorMaskedName` — tutor name with LGPD masking applied by the backend.
+ *   `petsCovered`     — array of pet names covered by the client's subscription.
+ *   `chargesBehavior` ∈ { immediate | next_cycle } — aggregated across all plans:
+ *     `immediate`  if at least one plan is `pendente`/`inadimplente`;
+ *     `next_cycle` if all plans are `ativo`/`carencia`.
  * Returns 404 for invalid/expired/used tokens (generic — no enumeration).
  *
- * LGPD: response contains only petName and planStatus — no PII.
+ * LGPD: response contains only masked tutor name and pet names — no CPF, phone, or email.
  */
 export async function GET(_req: Request, ctx: RouteContext) {
   const { token } = await ctx.params;

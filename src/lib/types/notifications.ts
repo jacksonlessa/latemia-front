@@ -2,7 +2,8 @@ export type NotificationEventType =
   | "plan.created"
   | "plan.statusChanged"
   | "plan.paymentFailed"
-  | "plan.renewed";
+  | "plan.renewed"
+  | "plan.paymentMethodUpdated";
 
 export interface NotificationEventConfigDto {
   type: NotificationEventType;

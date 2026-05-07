@@ -2,7 +2,10 @@
  * Unit tests for validatePaymentUpdateToken use-case.
  *
  * Mocks the global fetch to test the use-case in isolation.
- * LGPD: no PII is used in fixtures or assertions.
+ * LGPD: no PII is used in fixtures or assertions — only masked name and pet names.
+ *
+ * Model: 1 client = 1 subscription with N items (pivô subscription consolidada).
+ * TokenContext now carries tutorMaskedName + petsCovered[] instead of petName/planStatus.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -24,10 +27,16 @@ function makeResponse(body: unknown, status: number): Response {
   } as unknown as Response;
 }
 
-const tokenContext: TokenContext = {
-  petName: 'Rex',
-  planStatus: 'inadimplente',
-  chargesBehavior: 'overdue_charge',
+const tokenContextSinglePet: TokenContext = {
+  tutorMaskedName: 'J** S***',
+  petsCovered: ['Rex'],
+  chargesBehavior: 'immediate',
+};
+
+const tokenContextMultiplePets: TokenContext = {
+  tutorMaskedName: 'M**** O****',
+  petsCovered: ['Luna', 'Thor', 'Mel'],
+  chargesBehavior: 'next_cycle',
 };
 
 // ---------------------------------------------------------------------------
@@ -48,17 +57,30 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 
 describe('validatePaymentUpdateToken — success', () => {
-  it('should return token context when token is valid', async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(makeResponse(tokenContext, 200));
+  it('should return token context with tutorMaskedName and petsCovered when token is valid', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(makeResponse(tokenContextSinglePet, 200));
 
     const result = await validatePaymentUpdateToken('valid-token');
 
-    expect(result).toEqual(tokenContext);
+    expect(result).toEqual(tokenContextSinglePet);
+    expect(result.tutorMaskedName).toBe('J** S***');
+    expect(result.petsCovered).toEqual(['Rex']);
+    expect(result.chargesBehavior).toBe('immediate');
+  });
+
+  it('should return multiple petsCovered when client has multiple plans', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(makeResponse(tokenContextMultiplePets, 200));
+
+    const result = await validatePaymentUpdateToken('valid-token');
+
+    expect(result.petsCovered).toHaveLength(3);
+    expect(result.petsCovered).toEqual(['Luna', 'Thor', 'Mel']);
+    expect(result.chargesBehavior).toBe('next_cycle');
   });
 
   it('should call GET /api/public/payment-update/:token', async () => {
     const mockFetch = vi.mocked(fetch);
-    mockFetch.mockResolvedValueOnce(makeResponse(tokenContext, 200));
+    mockFetch.mockResolvedValueOnce(makeResponse(tokenContextSinglePet, 200));
 
     await validatePaymentUpdateToken('abc123');
 
@@ -66,6 +88,18 @@ describe('validatePaymentUpdateToken — success', () => {
     expect(String(url)).toContain('/api/public/payment-update/abc123');
     expect((init as RequestInit).method).toBe('GET');
     expect((init as RequestInit).cache).toBe('no-store');
+  });
+
+  it('should not expose CPF, email, or phone in the returned context', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(makeResponse(tokenContextSinglePet, 200));
+
+    const result = await validatePaymentUpdateToken('valid-token');
+
+    expect(result).not.toHaveProperty('cpf');
+    expect(result).not.toHaveProperty('email');
+    expect(result).not.toHaveProperty('phone');
+    expect(result).not.toHaveProperty('petName');
+    expect(result).not.toHaveProperty('planStatus');
   });
 });
 

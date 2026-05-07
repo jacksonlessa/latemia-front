@@ -12,6 +12,7 @@ const EVENT_LABELS: Record<NotificationEventType, string> = {
   "plan.statusChanged": "Status do plano alterado",
   "plan.paymentFailed": "Falha no pagamento",
   "plan.renewed": "Plano renovado",
+  "plan.paymentMethodUpdated": "Método de pagamento atualizado",
 };
 
 const EVENT_DESCRIPTIONS: Record<NotificationEventType, string> = {
@@ -19,6 +20,7 @@ const EVENT_DESCRIPTIONS: Record<NotificationEventType, string> = {
   "plan.statusChanged": "Avisar a cada transição de status do plano.",
   "plan.paymentFailed": "Avisar quando uma cobrança falhar.",
   "plan.renewed": "Avisar quando um plano for renovado com sucesso.",
+  "plan.paymentMethodUpdated": "Avisar quando o método de pagamento de um plano for atualizado.",
 };
 
 type ToggleAction = (
