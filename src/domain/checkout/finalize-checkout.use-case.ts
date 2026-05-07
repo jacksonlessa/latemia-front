@@ -240,7 +240,7 @@ interface CheckoutCustomerResponse {
 
 interface CheckoutSubscriptionResponse {
   pagarme_subscription_id: string;
-  items: Array<{ pet_id: string; pagarme_subscription_item_id: string }>;
+  items: Array<{ pet_id: string; pagarme_subscription_item_id?: string }>;
 }
 
 async function postJson<T>(path: string, body: unknown): Promise<{ ok: true; data: T } | { ok: false; res: Response }> {

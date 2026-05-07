@@ -16,7 +16,7 @@ import type { ApiErrorBody } from '@/lib/api-client';
 
 export interface RegisterContractSubscriptionItem {
   pet_id: string;
-  pagarme_subscription_item_id: string;
+  pagarme_subscription_item_id?: string;
 }
 
 export interface RegisterContractSubscription {
