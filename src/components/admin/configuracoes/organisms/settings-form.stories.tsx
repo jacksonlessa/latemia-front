@@ -51,7 +51,7 @@ export default meta;
 
 const mockSaveSuccess = async (_payload: UpdateSystemSettingsInput) => ({
   success: true as const,
-  data: { payment_provider: "pagarme", subscription_plan_id: "plan_abc123" } as SystemSettingsDto,
+  data: { payment_provider: "pagarme", subscription_plan_id: "plan_abc123", subscription_plan_price_cents: "4990" } as SystemSettingsDto,
 });
 
 const mockSaveError = async (_payload: UpdateSystemSettingsInput) => ({
@@ -64,6 +64,7 @@ const mockSavePending = (): Promise<never> => new Promise(() => {});
 const filledValues: SystemSettingsDto = {
   payment_provider: "pagarme",
   subscription_plan_id: "plan_abc123",
+  subscription_plan_price_cents: "4990",
 };
 
 // ---------------------------------------------------------------------------

@@ -36,6 +36,8 @@ function getFeedbackMessage(code: string): string {
       return "Provedor de pagamento inválido. Selecione uma opção válida.";
     case "INVALID_SUBSCRIPTION_PLAN_ID":
       return "ID do plano de assinatura inválido. Verifique o valor informado.";
+    case "INVALID_SUBSCRIPTION_PLAN_PRICE":
+      return "Preço do plano inválido. Informe um valor inteiro positivo em centavos.";
     case "EMPTY_UPDATE":
       return "Nenhuma alteração detectada. Modifique ao menos um campo antes de salvar.";
     case "UNAUTHORIZED":
@@ -53,13 +55,17 @@ export function SettingsForm({ initialValues, saveAction, fetchError }: Settings
   const [subscriptionPlanId, setSubscriptionPlanId] = useState<string>(
     initialValues?.subscription_plan_id ?? "",
   );
+  const [subscriptionPlanPriceCents, setSubscriptionPlanPriceCents] = useState<string>(
+    initialValues?.subscription_plan_price_cents ?? "",
+  );
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const isDirty =
     paymentProvider !== (savedValues?.payment_provider ?? "") ||
-    subscriptionPlanId !== (savedValues?.subscription_plan_id ?? "");
+    subscriptionPlanId !== (savedValues?.subscription_plan_id ?? "") ||
+    subscriptionPlanPriceCents !== (savedValues?.subscription_plan_price_cents ?? "");
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -69,6 +75,10 @@ export function SettingsForm({ initialValues, saveAction, fetchError }: Settings
     const payload: UpdateSystemSettingsInput = {};
     if (paymentProvider) payload.payment_provider = paymentProvider;
     if (subscriptionPlanId) payload.subscription_plan_id = subscriptionPlanId;
+    if (subscriptionPlanPriceCents) {
+      const parsed = parseInt(subscriptionPlanPriceCents, 10);
+      if (!isNaN(parsed) && parsed > 0) payload.subscription_plan_price_cents = parsed;
+    }
 
     startTransition(async () => {
       const result = await saveAction(payload);
@@ -153,6 +163,26 @@ export function SettingsForm({ initialValues, saveAction, fetchError }: Settings
             setSuccessMessage(null);
           }}
           placeholder="Ex: plan_abc123"
+          disabled={isPending}
+          aria-describedby={errorMessage ? "settings-error" : undefined}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="subscription_plan_price_cents">
+          Preço Mensal por Pet (centavos)
+        </Label>
+        <Input
+          id="subscription_plan_price_cents"
+          type="number"
+          min={1}
+          step={1}
+          value={subscriptionPlanPriceCents}
+          onChange={(e) => {
+            setSubscriptionPlanPriceCents(e.target.value);
+            setSuccessMessage(null);
+          }}
+          placeholder="Ex: 4990 (= R$49,90)"
           disabled={isPending}
           aria-describedby={errorMessage ? "settings-error" : undefined}
         />
