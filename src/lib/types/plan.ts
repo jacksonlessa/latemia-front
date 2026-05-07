@@ -115,17 +115,6 @@ export interface PlanDetail {
     consentedAt: string;
   };
   payments: Payment[];
-  /**
-   * Most-recent payment-update token for this plan, included when one exists.
-   * Null when no token has ever been generated.
-   * Used by `PaymentUpdateLinkSection` to display the current link status.
-   */
-  paymentUpdateToken?: {
-    token: string;
-    status: 'active' | 'used' | 'expired';
-    expiresAt: string;
-    usedAt: string | null;
-  } | null;
 }
 
 /**
