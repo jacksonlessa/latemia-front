@@ -5,7 +5,6 @@ import {
   ProgressStep,
   type ProgressState,
 } from '@/components/public/contratar/atoms/progress-step';
-import type { ProgressSubStepData } from '@/components/public/contratar/atoms/progress-sub-step';
 import { Button } from '@/components/ui/button';
 
 export const CHECKOUT_STAGE_MESSAGES: Record<number, string> = {
@@ -14,7 +13,7 @@ export const CHECKOUT_STAGE_MESSAGES: Record<number, string> = {
   3: 'Salvando seus dados de cadastro...',
   4: 'Cadastrando seu(s) pet(s)...',
   5: 'Conectando ao provedor de pagamento...',
-  6: 'Configurando assinatura para seus pets...',
+  6: 'Configurando sua assinatura...',
   7: 'Finalizando sua contratação...',
   8: 'Pronto! Redirecionando...',
 };
@@ -24,19 +23,9 @@ export const CHECKOUT_TOTAL_STAGES = 8;
 /** Atraso mínimo antes que um estado novo seja exibido (anti-flicker). */
 export const ANTI_FLICKER_MS = 300;
 
-export interface CheckoutPetStage {
-  /** Nome exibido (ex.: "Rex"). */
-  name: string;
-  state: ProgressState;
-  /** Mensagem de erro a exibir quando state === 'error'. */
-  errorMessage?: string;
-}
-
 export interface CheckoutProgressPanelProps {
   /** Etapa atual (1..8). Etapas anteriores aparecem como `done`, futuras como `pending`. */
   currentStage: number;
-  /** Sub-itens da etapa 6 (1 por pet). */
-  petStages?: CheckoutPetStage[];
   /** Etapa que falhou; quando definida, sobrepõe o estado dessa etapa para `error`. */
   errorStage?: number;
   /** Mensagem de erro localizada exibida na etapa que falhou. */
@@ -62,15 +51,6 @@ function getStageState(
     return 'in_progress';
   }
   return 'pending';
-}
-
-function petStageToSub(p: CheckoutPetStage, idx: number): ProgressSubStepData {
-  return {
-    id: `${idx}-${p.name}`,
-    label: `Configurando assinatura para ${p.name}`,
-    state: p.state,
-    errorMessage: p.errorMessage,
-  };
 }
 
 /**
@@ -182,7 +162,6 @@ function useFocusTrap(
 
 export function CheckoutProgressPanel({
   currentStage,
-  petStages,
   errorStage,
   errorMessage,
   onRetry,
@@ -200,11 +179,6 @@ export function CheckoutProgressPanel({
 
   useFocusTrap(containerRef, asOverlay);
 
-  const subSteps = useMemo<ProgressSubStepData[] | undefined>(() => {
-    if (!petStages || petStages.length === 0) return undefined;
-    return petStages.map(petStageToSub);
-  }, [petStages]);
-
   const stages = useMemo(
     () =>
       Array.from({ length: CHECKOUT_TOTAL_STAGES }, (_, i) => i + 1).map(
@@ -216,11 +190,10 @@ export function CheckoutProgressPanel({
             state,
             label: CHECKOUT_STAGE_MESSAGES[stage],
             errorMessage: isErroredStage ? errorMessage : undefined,
-            subSteps: stage === 6 ? subSteps : undefined,
           };
         },
       ),
-    [shownStage, errorStage, errorMessage, subSteps],
+    [shownStage, errorStage, errorMessage],
   );
 
   const panel = (
@@ -250,7 +223,6 @@ export function CheckoutProgressPanel({
             key={s.stage}
             state={s.state}
             label={s.label}
-            subSteps={s.subSteps}
             errorMessage={s.errorMessage}
           />
         ))}

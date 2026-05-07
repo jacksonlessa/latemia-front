@@ -11,10 +11,7 @@ import {
   type CardFormField,
   type CardFormValue,
 } from './card-form';
-import {
-  CheckoutProgressPanel,
-  type CheckoutPetStage,
-} from './checkout-progress-panel';
+import { CheckoutProgressPanel } from './checkout-progress-panel';
 import type { CheckoutSummary } from '@/domain/checkout/checkout.types';
 import { formatBRL } from '@/lib/currency';
 
@@ -29,7 +26,6 @@ export interface StepPagamentoProps {
   mode?: StepPagamentoMode;
   /** Estado do painel de progresso quando `mode !== 'form'`. */
   currentStage?: number;
-  petStages?: CheckoutPetStage[];
   errorStage?: number;
   errorMessage?: string;
   /** Erro inline acima dos botões (para erros pré-tokenização). */
@@ -45,7 +41,6 @@ export function StepPagamento({
   onRetry,
   mode = 'form',
   currentStage = 1,
-  petStages,
   errorStage,
   errorMessage,
   formError,
@@ -159,7 +154,6 @@ export function StepPagamento({
         <CheckoutProgressPanel
           asOverlay={false}
           currentStage={currentStage}
-          petStages={petStages}
           errorStage={mode === 'error' ? errorStage : undefined}
           errorMessage={mode === 'error' ? errorMessage : undefined}
           onRetry={mode === 'error' ? onRetry : undefined}

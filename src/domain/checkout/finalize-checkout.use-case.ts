@@ -63,7 +63,8 @@ export interface FinalizeCheckoutInput {
     petIds?: string[];
     pagarmeCustomerId?: string;
     pagarmeCardId?: string;
-    pagarmeSubscriptionIds?: string[];
+    /** Subscription consolidada já criada (se houver). */
+    pagarmeSubscriptionId?: string;
   };
 }
 
@@ -74,14 +75,12 @@ export interface FinalizeCheckoutResult {
   petIds: string[];
   pagarmeCustomerId: string;
   pagarmeCardId: string;
-  pagarmeSubscriptionIds: string[];
+  /** ID da subscription consolidada (1 por cliente). */
+  pagarmeSubscriptionId: string;
 }
 
 export interface OnStageChangePayload {
   stage: CheckoutStage;
-  /** Quando definido, indica o pet em foco (estágio 6 sub-step). */
-  petIndex?: number;
-  petName?: string;
 }
 
 export type OnStageChange = (payload: OnStageChangePayload) => void;
@@ -94,9 +93,8 @@ export type OnStageChange = (payload: OnStageChangePayload) => void;
 export class CheckoutError extends Error {
   readonly stage: CheckoutStage;
   readonly code: string;
-  readonly petIndex?: number;
-  /** Subscriptions Pagar.me já criadas no momento da falha. */
-  readonly createdSubscriptionIds: string[];
+  /** Subscription Pagar.me já criada no momento da falha (se houver). */
+  readonly createdSubscriptionId?: string;
   /** pagarmeCustomerId já obtido (se houver). */
   readonly pagarmeCustomerId?: string;
 
@@ -104,16 +102,14 @@ export class CheckoutError extends Error {
     stage: CheckoutStage;
     code: string;
     message: string;
-    petIndex?: number;
-    createdSubscriptionIds?: string[];
+    createdSubscriptionId?: string;
     pagarmeCustomerId?: string;
   }) {
     super(params.message);
     this.name = 'CheckoutError';
     this.stage = params.stage;
     this.code = params.code;
-    this.petIndex = params.petIndex;
-    this.createdSubscriptionIds = params.createdSubscriptionIds ?? [];
+    this.createdSubscriptionId = params.createdSubscriptionId;
     this.pagarmeCustomerId = params.pagarmeCustomerId;
   }
 }
@@ -217,8 +213,7 @@ async function readApiError(res: Response): Promise<{ code: string; message?: st
 function buildCheckoutError(
   stage: CheckoutStage,
   code: string,
-  petIndex: number | undefined,
-  createdSubscriptionIds: string[],
+  createdSubscriptionId: string | undefined,
   pagarmeCustomerId: string | undefined,
 ): CheckoutError {
   const message =
@@ -227,8 +222,7 @@ function buildCheckoutError(
     stage,
     code,
     message,
-    petIndex,
-    createdSubscriptionIds,
+    createdSubscriptionId,
     pagarmeCustomerId,
   });
 }
@@ -246,6 +240,7 @@ interface CheckoutCustomerResponse {
 
 interface CheckoutSubscriptionResponse {
   pagarme_subscription_id: string;
+  items: Array<{ pet_id: string; pagarme_subscription_item_id: string }>;
 }
 
 async function postJson<T>(path: string, body: unknown): Promise<{ ok: true; data: T } | { ok: false; res: Response }> {
@@ -287,9 +282,7 @@ export class FinalizeCheckoutUseCase {
     onStageChange: OnStageChange = () => {},
   ): Promise<FinalizeCheckoutResult> {
     const resume = input.resume ?? {};
-    const createdSubscriptionIds: string[] = [
-      ...(resume.pagarmeSubscriptionIds ?? []),
-    ];
+    let createdSubscriptionId: string | undefined = resume.pagarmeSubscriptionId;
     let pagarmeCustomerId: string | undefined = resume.pagarmeCustomerId;
     let pagarmeCardId: string | undefined = resume.pagarmeCardId;
 
@@ -404,7 +397,7 @@ export class FinalizeCheckoutUseCase {
       );
       if (!result.ok) {
         const { code } = await readApiError(result.res);
-        throw buildCheckoutError(5, code, undefined, [], undefined);
+        throw buildCheckoutError(5, code, undefined, undefined);
       }
       pagarmeCustomerId = result.data.pagarme_customer_id;
       pagarmeCardId = result.data.pagarme_card_id;
@@ -413,50 +406,31 @@ export class FinalizeCheckoutUseCase {
           5,
           'PROVIDER_UPSTREAM',
           undefined,
-          [],
           pagarmeCustomerId,
         );
       }
     }
 
     // -----------------------------------------------------------------------
-    // Stage 6 — create one Pagar.me subscription per pet (sequential)
+    // Stage 6 — create consolidated Pagar.me subscription with all pets
     // -----------------------------------------------------------------------
-    onStageChange({
-      stage: 6,
-      petIndex: createdSubscriptionIds.length,
-      petName: input.pets[createdSubscriptionIds.length]?.name,
-    });
-    for (let i = createdSubscriptionIds.length; i < input.pets.length; i++) {
-      onStageChange({
-        stage: 6,
-        petIndex: i,
-        petName: input.pets[i].name,
-      });
+    let subscriptionItems: CheckoutSubscriptionResponse['items'] = [];
+    if (!createdSubscriptionId) {
+      onStageChange({ stage: 6 });
       const result = await postJson<CheckoutSubscriptionResponse>(
         '/v1/checkout/subscription',
         {
           client_id: clientId,
-          pet_id: petIds[i],
+          pet_ids: petIds,
           card_id: pagarmeCardId,
         },
       );
       if (!result.ok) {
         const { code } = await readApiError(result.res);
-        const err = buildCheckoutError(
-          6,
-          code,
-          i,
-          createdSubscriptionIds,
-          pagarmeCustomerId,
-        );
-        // Rollback fire-and-forget: erro pós-stage 5 e já temos subscriptions criadas
-        if (createdSubscriptionIds.length > 0) {
-          fireAndForgetRollback(createdSubscriptionIds);
-        }
-        throw err;
+        throw buildCheckoutError(6, code, undefined, pagarmeCustomerId);
       }
-      createdSubscriptionIds.push(result.data.pagarme_subscription_id);
+      createdSubscriptionId = result.data.pagarme_subscription_id;
+      subscriptionItems = result.data.items;
     }
 
     // -----------------------------------------------------------------------
@@ -466,26 +440,27 @@ export class FinalizeCheckoutUseCase {
     let contractId: string;
     let planIds: string[];
     try {
-      const subscriptions = input.pets.map((_, i) => ({
-        pet_id: petIds[i],
-        pagarme_subscription_id: createdSubscriptionIds[i],
-      }));
       const contractResult = await this.contractUseCase.execute({
         clientId,
         petIds,
         contractVersion: input.contractVersion,
         consentedAt: input.contractAcceptedAt,
-        subscriptions,
+        subscription: createdSubscriptionId
+          ? {
+              pagarme_subscription_id: createdSubscriptionId,
+              items: subscriptionItems,
+            }
+          : undefined,
       });
       contractId = contractResult.contract_id;
       planIds = contractResult.plan_ids;
     } catch (err) {
-      // Falha pós-stage 5 com subscriptions criadas — rollback fire-and-forget
-      if (createdSubscriptionIds.length > 0) {
-        fireAndForgetRollback(createdSubscriptionIds);
+      // Falha pós-stage 6 com subscription criada — rollback consolidado fire-and-forget
+      if (createdSubscriptionId) {
+        fireAndForgetRollback(createdSubscriptionId);
       }
       throw mapDomainError(err, 7, undefined, {
-        createdSubscriptionIds,
+        createdSubscriptionId,
         pagarmeCustomerId,
       });
     }
@@ -502,7 +477,7 @@ export class FinalizeCheckoutUseCase {
       petIds,
       pagarmeCustomerId,
       pagarmeCardId,
-      pagarmeSubscriptionIds: createdSubscriptionIds,
+      pagarmeSubscriptionId: createdSubscriptionId ?? '',
     };
   }
 }
@@ -516,7 +491,7 @@ function mapDomainError(
   stage: CheckoutStage,
   petIndex?: number,
   carry?: {
-    createdSubscriptionIds?: string[];
+    createdSubscriptionId?: string;
     pagarmeCustomerId?: string;
   },
 ): CheckoutError {
@@ -529,8 +504,7 @@ function mapDomainError(
       stage,
       code,
       message,
-      petIndex,
-      createdSubscriptionIds: carry?.createdSubscriptionIds ?? [],
+      createdSubscriptionId: carry?.createdSubscriptionId,
       pagarmeCustomerId: carry?.pagarmeCustomerId,
     });
   }
@@ -538,8 +512,7 @@ function mapDomainError(
     stage,
     code: 'UNKNOWN_ERROR',
     message: fallbackMessageForStage(stage),
-    petIndex,
-    createdSubscriptionIds: carry?.createdSubscriptionIds ?? [],
+    createdSubscriptionId: carry?.createdSubscriptionId,
     pagarmeCustomerId: carry?.pagarmeCustomerId,
   });
 }
@@ -548,14 +521,14 @@ function mapDomainError(
 // Rollback (fire-and-forget)
 // ---------------------------------------------------------------------------
 
-function fireAndForgetRollback(pagarmeSubscriptionIds: string[]): void {
+function fireAndForgetRollback(pagarmeSubscriptionId: string): void {
   // Não aguardamos o resultado e não logamos detalhes — o backend é
   // responsável pela orquestração best-effort + outbox.
   try {
     void fetch(getApiUrl('/v1/checkout/rollback'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pagarme_subscription_ids: pagarmeSubscriptionIds }),
+      body: JSON.stringify({ pagarme_subscription_id: pagarmeSubscriptionId }),
       keepalive: true,
     }).catch(() => {
       /* swallow */

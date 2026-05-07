@@ -126,22 +126,29 @@ const validDraft = {
 
 // Default fetch stub: handles /v1/checkout/customer + /v1/checkout/subscription
 function installCheckoutFetchMock() {
-  let subCounter = 0;
   const fetchMock = vi.fn(async (url: string) => {
     const u = String(url);
     if (u.includes('/v1/checkout/customer')) {
       return {
         ok: true,
         status: 201,
-        json: () => Promise.resolve({ pagarme_customer_id: 'cus_1', created: true }),
+        json: () =>
+          Promise.resolve({
+            pagarme_customer_id: 'cus_1',
+            created: true,
+            pagarme_card_id: 'card_1',
+          }),
       } as unknown as Response;
     }
     if (u.includes('/v1/checkout/subscription')) {
-      subCounter++;
       return {
         ok: true,
         status: 201,
-        json: () => Promise.resolve({ pagarme_subscription_id: `sub_${subCounter}` }),
+        json: () =>
+          Promise.resolve({
+            pagarme_subscription_id: 'sub_1',
+            items: [{ pet_id: 'pet-uuid-1', pagarme_subscription_item_id: 'si_1' }],
+          }),
       } as unknown as Response;
     }
     if (u.includes('/v1/checkout/rollback')) {

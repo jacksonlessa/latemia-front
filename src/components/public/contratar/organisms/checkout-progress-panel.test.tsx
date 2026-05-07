@@ -14,6 +14,17 @@ describe('CheckoutProgressPanel', () => {
     }
   });
 
+  it('should render stage 6 as a single spinner line without sub-items', () => {
+    render(<CheckoutProgressPanel currentStage={6} asOverlay={false} />);
+    expect(
+      screen.getByText('Configurando sua assinatura...'),
+    ).toBeInTheDocument();
+    // No per-pet sub-items should be rendered
+    expect(
+      screen.queryByText(/Configurando assinatura para/),
+    ).not.toBeInTheDocument();
+  });
+
   it('should mark stages before currentStage as done and current as in_progress (polite live)', () => {
     render(<CheckoutProgressPanel currentStage={3} asOverlay={false} />);
     const liveNodes = screen.getAllByRole('status');
@@ -25,23 +36,6 @@ describe('CheckoutProgressPanel', () => {
     liveNodes.forEach((n) => {
       expect(n).toHaveAttribute('aria-live', 'polite');
     });
-  });
-
-  it('should expand stage 6 with one sub-item per pet', () => {
-    render(
-      <CheckoutProgressPanel
-        currentStage={6}
-        asOverlay={false}
-        petStages={[
-          { name: 'Rex', state: 'done' },
-          { name: 'Mel', state: 'in_progress' },
-          { name: 'Thor', state: 'pending' },
-        ]}
-      />,
-    );
-    expect(screen.getByText('Configurando assinatura para Rex')).toBeInTheDocument();
-    expect(screen.getByText('Configurando assinatura para Mel')).toBeInTheDocument();
-    expect(screen.getByText('Configurando assinatura para Thor')).toBeInTheDocument();
   });
 
   it('should render error state with errorMessage and trigger onRetry', () => {
@@ -64,6 +58,23 @@ describe('CheckoutProgressPanel', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /tentar novamente/i }));
     expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it('should render error on stage 6 without sub-items', () => {
+    const onRetry = vi.fn();
+    render(
+      <CheckoutProgressPanel
+        currentStage={6}
+        errorStage={6}
+        errorMessage="Cartão recusado."
+        onRetry={onRetry}
+        asOverlay={false}
+      />,
+    );
+    expect(screen.getByText('Cartão recusado.')).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Configurando assinatura para/),
+    ).not.toBeInTheDocument();
   });
 
   it('should render as a modal dialog with aria-modal and aria-labelledby when overlay', () => {

@@ -20,7 +20,6 @@ import {
   type CheckoutStage,
   type OnStageChangePayload,
 } from '@/domain/checkout/finalize-checkout.use-case';
-import type { CheckoutPetStage } from '@/components/public/contratar/organisms/checkout-progress-panel';
 import type { CardFormValue } from '@/components/public/contratar/organisms/card-form';
 import { navigateToFieldStep } from '@/domain/client/field-to-step';
 import { CONTRACT_VERSION } from '@/content/contrato';
@@ -46,7 +45,7 @@ interface CheckoutResumeState {
   clientId?: string;
   petIds?: string[];
   pagarmeCustomerId?: string;
-  pagarmeSubscriptionIds?: string[];
+  pagarmeSubscriptionId?: string;
 }
 
 interface ContratarState {
@@ -63,7 +62,6 @@ interface ContratarState {
   /** Modo do passo 4 (form ↔ painel de progresso ↔ erro). */
   paymentMode: 'form' | 'processing' | 'error';
   currentStage: CheckoutStage;
-  petStages: CheckoutPetStage[];
   errorStage?: number;
   errorMessage?: string;
   /** Trigger para limpar CVV após erro (RF12). */
@@ -92,7 +90,6 @@ const INITIAL_STATE: ContratarState = {
   planIds: [],
   paymentMode: 'form',
   currentStage: 1,
-  petStages: [],
   errorStage: undefined,
   errorMessage: undefined,
   clearCvvOnError: false,
@@ -317,16 +314,10 @@ export function ContratarPageClient() {
       return;
     }
 
-    // Build initial petStages, marking already-resumed subs as done (RF10)
-    const resumed = state.checkoutResume;
-    const initialPetStages: CheckoutPetStage[] = state.pets.map((pet, i) => ({
-      name: pet.name,
-      state:
-        i < (resumed.pagarmeSubscriptionIds?.length ?? 0) ? 'done' : 'pending',
-    }));
-
     // RF10: pré-marca stages 3/4 como done quando já criadas
+    const resumed = state.checkoutResume;
     const initialStage: CheckoutStage = (() => {
+      if (resumed.pagarmeSubscriptionId) return 7;
       if (resumed.pagarmeCustomerId) return 6;
       if (resumed.petIds && resumed.petIds.length === state.pets.length) return 5;
       if (resumed.clientId) return 4;
@@ -339,32 +330,16 @@ export function ContratarPageClient() {
       fieldErrors: {},
       paymentMode: 'processing',
       currentStage: initialStage,
-      petStages: initialPetStages,
       errorStage: undefined,
       errorMessage: undefined,
       clearCvvOnError: false,
     }));
 
     const onStageChange = (payload: OnStageChangePayload): void => {
-      setState((prev) => {
-        let nextPetStages = prev.petStages;
-        if (payload.stage === 6 && payload.petIndex !== undefined) {
-          nextPetStages = prev.petStages.map((ps, i) => {
-            if (i < (payload.petIndex as number)) {
-              return { ...ps, state: 'done' };
-            }
-            if (i === payload.petIndex) {
-              return { ...ps, state: 'in_progress' };
-            }
-            return ps;
-          });
-        }
-        return {
-          ...prev,
-          currentStage: payload.stage,
-          petStages: nextPetStages,
-        };
-      });
+      setState((prev) => ({
+        ...prev,
+        currentStage: payload.stage,
+      }));
     };
 
     try {
@@ -391,12 +366,11 @@ export function ContratarPageClient() {
         paymentMode: 'form',
         planIds: result.planIds,
         currentStage: 8,
-        petStages: prev.petStages.map((ps) => ({ ...ps, state: 'done' })),
         checkoutResume: {
           clientId: result.clientId,
           petIds: result.petIds,
           pagarmeCustomerId: result.pagarmeCustomerId,
-          pagarmeSubscriptionIds: result.pagarmeSubscriptionIds,
+          pagarmeSubscriptionId: result.pagarmeSubscriptionId,
         },
       }));
     } catch (e) {
@@ -410,19 +384,6 @@ export function ContratarPageClient() {
           paymentMode: 'error',
           errorStage: e.stage,
           errorMessage: e.message,
-          // pet stage marker em erro (sub-step do pet K)
-          petStages:
-            e.stage === 6 && e.petIndex !== undefined
-              ? prev.petStages.map((ps, i) => {
-                  if (i === e.petIndex) {
-                    return { ...ps, state: 'error', errorMessage: e.message };
-                  }
-                  if (i < (e.petIndex as number)) {
-                    return { ...ps, state: 'done' };
-                  }
-                  return ps;
-                })
-              : prev.petStages,
           checkoutResume: shouldClearCustomer
             ? {
                 clientId: prev.checkoutResume.clientId,
@@ -615,7 +576,6 @@ export function ContratarPageClient() {
           onRetry={handleRetryCheckout}
           mode={state.paymentMode}
           currentStage={state.currentStage}
-          petStages={state.petStages}
           errorStage={state.errorStage}
           errorMessage={state.errorMessage}
           formError={state.fieldErrors['_form']}

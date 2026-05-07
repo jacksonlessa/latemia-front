@@ -78,7 +78,17 @@ export const Processing: Story = {
     onBack: noop,
     mode: 'processing',
     currentStage: 5,
-    petStages: [{ name: 'Rex', state: 'pending' }],
+  },
+};
+
+export const ProcessingSubscription: Story = {
+  name: 'Processing (stage 6 — configurando assinatura)',
+  args: {
+    summary: multiPetSummary,
+    onSubmit: noop,
+    onBack: noop,
+    mode: 'processing',
+    currentStage: 6,
   },
 };
 
@@ -93,7 +103,6 @@ export const Erro: Story = {
     currentStage: 6,
     errorStage: 6,
     errorMessage: 'Seu cartão foi recusado. Verifique os dados ou tente outro cartão.',
-    petStages: [{ name: 'Rex', state: 'error' }],
   },
 };
 
