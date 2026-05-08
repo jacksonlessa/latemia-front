@@ -456,3 +456,64 @@ describe('FinalizeCheckoutUseCase — rollback', () => {
     expect(calls.filter((c) => c.url.includes('/checkout/rollback')).length).toBe(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// requestId propagation (M1)
+// ---------------------------------------------------------------------------
+
+describe('FinalizeCheckoutUseCase — requestId propagation', () => {
+  it('should generate distinct requestIds for two consecutive execute() calls', async () => {
+    setupFetchMock({
+      'api.pagar.me/core/v5/tokens': () => jsonResponse({ id: 'token_abc' }),
+      '/v1/checkout/customer': () =>
+        jsonResponse({ pagarme_customer_id: 'cus_1', pagarme_card_id: 'card_1' }, 201),
+      '/v1/checkout/subscription': () =>
+        jsonResponse({ code: 'PROVIDER_UPSTREAM' }, 503),
+    });
+
+    const useCase = makeUseCase();
+    const err1 = await useCase.execute(buildInput(1)).catch((e) => e) as CheckoutError;
+    const err2 = await useCase.execute(buildInput(1)).catch((e) => e) as CheckoutError;
+
+    expect(err1).toBeInstanceOf(CheckoutError);
+    expect(err2).toBeInstanceOf(CheckoutError);
+    expect(err1.requestId).toBeTruthy();
+    expect(err2.requestId).toBeTruthy();
+    expect(err1.requestId).not.toBe(err2.requestId);
+  });
+
+  it('should carry requestId in CheckoutError thrown from stage 5 (http 5xx)', async () => {
+    setupFetchMock({
+      'api.pagar.me/core/v5/tokens': () => jsonResponse({ id: 'token_abc' }),
+      '/v1/checkout/customer': () =>
+        jsonResponse({ code: 'PROVIDER_UPSTREAM' }, 503),
+    });
+
+    const useCase = makeUseCase();
+    const err = await useCase.execute(buildInput(1)).catch((e) => e) as CheckoutError;
+
+    expect(err).toBeInstanceOf(CheckoutError);
+    expect(err.stage).toBe(5);
+    expect(typeof err.requestId).toBe('string');
+    expect(err.requestId!.length).toBeGreaterThan(0);
+  });
+
+  it('should carry requestId in CheckoutError thrown from network error (NETWORK_ERROR)', async () => {
+    // Simulate a network failure on /checkout/customer
+    const fetchMock = vi.fn(async (url: string) => {
+      if (String(url).includes('api.pagar.me')) {
+        return jsonResponse({ id: 'token_abc' });
+      }
+      throw new TypeError('Failed to fetch');
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const useCase = makeUseCase();
+    const err = await useCase.execute(buildInput(1)).catch((e) => e) as CheckoutError;
+
+    expect(err).toBeInstanceOf(CheckoutError);
+    expect(err.code).toBe('NETWORK_ERROR');
+    expect(typeof err.requestId).toBe('string');
+    expect(err.requestId!.length).toBeGreaterThan(0);
+  });
+});

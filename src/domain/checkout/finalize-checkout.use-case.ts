@@ -261,6 +261,7 @@ async function postJson<T>(
   path: string,
   body: unknown,
   opts: { idempotent?: boolean; idempotencyKey?: string } = {},
+  requestId?: string,
 ): Promise<{ ok: true; data: T } | { ok: false; res: Response }> {
   let res: Response;
   try {
@@ -270,13 +271,18 @@ async function postJson<T>(
       body: JSON.stringify(body),
       idempotent: opts.idempotent,
       idempotencyKey: opts.idempotencyKey,
+      // execute() is the sole reporter for these endpoints; suppress the
+      // automatic http_5xx / network report from httpFetch so we never emit
+      // two events for the same error (one generic + one with stage context).
+      reportClientErrorOn5xx: false,
     });
   } catch {
-    // Network error — synthesize a Response-like rejection
+    // Network error — synthesize a typed CheckoutError with correlation ID
     throw new CheckoutError({
       stage: 5,
       code: 'NETWORK_ERROR',
       message: 'Erro de conexão. Verifique sua internet e tente novamente.',
+      requestId,
     });
   }
   if (!res.ok) {
@@ -453,6 +459,7 @@ export class FinalizeCheckoutUseCase {
         '/v1/checkout/customer',
         { client_id: clientId },
         { idempotent: true, idempotencyKey },
+        requestId,
       );
       if (!result.ok) {
         const { code } = await readApiError(result.res);
@@ -485,6 +492,7 @@ export class FinalizeCheckoutUseCase {
           card_token: cardToken,
         },
         { idempotent: true, idempotencyKey },
+        requestId,
       );
       if (!result.ok) {
         const { code } = await readApiError(result.res);
