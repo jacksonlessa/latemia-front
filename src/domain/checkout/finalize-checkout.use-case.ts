@@ -382,37 +382,26 @@ export class FinalizeCheckoutUseCase {
     }
 
     // -----------------------------------------------------------------------
-    // Stage 5 — ensure Pagar.me customer + vincular card_token ao customer.
-    //
-    // Enviamos o `card_token` (single-use) já nesta etapa para que o backend
-    // crie um `card_id` permanente reutilizável nas N subscriptions da
-    // stage 6. Sem isso, o token seria consumido na 1ª subscription e a 2ª
-    // falharia com `Token not found`.
+    // Stage 5 — ensure Pagar.me customer (sem vincular card_token ao customer;
+    // o token é passado diretamente na stage 6 para a subscription).
     // -----------------------------------------------------------------------
-    if (!pagarmeCustomerId || !pagarmeCardId) {
+    if (!pagarmeCustomerId) {
       onStageChange({ stage: 5 });
       const result = await postJson<CheckoutCustomerResponse>(
         '/v1/checkout/customer',
-        { client_id: clientId, card_token: cardToken },
+        { client_id: clientId },
       );
       if (!result.ok) {
         const { code } = await readApiError(result.res);
         throw buildCheckoutError(5, code, undefined, undefined);
       }
       pagarmeCustomerId = result.data.pagarme_customer_id;
-      pagarmeCardId = result.data.pagarme_card_id;
-      if (!pagarmeCardId) {
-        throw buildCheckoutError(
-          5,
-          'PROVIDER_UPSTREAM',
-          undefined,
-          pagarmeCustomerId,
-        );
-      }
     }
 
     // -----------------------------------------------------------------------
-    // Stage 6 — create consolidated Pagar.me subscription with all pets
+    // Stage 6 — create consolidated Pagar.me subscription with all pets.
+    // Passa card_token diretamente; a Pagar.me usa o token para autorizar a
+    // primeira cobrança e armazena o cartão internamente na subscription.
     // -----------------------------------------------------------------------
     let subscriptionItems: CheckoutSubscriptionResponse['items'] = [];
     if (!createdSubscriptionId) {
@@ -422,7 +411,7 @@ export class FinalizeCheckoutUseCase {
         {
           client_id: clientId,
           pet_ids: petIds,
-          card_id: pagarmeCardId,
+          card_token: cardToken,
         },
       );
       if (!result.ok) {
