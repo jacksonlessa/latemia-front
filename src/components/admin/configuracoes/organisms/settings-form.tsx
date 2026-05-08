@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -11,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MoneyInput } from "@/components/admin/planos-assinatura/atoms/money-input/MoneyInput";
 import type { SystemSettingsDto, UpdateSystemSettingsInput } from "@/lib/types/system-settings";
 
 const PAYMENT_PROVIDER_OPTIONS = [
@@ -52,20 +52,17 @@ export function SettingsForm({ initialValues, saveAction, fetchError }: Settings
   const [paymentProvider, setPaymentProvider] = useState<string>(
     initialValues?.payment_provider ?? "",
   );
-  const [subscriptionPlanId, setSubscriptionPlanId] = useState<string>(
-    initialValues?.subscription_plan_id ?? "",
-  );
-  const [subscriptionPlanPriceCents, setSubscriptionPlanPriceCents] = useState<string>(
-    initialValues?.subscription_plan_price_cents ?? "",
+  const [subscriptionPlanPriceCents, setSubscriptionPlanPriceCents] = useState<number>(
+    parseInt(initialValues?.subscription_plan_price_cents ?? "0", 10) || 0,
   );
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  const savedPriceCents = parseInt(savedValues?.subscription_plan_price_cents ?? "0", 10) || 0;
   const isDirty =
     paymentProvider !== (savedValues?.payment_provider ?? "") ||
-    subscriptionPlanId !== (savedValues?.subscription_plan_id ?? "") ||
-    subscriptionPlanPriceCents !== (savedValues?.subscription_plan_price_cents ?? "");
+    subscriptionPlanPriceCents !== savedPriceCents;
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -74,11 +71,7 @@ export function SettingsForm({ initialValues, saveAction, fetchError }: Settings
 
     const payload: UpdateSystemSettingsInput = {};
     if (paymentProvider) payload.payment_provider = paymentProvider;
-    if (subscriptionPlanId) payload.subscription_plan_id = subscriptionPlanId;
-    if (subscriptionPlanPriceCents) {
-      const parsed = parseInt(subscriptionPlanPriceCents, 10);
-      if (!isNaN(parsed) && parsed > 0) payload.subscription_plan_price_cents = parsed;
-    }
+    if (subscriptionPlanPriceCents > 0) payload.subscription_plan_price_cents = subscriptionPlanPriceCents;
 
     startTransition(async () => {
       const result = await saveAction(payload);
@@ -153,36 +146,14 @@ export function SettingsForm({ initialValues, saveAction, fetchError }: Settings
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="subscription_plan_id">ID do Plano de Assinatura</Label>
-        <Input
-          id="subscription_plan_id"
-          type="text"
-          value={subscriptionPlanId}
-          onChange={(e) => {
-            setSubscriptionPlanId(e.target.value);
-            setSuccessMessage(null);
-          }}
-          placeholder="Ex: plan_abc123"
-          disabled={isPending}
-          aria-describedby={errorMessage ? "settings-error" : undefined}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="subscription_plan_price_cents">
-          Preço Mensal por Pet (centavos)
-        </Label>
-        <Input
+        <Label htmlFor="subscription_plan_price_cents">Preço Mensal por Pet</Label>
+        <MoneyInput
           id="subscription_plan_price_cents"
-          type="number"
-          min={1}
-          step={1}
           value={subscriptionPlanPriceCents}
-          onChange={(e) => {
-            setSubscriptionPlanPriceCents(e.target.value);
+          onChange={(cents) => {
+            setSubscriptionPlanPriceCents(cents);
             setSuccessMessage(null);
           }}
-          placeholder="Ex: 4990 (= R$49,90)"
           disabled={isPending}
           aria-describedby={errorMessage ? "settings-error" : undefined}
         />

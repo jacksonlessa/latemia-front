@@ -110,6 +110,21 @@ export function PlanosAssinaturaPageClient() {
 
   return (
     <div className="space-y-4 md:space-y-6">
+      {/* Inactive module banner */}
+      <div
+        role="status"
+        className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+      >
+        <span className="mt-0.5 shrink-0 text-base leading-none" aria-hidden="true">⚠️</span>
+        <span>
+          <strong>Módulo inativo.</strong> A gestão de planos na Pagar.me não é mais utilizada pelo fluxo de contratação. O preço mensal por pet é configurado em{' '}
+          <a href="/admin/configuracoes" className="underline underline-offset-2 hover:opacity-80">
+            Configurações Gerais
+          </a>
+          .
+        </span>
+      </div>
+
       {/* Page header */}
       <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm md:p-6">
         <h1 className="mb-2 text-xl font-semibold text-[#2C2C2E] md:text-2xl">

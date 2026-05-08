@@ -51,19 +51,19 @@ export default meta;
 
 const mockSaveSuccess = async (_payload: UpdateSystemSettingsInput) => ({
   success: true as const,
-  data: { payment_provider: "pagarme", subscription_plan_id: "plan_abc123", subscription_plan_price_cents: "4990" } as SystemSettingsDto,
+  data: { payment_provider: "pagarme", subscription_plan_id: null, subscription_plan_price_cents: "4990" } as SystemSettingsDto,
 });
 
 const mockSaveError = async (_payload: UpdateSystemSettingsInput) => ({
   success: false as const,
-  error: { code: "INVALID_SUBSCRIPTION_PLAN_ID", message: "ID inválido." },
+  error: { code: "INVALID_SUBSCRIPTION_PLAN_PRICE", message: "Preço inválido." },
 });
 
 const mockSavePending = (): Promise<never> => new Promise(() => {});
 
 const filledValues: SystemSettingsDto = {
   payment_provider: "pagarme",
-  subscription_plan_id: "plan_abc123",
+  subscription_plan_id: null,
   subscription_plan_price_cents: "4990",
 };
 
