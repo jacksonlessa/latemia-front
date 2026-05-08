@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import { reportClientError } from "@/lib/observability/client-error-reporter";
 import { getOrCreateAttemptId } from "@/lib/observability/request-id";
 import { hashStack } from "@/lib/observability/stack-hash";
+import { SUPPORT_WHATSAPP_URL } from "@/lib/contact";
 
 export default function GlobalError({
   error,
@@ -94,6 +95,20 @@ export default function GlobalError({
               Copiar
             </button>
           </div>
+
+          <a
+            href={SUPPORT_WHATSAPP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: "#4E8C75",
+              fontSize: "0.875rem",
+              marginBottom: "1rem",
+              textDecoration: "underline",
+            }}
+          >
+            Falar com o suporte
+          </a>
 
           <button
             onClick={reset}

@@ -5,6 +5,7 @@ import { reportClientError } from "@/lib/observability/client-error-reporter";
 import { getOrCreateAttemptId } from "@/lib/observability/request-id";
 import { hashStack } from "@/lib/observability/stack-hash";
 import { Button } from "@/components/ui/button";
+import { SUPPORT_WHATSAPP_URL } from "@/lib/contact";
 
 export default function Error({
   error,
@@ -51,6 +52,15 @@ export default function Error({
           Copiar
         </button>
       </div>
+
+      <a
+        href={SUPPORT_WHATSAPP_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mb-4 text-[#4E8C75] hover:underline text-sm"
+      >
+        Falar com o suporte
+      </a>
 
       <Button
         onClick={reset}
