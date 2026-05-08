@@ -27,10 +27,15 @@ export async function reportClientError(
     const base =
       process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
+    const safePayload: ClientErrorPayload = {
+      ...payload,
+      userAgent: payload.userAgent?.slice(0, 200),
+    };
+
     await fetch(`${base}/v1/log/client-error`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(safePayload),
       keepalive: true,
     });
   } catch {

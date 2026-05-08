@@ -7,27 +7,9 @@
  * returns a temporary UUID without attempting to access sessionStorage.
  */
 
+import { generateUUID } from './uuid';
+
 const SESSION_KEY = 'latemia.attemptId';
-
-/**
- * Generates a UUID v4 using the Web Crypto API when available, falling back
- * to a Math.random-based implementation for environments that lack it.
- */
-function generateUUID(): string {
-  if (
-    typeof crypto !== 'undefined' &&
-    typeof crypto.randomUUID === 'function'
-  ) {
-    return crypto.randomUUID();
-  }
-
-  // Fallback: Math.random-based UUID v4
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
 
 /**
  * Returns the current attempt ID from sessionStorage, creating and persisting
