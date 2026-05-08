@@ -64,6 +64,11 @@ interface ContratarState {
   currentStage: CheckoutStage;
   errorStage?: number;
   errorMessage?: string;
+  /**
+   * ID de correlação da tentativa falha — exibido na UI para o cliente
+   * poder reportar ao suporte (propagado de `CheckoutError.requestId`).
+   */
+  errorRequestId?: string;
   /** Trigger para limpar CVV após erro (RF12). */
   clearCvvOnError: boolean;
   /** Estado de resume entre tentativas (idempotência — RF10). */
@@ -92,6 +97,7 @@ const INITIAL_STATE: ContratarState = {
   currentStage: 1,
   errorStage: undefined,
   errorMessage: undefined,
+  errorRequestId: undefined,
   clearCvvOnError: false,
   checkoutResume: {},
   touchpoints: undefined,
@@ -332,6 +338,7 @@ export function ContratarPageClient() {
       currentStage: initialStage,
       errorStage: undefined,
       errorMessage: undefined,
+      errorRequestId: undefined,
       clearCvvOnError: false,
     }));
 
@@ -384,6 +391,7 @@ export function ContratarPageClient() {
           paymentMode: 'error',
           errorStage: e.stage,
           errorMessage: e.message,
+          errorRequestId: e.requestId,
           checkoutResume: shouldClearCustomer
             ? {
                 clientId: prev.checkoutResume.clientId,
@@ -403,6 +411,7 @@ export function ContratarPageClient() {
         paymentMode: 'error',
         errorStage: prev.currentStage,
         errorMessage: 'Erro inesperado ao finalizar. Tente novamente.',
+        errorRequestId: undefined,
       }));
     }
   }
@@ -416,6 +425,7 @@ export function ContratarPageClient() {
       paymentMode: 'form',
       errorStage: undefined,
       errorMessage: undefined,
+      errorRequestId: undefined,
       clearCvvOnError: true,
       isSubmitting: false,
     }));
@@ -580,6 +590,7 @@ export function ContratarPageClient() {
           errorMessage={state.errorMessage}
           formError={state.fieldErrors['_form']}
           clearCvvOnError={state.clearCvvOnError}
+          requestId={state.errorRequestId}
         />
       )}
     </main>

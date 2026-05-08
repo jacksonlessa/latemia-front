@@ -10,6 +10,7 @@
 import { ValidationError, ClientEntity } from "./client.entity";
 import { getApiUrl, extractErrorCode } from "@/lib/api-client";
 import type { ApiErrorBody } from "@/lib/api-client";
+import { httpFetch } from "@/lib/http";
 import type {
   CreateClientPayload,
   RegisterClientInput,
@@ -176,7 +177,7 @@ export class RegisterClientUseCase {
     // 2. Call API
     let res: Response;
     try {
-      res = await fetch(getApiUrl("/v1/register/client"), {
+      res = await httpFetch(getApiUrl("/v1/register/client"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

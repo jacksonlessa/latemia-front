@@ -9,6 +9,7 @@
 import { ValidationError } from '@/lib/validation-error';
 import { getApiUrl, extractErrorCode } from '@/lib/api-client';
 import type { ApiErrorBody } from '@/lib/api-client';
+import { httpFetch } from '@/lib/http';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -36,6 +37,11 @@ export interface RegisterContractInput {
    * esse campo é sempre enviado.
    */
   subscription?: RegisterContractSubscription;
+  /**
+   * Chave de idempotência por tentativa — gerada pelo `FinalizeCheckoutUseCase`
+   * e propagada para que o backend deduplicar reenvios em rede instável.
+   */
+  idempotencyKey?: string;
 }
 
 export interface RegisterContractResult {
@@ -120,10 +126,12 @@ export class RegisterContractUseCase {
 
     let res: Response;
     try {
-      res = await fetch(getApiUrl('/v1/register/contract'), {
+      res = await httpFetch(getApiUrl('/v1/register/contract'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
+        idempotent: Boolean(input.idempotencyKey),
+        idempotencyKey: input.idempotencyKey,
       });
     } catch {
       // Network failure — no personal data in error

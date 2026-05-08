@@ -36,6 +36,11 @@ export interface CheckoutProgressPanelProps {
   asOverlay?: boolean;
   /** Título visível (configurável para SR + aria-labelledby). */
   title?: string;
+  /**
+   * ID de correlação da tentativa — exibido em formato copiável quando há
+   * erro, para que o cliente possa reportar ao suporte e o dev rastrear nos logs.
+   */
+  requestId?: string;
 }
 
 function getStageState(
@@ -167,6 +172,7 @@ export function CheckoutProgressPanel({
   onRetry,
   asOverlay = true,
   title = 'Processando sua contratação',
+  requestId,
 }: CheckoutProgressPanelProps) {
   const titleId = useId();
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -228,8 +234,20 @@ export function CheckoutProgressPanel({
         ))}
       </ol>
 
+      {errorStage !== undefined && requestId && (
+        <p className="mt-4 text-xs text-muted-foreground">
+          Código de rastreamento:{' '}
+          <code
+            className="select-all rounded bg-muted px-1 py-0.5 font-mono text-xs"
+            title="Copie este código ao contatar o suporte"
+          >
+            {requestId}
+          </code>
+        </p>
+      )}
+
       {errorStage !== undefined && onRetry && (
-        <div className="mt-6 flex justify-end">
+        <div className="mt-4 flex justify-end">
           <Button
             type="button"
             onClick={onRetry}

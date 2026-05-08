@@ -19,6 +19,11 @@ import { tokenizeCard } from '@/lib/billing/tokenize-card';
 import { getApiUrl, extractErrorCode } from '@/lib/api-client';
 import type { ApiErrorBody } from '@/lib/api-client';
 import { ValidationError } from '@/lib/validation-error';
+import { httpFetch } from '@/lib/http';
+import { resetAttemptId, getOrCreateAttemptId } from '@/lib/observability/request-id';
+import { createIdempotencyKey } from '@/lib/observability/idempotency-key';
+import { reportClientError } from '@/lib/observability/client-error-reporter';
+import { hashStack } from '@/lib/observability/stack-hash';
 import { RegisterClientUseCase } from '@/domain/client/register-client.use-case';
 import { RegisterPetUseCase } from '@/domain/pet/register-pet.use-case';
 import { RegisterContractUseCase } from '@/domain/contract/register-contract.use-case';
@@ -97,6 +102,11 @@ export class CheckoutError extends Error {
   readonly createdSubscriptionId?: string;
   /** pagarmeCustomerId já obtido (se houver). */
   readonly pagarmeCustomerId?: string;
+  /**
+   * ID de correlação da tentativa (UUID v4). Exibido na tela de erro para
+   * que o cliente possa reportar ao suporte e o dev possa rastrear nos logs.
+   */
+  readonly requestId?: string;
 
   constructor(params: {
     stage: CheckoutStage;
@@ -104,6 +114,7 @@ export class CheckoutError extends Error {
     message: string;
     createdSubscriptionId?: string;
     pagarmeCustomerId?: string;
+    requestId?: string;
   }) {
     super(params.message);
     this.name = 'CheckoutError';
@@ -111,6 +122,7 @@ export class CheckoutError extends Error {
     this.code = params.code;
     this.createdSubscriptionId = params.createdSubscriptionId;
     this.pagarmeCustomerId = params.pagarmeCustomerId;
+    this.requestId = params.requestId;
   }
 }
 
@@ -215,6 +227,7 @@ function buildCheckoutError(
   code: string,
   createdSubscriptionId: string | undefined,
   pagarmeCustomerId: string | undefined,
+  requestId?: string,
 ): CheckoutError {
   const message =
     BACKEND_ERROR_MESSAGES[code] ?? fallbackMessageForStage(stage);
@@ -224,6 +237,7 @@ function buildCheckoutError(
     message,
     createdSubscriptionId,
     pagarmeCustomerId,
+    requestId,
   });
 }
 
@@ -243,13 +257,19 @@ interface CheckoutSubscriptionResponse {
   items: Array<{ pet_id: string; pagarme_subscription_item_id?: string }>;
 }
 
-async function postJson<T>(path: string, body: unknown): Promise<{ ok: true; data: T } | { ok: false; res: Response }> {
+async function postJson<T>(
+  path: string,
+  body: unknown,
+  opts: { idempotent?: boolean; idempotencyKey?: string } = {},
+): Promise<{ ok: true; data: T } | { ok: false; res: Response }> {
   let res: Response;
   try {
-    res = await fetch(getApiUrl(path), {
+    res = await httpFetch(getApiUrl(path), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
+      idempotent: opts.idempotent,
+      idempotencyKey: opts.idempotencyKey,
     });
   } catch {
     // Network error — synthesize a Response-like rejection
@@ -281,6 +301,14 @@ export class FinalizeCheckoutUseCase {
     input: FinalizeCheckoutInput,
     onStageChange: OnStageChange = () => {},
   ): Promise<FinalizeCheckoutResult> {
+    // -----------------------------------------------------------------------
+    // Observability bootstrap — new UUID per "Concluir" click.
+    // The same requestId propagates to all httpFetch calls via X-Request-Id.
+    // -----------------------------------------------------------------------
+    resetAttemptId();
+    const requestId = getOrCreateAttemptId();
+    const idempotencyKey = createIdempotencyKey();
+
     const resume = input.resume ?? {};
     let createdSubscriptionId: string | undefined = resume.pagarmeSubscriptionId;
     let pagarmeCustomerId: string | undefined = resume.pagarmeCustomerId;
@@ -293,17 +321,32 @@ export class FinalizeCheckoutUseCase {
     try {
       validateCardInput(input.cardInput);
     } catch (err) {
-      throw err instanceof CheckoutError
+      const baseErr = err instanceof CheckoutError
         ? err
         : new CheckoutError({
             stage: 1,
             code: 'INVALID_CARD_DATA',
             message: 'Dados do cartão inválidos.',
           });
+      const stackHash = await hashStack(err instanceof Error ? (err.stack ?? '') : '');
+      reportClientError({
+        requestId,
+        stage: 'stage_1',
+        message: (err instanceof Error ? err.message : String(err)).slice(0, 200),
+        stackHash,
+      }).catch(() => {});
+      throw new CheckoutError({
+        stage: baseErr.stage,
+        code: baseErr.code,
+        message: baseErr.message,
+        createdSubscriptionId: baseErr.createdSubscriptionId,
+        pagarmeCustomerId: baseErr.pagarmeCustomerId,
+        requestId,
+      });
     }
 
     // -----------------------------------------------------------------------
-    // Stage 2 — tokenize card
+    // Stage 2 — tokenize card (external Pagar.me API — NOT wrapped in httpFetch)
     // -----------------------------------------------------------------------
     onStageChange({ stage: 2 });
     let cardToken: string;
@@ -336,11 +379,14 @@ export class FinalizeCheckoutUseCase {
         err instanceof ValidationError
           ? (err.fieldErrors._form ?? BACKEND_ERROR_MESSAGES.INVALID_CARD_DATA)
           : BACKEND_ERROR_MESSAGES.INVALID_CARD_DATA;
-      throw new CheckoutError({
-        stage: 2,
-        code,
-        message,
-      });
+      const stackHash = await hashStack(err instanceof Error ? (err.stack ?? '') : '');
+      reportClientError({
+        requestId,
+        stage: 'stage_2',
+        message: message.slice(0, 200),
+        stackHash,
+      }).catch(() => {});
+      throw new CheckoutError({ stage: 2, code, message, requestId });
     }
 
     // -----------------------------------------------------------------------
@@ -358,7 +404,15 @@ export class FinalizeCheckoutUseCase {
         );
         clientId = registered.id;
       } catch (err) {
-        throw mapDomainError(err, 3);
+        const checkoutErr = mapDomainError(err, 3, undefined, undefined, requestId);
+        const stackHash = await hashStack(err instanceof Error ? (err.stack ?? '') : '');
+        reportClientError({
+          requestId,
+          stage: 'stage_3',
+          message: checkoutErr.message.slice(0, 200),
+          stackHash,
+        }).catch(() => {});
+        throw checkoutErr;
       }
     }
 
@@ -376,7 +430,15 @@ export class FinalizeCheckoutUseCase {
           );
           petIds.push(created.id);
         } catch (err) {
-          throw mapDomainError(err, 4, i);
+          const checkoutErr = mapDomainError(err, 4, i, undefined, requestId);
+          const stackHash = await hashStack(err instanceof Error ? (err.stack ?? '') : '');
+          reportClientError({
+            requestId,
+            stage: 'stage_4',
+            message: checkoutErr.message.slice(0, 200),
+            stackHash,
+          }).catch(() => {});
+          throw checkoutErr;
         }
       }
     }
@@ -390,10 +452,19 @@ export class FinalizeCheckoutUseCase {
       const result = await postJson<CheckoutCustomerResponse>(
         '/v1/checkout/customer',
         { client_id: clientId },
+        { idempotent: true, idempotencyKey },
       );
       if (!result.ok) {
         const { code } = await readApiError(result.res);
-        throw buildCheckoutError(5, code, undefined, undefined);
+        const checkoutErr = buildCheckoutError(5, code, undefined, undefined, requestId);
+        const stackHash = await hashStack('');
+        reportClientError({
+          requestId,
+          stage: 'stage_5',
+          message: checkoutErr.message.slice(0, 200),
+          stackHash,
+        }).catch(() => {});
+        throw checkoutErr;
       }
       pagarmeCustomerId = result.data.pagarme_customer_id;
     }
@@ -413,10 +484,19 @@ export class FinalizeCheckoutUseCase {
           pet_ids: petIds,
           card_token: cardToken,
         },
+        { idempotent: true, idempotencyKey },
       );
       if (!result.ok) {
         const { code } = await readApiError(result.res);
-        throw buildCheckoutError(6, code, undefined, pagarmeCustomerId);
+        const checkoutErr = buildCheckoutError(6, code, undefined, pagarmeCustomerId, requestId);
+        const stackHash = await hashStack('');
+        reportClientError({
+          requestId,
+          stage: 'stage_6',
+          message: checkoutErr.message.slice(0, 200),
+          stackHash,
+        }).catch(() => {});
+        throw checkoutErr;
       }
       createdSubscriptionId = result.data.pagarme_subscription_id;
       subscriptionItems = result.data.items;
@@ -440,18 +520,27 @@ export class FinalizeCheckoutUseCase {
               items: subscriptionItems,
             }
           : undefined,
+        idempotencyKey,
       });
       contractId = contractResult.contract_id;
       planIds = contractResult.plan_ids;
     } catch (err) {
       // Falha pós-stage 6 com subscription criada — rollback consolidado fire-and-forget
       if (createdSubscriptionId) {
-        fireAndForgetRollback(createdSubscriptionId);
+        fireAndForgetRollback(createdSubscriptionId, requestId);
       }
-      throw mapDomainError(err, 7, undefined, {
+      const checkoutErr = mapDomainError(err, 7, undefined, {
         createdSubscriptionId,
         pagarmeCustomerId,
-      });
+      }, requestId);
+      const stackHash = await hashStack(err instanceof Error ? (err.stack ?? '') : '');
+      reportClientError({
+        requestId,
+        stage: 'stage_7',
+        message: checkoutErr.message.slice(0, 200),
+        stackHash,
+      }).catch(() => {});
+      throw checkoutErr;
     }
 
     // -----------------------------------------------------------------------
@@ -483,8 +572,20 @@ function mapDomainError(
     createdSubscriptionId?: string;
     pagarmeCustomerId?: string;
   },
+  requestId?: string,
 ): CheckoutError {
-  if (err instanceof CheckoutError) return err;
+  if (err instanceof CheckoutError) {
+    // Preserve existing CheckoutError but inject requestId if not already set
+    if (err.requestId) return err;
+    return new CheckoutError({
+      stage: err.stage,
+      code: err.code,
+      message: err.message,
+      createdSubscriptionId: err.createdSubscriptionId,
+      pagarmeCustomerId: err.pagarmeCustomerId,
+      requestId,
+    });
+  }
   if (err instanceof ValidationError) {
     const message =
       err.fieldErrors._form ?? fallbackMessageForStage(stage);
@@ -495,6 +596,7 @@ function mapDomainError(
       message,
       createdSubscriptionId: carry?.createdSubscriptionId,
       pagarmeCustomerId: carry?.pagarmeCustomerId,
+      requestId,
     });
   }
   return new CheckoutError({
@@ -503,6 +605,7 @@ function mapDomainError(
     message: fallbackMessageForStage(stage),
     createdSubscriptionId: carry?.createdSubscriptionId,
     pagarmeCustomerId: carry?.pagarmeCustomerId,
+    requestId,
   });
 }
 
@@ -510,15 +613,21 @@ function mapDomainError(
 // Rollback (fire-and-forget)
 // ---------------------------------------------------------------------------
 
-function fireAndForgetRollback(pagarmeSubscriptionId: string): void {
+function fireAndForgetRollback(pagarmeSubscriptionId: string, requestId?: string): void {
   // Não aguardamos o resultado e não logamos detalhes — o backend é
   // responsável pela orquestração best-effort + outbox.
+  // reportClientErrorOn5xx: false para não criar loop de relatórios.
   try {
-    void fetch(getApiUrl('/v1/checkout/rollback'), {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (requestId) {
+      headers['X-Request-Id'] = requestId;
+    }
+    void httpFetch(getApiUrl('/v1/checkout/rollback'), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ pagarme_subscription_id: pagarmeSubscriptionId }),
       keepalive: true,
+      reportClientErrorOn5xx: false,
     }).catch(() => {
       /* swallow */
     });

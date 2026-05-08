@@ -11,6 +11,7 @@
 import { ValidationError, PetEntity } from "./pet.entity";
 import { getApiUrl, extractErrorCode } from "@/lib/api-client";
 import type { ApiErrorBody } from "@/lib/api-client";
+import { httpFetch } from "@/lib/http";
 import type { RegisterPetInput, RegisterPetResult } from "@/lib/types/pet";
 
 // ---------------------------------------------------------------------------
@@ -79,7 +80,7 @@ export class RegisterPetUseCase {
     // 2. Call API
     let res: Response;
     try {
-      res = await fetch(getApiUrl("/v1/register/pet"), {
+      res = await httpFetch(getApiUrl("/v1/register/pet"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ clientId, ...entity.toApiPayload() }),
