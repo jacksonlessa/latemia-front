@@ -69,6 +69,8 @@ interface ContratarState {
    * poder reportar ao suporte (propagado de `CheckoutError.requestId`).
    */
   errorRequestId?: string;
+  /** false = erro terminal (ex: já tem assinatura); oculta o botão "Tentar novamente". */
+  errorRetryable: boolean;
   /** Trigger para limpar CVV após erro (RF12). */
   clearCvvOnError: boolean;
   /** Estado de resume entre tentativas (idempotência — RF10). */
@@ -98,6 +100,7 @@ const INITIAL_STATE: ContratarState = {
   errorStage: undefined,
   errorMessage: undefined,
   errorRequestId: undefined,
+  errorRetryable: true,
   clearCvvOnError: false,
   checkoutResume: {},
   touchpoints: undefined,
@@ -373,6 +376,7 @@ export function ContratarPageClient() {
         paymentMode: 'form',
         planIds: result.planIds,
         currentStage: 8,
+        errorRetryable: true,
         checkoutResume: {
           clientId: result.clientId,
           petIds: result.petIds,
@@ -392,6 +396,7 @@ export function ContratarPageClient() {
           errorStage: e.stage,
           errorMessage: e.message,
           errorRequestId: e.requestId,
+          errorRetryable: e.retryable,
           checkoutResume: shouldClearCustomer
             ? {
                 clientId: prev.checkoutResume.clientId,
@@ -412,6 +417,7 @@ export function ContratarPageClient() {
         errorStage: prev.currentStage,
         errorMessage: 'Erro inesperado ao finalizar. Tente novamente.',
         errorRequestId: undefined,
+        errorRetryable: true,
       }));
     }
   }
@@ -426,6 +432,7 @@ export function ContratarPageClient() {
       errorStage: undefined,
       errorMessage: undefined,
       errorRequestId: undefined,
+      errorRetryable: true,
       clearCvvOnError: true,
       isSubmitting: false,
     }));
@@ -583,7 +590,7 @@ export function ContratarPageClient() {
           }}
           onSubmit={handleFinalizeCheckout}
           onBack={handleBack}
-          onRetry={handleRetryCheckout}
+          onRetry={state.errorRetryable ? handleRetryCheckout : undefined}
           mode={state.paymentMode}
           currentStage={state.currentStage}
           errorStage={state.errorStage}

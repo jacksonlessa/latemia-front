@@ -107,6 +107,11 @@ export class CheckoutError extends Error {
    * que o cliente possa reportar ao suporte e o dev possa rastrear nos logs.
    */
   readonly requestId?: string;
+  /**
+   * false = erro terminal, não adianta tentar de novo (ex: já tem assinatura ativa).
+   * true  = erro transitório, o cliente pode e deve tentar novamente.
+   */
+  readonly retryable: boolean;
 
   constructor(params: {
     stage: CheckoutStage;
@@ -115,6 +120,7 @@ export class CheckoutError extends Error {
     createdSubscriptionId?: string;
     pagarmeCustomerId?: string;
     requestId?: string;
+    retryable?: boolean;
   }) {
     super(params.message);
     this.name = 'CheckoutError';
@@ -123,6 +129,7 @@ export class CheckoutError extends Error {
     this.createdSubscriptionId = params.createdSubscriptionId;
     this.pagarmeCustomerId = params.pagarmeCustomerId;
     this.requestId = params.requestId;
+    this.retryable = params.retryable ?? true;
   }
 }
 
@@ -195,7 +202,15 @@ const BACKEND_ERROR_MESSAGES: Record<string, string> = {
     'Sistema temporariamente indisponível. Tente em alguns minutos.',
   PROVIDER_UPSTREAM:
     'Provedor de pagamento indisponível. Tente novamente.',
+  CLIENT_ALREADY_HAS_SUBSCRIPTION:
+    'Você já possui um plano ativo. Para contratar novamente, cancele o plano atual. Se precisar de ajuda, fale com nosso suporte.',
 };
+
+// Erros terminais — não adianta tentar de novo. Oculta o botão "Tentar novamente"
+// e direciona o cliente ao suporte em vez de gerar frustração com retentativas.
+const NON_RETRYABLE_CODES = new Set([
+  'CLIENT_ALREADY_HAS_SUBSCRIPTION',
+]);
 
 function fallbackMessageForStage(stage: CheckoutStage): string {
   switch (stage) {
@@ -238,6 +253,7 @@ function buildCheckoutError(
     createdSubscriptionId,
     pagarmeCustomerId,
     requestId,
+    retryable: !NON_RETRYABLE_CODES.has(code),
   });
 }
 
@@ -501,7 +517,9 @@ export class FinalizeCheckoutUseCase {
         reportClientError({
           requestId,
           stage: 'stage_6',
-          message: checkoutErr.message.slice(0, 200),
+          // Prefixar com código permite ao suporte identificar o problema via log
+          // sem precisar do requestId do cliente. Ex: "[CLIENT_ALREADY_HAS_SUBSCRIPTION] Você já..."
+          message: `[${code}] ${checkoutErr.message}`.slice(0, 200),
           stackHash,
         }).catch(() => {});
         throw checkoutErr;
