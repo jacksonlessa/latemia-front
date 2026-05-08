@@ -465,7 +465,7 @@ export class FinalizeCheckoutUseCase {
       clientId,
       petIds,
       pagarmeCustomerId,
-      pagarmeCardId,
+      pagarmeCardId: pagarmeCardId ?? '',
       pagarmeSubscriptionId: createdSubscriptionId ?? '',
     };
   }
