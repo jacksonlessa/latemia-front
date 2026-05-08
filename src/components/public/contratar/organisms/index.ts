@@ -24,7 +24,4 @@ export {
   CHECKOUT_TOTAL_STAGES,
   ANTI_FLICKER_MS,
 } from './checkout-progress-panel';
-export type {
-  CheckoutProgressPanelProps,
-  CheckoutPetStage,
-} from './checkout-progress-panel';
+export type { CheckoutProgressPanelProps } from './checkout-progress-panel';

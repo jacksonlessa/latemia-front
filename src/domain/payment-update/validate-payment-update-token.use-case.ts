@@ -8,7 +8,7 @@
  * Throws an Error with code 'TOKEN_INVALID' on 404 (invalid/expired/used).
  * Throws an Error with code 'NETWORK_ERROR' on fetch failure.
  *
- * LGPD: no PII is sent or returned; only petName and planStatus are exposed.
+ * LGPD: no PII is sent or returned; only tutorMaskedName and petsCovered are exposed.
  */
 
 import type { TokenContext } from './types';

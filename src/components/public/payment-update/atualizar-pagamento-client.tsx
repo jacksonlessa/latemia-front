@@ -8,25 +8,23 @@
  *
  *   loading    — validating token on mount
  *   invalid    — token invalid/expired/used
- *   form       — shows petName, planStatus and card form
+ *   form       — shows tutorMaskedName, petsCovered and card form
  *   submitting — card is being tokenized and submitted
  *   error      — gateway error OR `charge_failed` outcome; form remains
  *                active for retry, token stays alive on the backend
- *   success    — card updated; renders one of 3 success outcomes
- *                (card_updated_no_charge | charge_paid | charge_pending)
+ *   success    — card updated; renders success message based on chargesBehavior
  *
- * LGPD: displays only petName and planStatus — no CPF, phone, or email.
+ * LGPD: displays only tutorMaskedName and petsCovered — no CPF, phone, or email.
  * PCI:  card data (PAN, CVV) never leave the PaymentCardForm component;
  *       only the Pagar.me token is forwarded to the backend.
+ *
+ * Model: 1 customer = 1 subscription with N items (pivô subscription consolidada).
+ * A single card update regularizes all covered pets at once.
  */
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { PaymentCardForm } from './molecules/payment-card-form';
-import {
-  PaymentUpdateSuccess,
-  type PaymentUpdateSuccessOutcome,
-} from './organisms/payment-update-success';
 import { PaymentUpdateInvalid } from './organisms/payment-update-invalid';
 import {
   validatePaymentUpdateToken,
@@ -36,7 +34,7 @@ import {
   consumePaymentUpdateToken,
   ConsumePaymentError,
 } from '@/domain/payment-update/consume-payment-update-token.use-case';
-import type { ChargesBehavior, TokenContext } from '@/domain/payment-update/types';
+import type { TokenContext } from '@/domain/payment-update/types';
 
 // ---------------------------------------------------------------------------
 // State machine
@@ -48,39 +46,31 @@ type PageState =
   | { kind: 'form'; context: TokenContext }
   | { kind: 'submitting'; context: TokenContext }
   | { kind: 'error'; context: TokenContext; message: string }
-  | { kind: 'success'; outcome: PaymentUpdateSuccessOutcome };
+  | { kind: 'success'; chargesBehavior: TokenContext['chargesBehavior'] };
 
 // ---------------------------------------------------------------------------
-// PT-BR plan status labels (LGPD — no personal data)
+// Success messages — derived from chargesBehavior (aggregated across all pets)
 // ---------------------------------------------------------------------------
 
-const STATUS_LABEL: Record<string, string> = {
-  inadimplente: 'Inadimplente',
-  ativo: 'Ativo',
-  carencia: 'Em carência',
-  pendente: 'Pendente',
-  cancelado: 'Cancelado',
-};
-
-function planStatusLabel(status: string): string {
-  return STATUS_LABEL[status] ?? status;
-}
-
-// ---------------------------------------------------------------------------
-// Subtitles for the validation screen — derived from chargesBehavior, which
-// the backend computes from the plan status at token-generation time.
-// ---------------------------------------------------------------------------
-
-const BEHAVIOR_SUBTITLES: Record<ChargesBehavior, string> = {
+const SUCCESS_MESSAGES: Record<TokenContext['chargesBehavior'], string> = {
+  immediate:
+    'Pronto! Atualizamos o cartão e já estamos processando a cobrança em atraso de todos os seus pets.',
   next_cycle:
-    'O novo cartão será usado na próxima cobrança do seu plano.',
-  first_charge:
-    'A primeira cobrança será processada agora com o novo cartão.',
-  overdue_charge:
-    'A cobrança em atraso será processada agora com o novo cartão.',
+    'Pronto! O novo cartão será usado na próxima cobrança mensal.',
 };
 
 const FAILED_CHARGE_FALLBACK = 'Cartão recusado. Tente outro cartão.';
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function buildPetsCoveredLabel(petsCovered: string[]): string {
+  if (petsCovered.length === 1) {
+    return `Pet coberto: ${petsCovered[0]}`;
+  }
+  return `Pets cobertos: ${petsCovered.join(', ')}`;
+}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -143,7 +133,7 @@ export function AtualizarPagamentoClient() {
         return;
       }
 
-      setState({ kind: 'success', outcome: result.outcome });
+      setState({ kind: 'success', chargesBehavior: context.chargesBehavior });
     } catch (err) {
       let message = 'Não foi possível atualizar o cartão. Tente novamente.';
       if (err instanceof TokenInvalidError) {
@@ -187,30 +177,46 @@ export function AtualizarPagamentoClient() {
   }
 
   if (state.kind === 'success') {
-    return <PaymentUpdateSuccess outcome={state.outcome} />;
+    return (
+      <div className="flex flex-col items-center gap-6 py-6 text-center">
+        <div className="space-y-2">
+          <h2 className="font-display text-2xl text-forest">Cartão atualizado!</h2>
+          <p className="text-base text-foreground max-w-sm mx-auto">
+            {SUCCESS_MESSAGES[state.chargesBehavior]}
+          </p>
+        </div>
+        <div className="rounded-lg border border-border bg-muted/30 p-4 max-w-sm w-full text-sm text-muted-foreground">
+          Em caso de dúvidas, entre em contato com nossa equipe pelo WhatsApp.
+        </div>
+      </div>
+    );
   }
 
   // form | submitting | error
   const context = state.context;
   const isSubmitting = state.kind === 'submitting';
   const errorMessage = state.kind === 'error' ? state.message : undefined;
-  const subtitle = BEHAVIOR_SUBTITLES[context.chargesBehavior];
 
   return (
     <div className="space-y-6">
-      {/* Plan context — LGPD: no CPF, phone, email */}
-      <div className="rounded-lg border border-border bg-white p-4 space-y-2">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          Plano do pet
-        </p>
-        <div className="flex items-center justify-between">
-          <span className="font-medium text-foreground">{context.petName}</span>
-          <span className="text-sm text-muted-foreground">
-            {planStatusLabel(context.planStatus)}
-          </span>
+      {/* Tutor + pets context — LGPD: no CPF, phone, email */}
+      <header className="rounded-lg border border-border bg-white p-4 space-y-3">
+        <div className="space-y-1">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Titular do plano
+          </h2>
+          <p className="font-medium text-foreground">{context.tutorMaskedName}</p>
         </div>
-        <p className="text-sm text-muted-foreground">{subtitle}</p>
-      </div>
+
+        <section aria-label="Pets cobertos">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+            {context.petsCovered.length === 1 ? 'Pet coberto' : 'Pets cobertos'}
+          </p>
+          <p className="text-sm text-foreground">
+            {buildPetsCoveredLabel(context.petsCovered)}
+          </p>
+        </section>
+      </header>
 
       {/* Error banner — inline, form stays active */}
       {errorMessage && (

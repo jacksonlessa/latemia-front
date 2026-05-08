@@ -1,29 +1,40 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Copy, Link2, RefreshCw } from 'lucide-react';
+import { Check, Copy, Info, Link2, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  generatePaymentUpdateLinkUseCase,
-  type GenerateTokenResponse,
-  PlanIneligibleForPaymentUpdateError,
-} from '@/domain/plan/generate-payment-update-link.use-case';
-import type { PlanDetail } from '@/lib/types/plan';
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
+  generateClientPaymentUpdateTokenUseCase,
+  type GenerateClientTokenResponse,
+  ClientIneligibleForPaymentUpdateError,
+} from '@/domain/client/generate-client-payment-update-token.use-case';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
+export interface PaymentUpdateTokenState {
+  token: string;
+  status: 'active' | 'used' | 'expired';
+  expiresAt: string;
+  usedAt: string | null;
+}
+
 interface PaymentUpdateLinkSectionProps {
-  planId: string;
-  currentToken: PlanDetail['paymentUpdateToken'];
-  onGenerated?: (token: GenerateTokenResponse) => void;
+  clientId: string;
+  currentToken: PaymentUpdateTokenState | null | undefined;
+  petsCovered?: string[];
+  onGenerated?: (token: GenerateClientTokenResponse) => void;
   /** Optional external isLoading override — used by Storybook to freeze the loading state. */
   isLoading?: boolean;
 }
-
-type TokenState = NonNullable<PlanDetail['paymentUpdateToken']>;
 
 // ---------------------------------------------------------------------------
 // Formatters
@@ -47,7 +58,7 @@ function formatDate(iso: string): string {
 // ---------------------------------------------------------------------------
 
 interface TokenBadgeProps {
-  tokenState: TokenState;
+  tokenState: PaymentUpdateTokenState;
 }
 
 function TokenBadge({ tokenState }: TokenBadgeProps) {
@@ -122,40 +133,38 @@ function CopyUrlButton({ url }: CopyUrlButtonProps) {
 // ---------------------------------------------------------------------------
 
 /**
- * PaymentUpdateLinkSection — Organism
+ * PaymentUpdateLinkSection — Organism (client-scoped version)
  *
  * Renders the payment-update link management section inside
- * `/admin/planos/[id]`. Should be rendered only when the plan status is one
- * of the eligible statuses (`ativo`, `carencia`, `pendente`, `inadimplente`)
- * — visibility is gated by the parent via
- * `canGeneratePaymentUpdateLink(plan.status)`. Hidden (no placeholder) for
- * terminal statuses (`cancelado`, `estornado`, `contestado`).
+ * `/admin/clientes/[id]`. Should be rendered only when the client has an
+ * active Pagar.me subscription (`pagarmeSubscriptionId`) AND at least one
+ * eligible plan (`paymentUpdateEligible`). Visibility is gated by the parent.
+ *
+ * The generated link updates the card for ALL pets covered under the client's
+ * single subscription — this is why it lives here, not on each plan page.
  *
  * States:
- * - `no-link`  (currentToken is null/undefined): shows "Gerar link" button only.
- * - `active`   : shows the shareable URL, a copy button, an "active until" badge,
- *                and a "Gerar novo link" button.
- * - `used`     : shows a "Used on <date>" badge and a "Gerar novo link" button.
- * - `expired`  : shows an "Expirado" badge and a "Gerar novo link" button.
+ * - `no-link`        (currentToken is null/undefined): shows "Gerar link" button only.
+ * - `active`         : shows the shareable URL, a copy button, "active until" badge,
+ *                      and a "Gerar novo link" button.
+ * - `used`           : shows a "Used on <date>" badge and a "Gerar novo link" button.
+ * - `expired`        : shows an "Expirado" badge and a "Gerar novo link" button.
+ * - `loading`        : generate button shows spinner "Gerando..."
+ * - `client-ineligible`: parent does not render this component at all.
  *
- * On generate: calls `generatePaymentUpdateLinkUseCase`, updates local state
+ * On generate: calls `generateClientPaymentUpdateTokenUseCase`, updates local state
  * without reloading the page, and calls `onGenerated` if provided.
- *
- * Defense-in-depth: a 422 from the backend (e.g. plan transitioned to a
- * terminal status between page render and click, or admin forced the
- * request via DevTools) surfaces an inline error message that does not
- * incorrectly state the plan must be `inadimplente`.
  */
 export function PaymentUpdateLinkSection({
-  planId,
+  clientId,
   currentToken,
+  petsCovered,
   onGenerated,
   isLoading: isLoadingProp,
 }: PaymentUpdateLinkSectionProps) {
-  // Local token state — starts from prop, updated optimistically after generation.
-  const [tokenState, setTokenState] = useState<TokenState | null | undefined>(
-    currentToken,
-  );
+  const [tokenState, setTokenState] = useState<
+    PaymentUpdateTokenState | null | undefined
+  >(currentToken);
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(() => {
     if (currentToken?.status === 'active') {
       return `${process.env.NEXT_PUBLIC_APP_URL}/atualizar-pagamento?token=${currentToken.token}`;
@@ -171,9 +180,8 @@ export function PaymentUpdateLinkSection({
     setErrorMessage(null);
 
     try {
-      const result = await generatePaymentUpdateLinkUseCase(planId);
+      const result = await generateClientPaymentUpdateTokenUseCase(clientId);
 
-      // Update local state to reflect new active token without a page reload.
       setTokenState({
         token: result.token,
         status: 'active',
@@ -184,13 +192,10 @@ export function PaymentUpdateLinkSection({
 
       onGenerated?.(result);
     } catch (err) {
-      if (err instanceof PlanIneligibleForPaymentUpdateError) {
-        // Backend 422 — plan is in a terminal status (cancelado / estornado /
-        // contestado). Surface a message aligned with the new eligibility rule
-        // and avoid mentioning only "inadimplente".
+      if (err instanceof ClientIneligibleForPaymentUpdateError) {
         setErrorMessage(
           err.message ||
-            'Este plano não está elegível para atualização de pagamento. O link não pode ser gerado.',
+            'Este cliente não está elegível para atualização de pagamento. O link não pode ser gerado.',
         );
       } else {
         setErrorMessage('Ocorreu um erro ao gerar o link. Tente novamente.');
@@ -200,10 +205,7 @@ export function PaymentUpdateLinkSection({
     }
   }
 
-  // Determine the URL to display: prefer newly generated URL (has full URL
-  // from the response), otherwise we have no URL for non-active states.
   const displayUrl = generatedUrl;
-
   const hasToken = tokenState != null;
   const isActive = tokenState?.status === 'active';
 
@@ -213,13 +215,39 @@ export function PaymentUpdateLinkSection({
       aria-label="Link de atualização de pagamento"
     >
       <header className="flex items-start justify-between gap-3 border-b border-amber-200 px-4 py-3 md:px-5">
-        <div className="min-w-0">
-          <h2 className="text-sm font-semibold text-[#2C2C2E]">
-            Atualização de Meio de Pagamento
-          </h2>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-semibold text-[#2C2C2E]">
+              Atualização de Meio de Pagamento
+            </h2>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="inline-flex items-center text-[#6B6B6E] hover:text-[#4E8C75] transition-colors"
+                    aria-label="Informações sobre o link de atualização"
+                  >
+                    <Info className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="right"
+                  className="max-w-xs text-xs"
+                  role="tooltip"
+                >
+                  O link gerado atualiza o cartão de todos os pets cobertos do
+                  cliente em uma única operação.
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           <p className="mt-0.5 text-xs text-[#6B6B6E]">
             Gere um link seguro para que o cliente atualize os dados do cartão
             sem precisar fazer login.
+            {petsCovered && petsCovered.length > 0 && (
+              <> Cobre: {petsCovered.join(', ')}.</>
+            )}
           </p>
         </div>
       </header>

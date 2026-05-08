@@ -14,9 +14,14 @@ import type { ApiErrorBody } from '@/lib/api-client';
 // Types
 // ---------------------------------------------------------------------------
 
-export interface RegisterContractSubscription {
+export interface RegisterContractSubscriptionItem {
   pet_id: string;
+  pagarme_subscription_item_id?: string;
+}
+
+export interface RegisterContractSubscription {
   pagarme_subscription_id: string;
+  items: RegisterContractSubscriptionItem[];
 }
 
 export interface RegisterContractInput {
@@ -25,11 +30,12 @@ export interface RegisterContractInput {
   contractVersion: string;
   consentedAt: string; // ISO timestamp from client clock
   /**
-   * Subscriptions Pagar.me já criadas (1 por pet). Quando ausente, o backend
-   * aceita a chamada sem vínculo de provider — útil para fluxos legados em
-   * dev. No fluxo principal `/contratar` esse campo é sempre enviado.
+   * Subscription consolidada Pagar.me (1 por cliente, com N items).
+   * Quando ausente, o backend aceita a chamada sem vínculo de provider —
+   * útil para fluxos legados em dev. No fluxo principal `/contratar`
+   * esse campo é sempre enviado.
    */
-  subscriptions?: RegisterContractSubscription[];
+  subscription?: RegisterContractSubscription;
 }
 
 export interface RegisterContractResult {
@@ -108,8 +114,8 @@ export class RegisterContractUseCase {
       },
     };
 
-    if (input.subscriptions && input.subscriptions.length > 0) {
-      body.subscriptions = input.subscriptions;
+    if (input.subscription) {
+      body.subscription = input.subscription;
     }
 
     let res: Response;

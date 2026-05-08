@@ -62,6 +62,7 @@ const EVENT_LABEL: Record<NotificationEventType, string> = {
   "plan.statusChanged": "Status alterado",
   "plan.paymentFailed": "Falha no pagamento",
   "plan.renewed": "Plano renovado",
+  "plan.paymentMethodUpdated": "Método de pagamento atualizado",
 };
 
 function formatDate(value: string | null): string {

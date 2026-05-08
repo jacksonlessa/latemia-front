@@ -7,6 +7,7 @@ import { PetListSticky } from '@/components/admin/clientes/organisms/pet-list-st
 import { PetPlanPanel } from '@/components/admin/clientes/organisms/pet-plan-panel';
 import { EditClientDrawer } from '@/components/admin/clientes/organisms/edit-client-drawer';
 import { EditPetDrawer } from '@/components/admin/clientes/organisms/edit-pet-drawer';
+import { PaymentUpdateLinkSection } from '@/components/admin/clientes/organisms/payment-update-link-section';
 import type { ClientDetail } from '@/lib/types/client';
 import type { PlanListItem, PlanStatus } from '@/lib/types/plan';
 import type { PetListItemData } from '@/components/admin/clientes/molecules/pet-list-item';
@@ -154,10 +155,30 @@ export function ClientDetailPageClient({
       }
     : null;
 
+  // Pets with live (non-terminal) plans — shown in payment update tooltip
+  const petsWithLivePlans = clientData.pets
+    .filter((pet) =>
+      plans.some(
+        (p) =>
+          p.petId === pet.id &&
+          !['cancelado', 'estornado', 'contestado'].includes(p.status),
+      ),
+    )
+    .map((pet) => pet.name);
+
   return (
     <>
       {/* Client header — always visible */}
       <ClientHeaderCard client={clientData} onEditClient={handleEditClient} />
+
+      {/* Payment update link — visible only when client has an active subscription and eligible plans */}
+      {clientData.pagarmeSubscriptionId && clientData.paymentUpdateEligible ? (
+        <PaymentUpdateLinkSection
+          clientId={clientData.id}
+          currentToken={clientData.paymentUpdateToken ?? null}
+          petsCovered={petsWithLivePlans}
+        />
+      ) : null}
 
       {/* Main area: pet list + plan panel */}
       {clientData.pets.length === 0 ? (

@@ -115,29 +115,32 @@ describe('RegisterContractUseCase.execute — success', () => {
     expect(result.contract_id).toBe('contract-uuid-1');
   });
 
-  it('should send subscriptions[] in payload when provided', async () => {
+  it('should send subscription object in payload when provided', async () => {
     const mockFetch = vi.mocked(fetch);
     mockFetch.mockResolvedValueOnce(makeFetchResponse(successResponse, 201));
 
     const useCase = new RegisterContractUseCase();
     await useCase.execute(
       validInput({
-        subscriptions: [
-          { pet_id: 'pet-uuid-1', pagarme_subscription_id: 'sub_1' },
-          { pet_id: 'pet-uuid-2', pagarme_subscription_id: 'sub_2' },
-        ],
+        subscription: {
+          pagarme_subscription_id: 'sub_1',
+          items: [
+            { pet_id: 'pet-uuid-1', pagarme_subscription_item_id: 'si_1' },
+            { pet_id: 'pet-uuid-2', pagarme_subscription_item_id: 'si_2' },
+          ],
+        },
       }),
     );
 
     const [, init] = mockFetch.mock.calls[0];
     const body = JSON.parse((init as RequestInit).body as string);
-    expect(body.subscriptions).toEqual([
-      { pet_id: 'pet-uuid-1', pagarme_subscription_id: 'sub_1' },
-      { pet_id: 'pet-uuid-2', pagarme_subscription_id: 'sub_2' },
-    ]);
+    expect(body.subscription.pagarme_subscription_id).toBe('sub_1');
+    expect(body.subscription.items).toHaveLength(2);
+    expect(body.subscription.items[0].pet_id).toBe('pet-uuid-1');
+    expect(body.subscription.items[0].pagarme_subscription_item_id).toBe('si_1');
   });
 
-  it('should omit subscriptions[] when not provided', async () => {
+  it('should omit subscription when not provided', async () => {
     const mockFetch = vi.mocked(fetch);
     mockFetch.mockResolvedValueOnce(makeFetchResponse(successResponse, 201));
 
@@ -146,7 +149,7 @@ describe('RegisterContractUseCase.execute — success', () => {
 
     const [, init] = mockFetch.mock.calls[0];
     const body = JSON.parse((init as RequestInit).body as string);
-    expect(body.subscriptions).toBeUndefined();
+    expect(body.subscription).toBeUndefined();
   });
 });
 

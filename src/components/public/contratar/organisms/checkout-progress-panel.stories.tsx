@@ -32,26 +32,9 @@ export const Stage2: Story = {
   args: { ...baseArgs, currentStage: 2 },
 };
 
-export const Stage6OnePet: Story = {
-  name: 'Etapa 6 — 1 pet',
-  args: {
-    ...baseArgs,
-    currentStage: 6,
-    petStages: [{ name: 'Rex', state: 'in_progress' }],
-  },
-};
-
-export const Stage6ThreePetsMix: Story = {
-  name: 'Etapa 6 — 3 pets (mix de estados)',
-  args: {
-    ...baseArgs,
-    currentStage: 6,
-    petStages: [
-      { name: 'Rex', state: 'done' },
-      { name: 'Mel', state: 'in_progress' },
-      { name: 'Thor', state: 'pending' },
-    ],
-  },
+export const Stage6Subscription: Story = {
+  name: 'Etapa 6 — configurando assinatura',
+  args: { ...baseArgs, currentStage: 6 },
 };
 
 export const Stage8Success: Story = {
@@ -62,14 +45,12 @@ export const Stage8Success: Story = {
 const errorArgs = (
   stage: number,
   message: string,
-  petStages?: CheckoutProgressPanelProps['petStages'],
 ): CheckoutProgressPanelProps => ({
   ...baseArgs,
   currentStage: stage,
   errorStage: stage,
   errorMessage: message,
   onRetry: () => console.log('retry'),
-  petStages,
 });
 
 export const ErrorStage1: Story = {
@@ -98,16 +79,8 @@ export const ErrorStage5: Story = {
 };
 
 export const ErrorStage6: Story = {
-  name: 'Erro — etapa 6 (3 pets)',
-  args: errorArgs(6, 'Seu cartão foi recusado. Verifique os dados ou tente outro cartão.', [
-    { name: 'Rex', state: 'done' },
-    {
-      name: 'Mel',
-      state: 'error',
-      errorMessage: 'Cartão recusado.',
-    },
-    { name: 'Thor', state: 'pending' },
-  ]),
+  name: 'Erro — etapa 6',
+  args: errorArgs(6, 'Seu cartão foi recusado. Verifique os dados ou tente outro cartão.'),
 };
 
 export const ErrorStage7: Story = {

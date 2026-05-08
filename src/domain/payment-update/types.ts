@@ -2,19 +2,22 @@
  * Shared types for the payment-update domain.
  *
  * LGPD: TokenContext intentionally excludes CPF, e-mail, and phone.
- * Only petName and planStatus are returned by the backend.
+ * Only tutorMaskedName and petsCovered are returned by the backend.
+ *
+ * Model: 1 customer = 1 subscription with N items (pivô subscription consolidada).
+ * The token is now per-client (not per-plan); all covered pets share one subscription.
  */
 
 /**
- * Comportamento de cobrança derivado do status do plano no momento da
- * geração do token. Mantido por compatibilidade retroativa com o frontend
- * legado — o novo contrato canônico do consumo é `outcome`.
+ * Comportamento de cobrança agregado dos planos do cliente no momento da
+ * geração do token.
  *
- * - `next_cycle`     — `ativo`/`carencia`: novo cartão usado no próximo ciclo.
- * - `first_charge`   — `pendente`: primeira cobrança será processada agora.
- * - `overdue_charge` — `inadimplente`: cobrança em atraso processada agora.
+ * - `immediate`   — pelo menos 1 plano está em `pendente` ou `inadimplente`:
+ *                   cobrança em atraso será processada agora para todos os pets.
+ * - `next_cycle`  — todos os planos estão em `ativo`/`carencia`:
+ *                   novo cartão usado apenas no próximo ciclo.
  */
-export type ChargesBehavior = 'next_cycle' | 'first_charge' | 'overdue_charge';
+export type ChargesBehavior = 'immediate' | 'next_cycle';
 
 /**
  * Desfecho canônico do consumo do token.
@@ -31,9 +34,15 @@ export type ConsumeOutcome =
   | 'charge_pending'
   | 'charge_failed';
 
+/**
+ * Contexto retornado pelo backend ao validar o token.
+ *
+ * LGPD: apenas nome mascarado do tutor e nomes dos pets são expostos.
+ * CPF, e-mail e telefone são omitidos.
+ */
 export interface TokenContext {
-  petName: string;
-  planStatus: string;
+  tutorMaskedName: string;
+  petsCovered: string[];
   chargesBehavior: ChargesBehavior;
 }
 

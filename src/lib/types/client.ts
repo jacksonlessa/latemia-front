@@ -76,6 +76,18 @@ export interface PetListItem {
   createdAt: string;
 }
 
+/**
+ * Most-recent payment-update token for this client, included when one exists.
+ * Null when no token has ever been generated.
+ * Used by `PaymentUpdateLinkSection` to display the current link status.
+ */
+export interface ClientPaymentUpdateToken {
+  token: string;
+  status: 'active' | 'used' | 'expired';
+  expiresAt: string;
+  usedAt: string | null;
+}
+
 /** Full client detail returned by POST /v1/clients and GET /v1/clients/:id. */
 export interface ClientDetail {
   id: string;
@@ -86,6 +98,22 @@ export interface ClientDetail {
   addresses: AddressDetail[];
   pets: PetListItem[];
   createdAt: string;
+  /**
+   * Pagar.me subscription identifier — present once the client has an active
+   * subscription (pivot: 1 subscription per client, shared across all pets).
+   */
+  pagarmeSubscriptionId?: string | null;
+  /**
+   * True when at least one of the client's plans is in an eligible status
+   * (`ativo`, `carencia`, `pendente`, `inadimplente`). Used to gate
+   * `PaymentUpdateLinkSection` visibility.
+   */
+  paymentUpdateEligible?: boolean;
+  /**
+   * Most-recent payment-update token for this client.
+   * Null when no token has ever been generated.
+   */
+  paymentUpdateToken?: ClientPaymentUpdateToken | null;
 }
 
 /** Lightweight row returned by GET /v1/clients list. */

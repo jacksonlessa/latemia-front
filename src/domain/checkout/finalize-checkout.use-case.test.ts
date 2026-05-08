@@ -183,9 +183,12 @@ describe('FinalizeCheckoutUseCase — happy paths', () => {
       'api.pagar.me/core/v5/tokens': () =>
         jsonResponse({ id: 'token_abc', card: { brand: 'visa', last_four_digits: '0010' } }),
       '/v1/checkout/customer': () =>
-        jsonResponse({ pagarme_customer_id: 'cus_1', created: true }, 201),
+        jsonResponse({ pagarme_customer_id: 'cus_1', created: true, pagarme_card_id: 'card_1' }, 201),
       '/v1/checkout/subscription': () =>
-        jsonResponse({ pagarme_subscription_id: 'sub_1' }, 201),
+        jsonResponse({
+          pagarme_subscription_id: 'sub_1',
+          items: [{ pet_id: 'pet-uuid-1', pagarme_subscription_item_id: 'si_1' }],
+        }, 201),
     });
 
     const stages: OnStageChangePayload[] = [];
@@ -194,7 +197,7 @@ describe('FinalizeCheckoutUseCase — happy paths', () => {
 
     expect(result.contractId).toBe('contract-uuid-1');
     expect(result.planIds).toEqual(['plan-uuid-1', 'plan-uuid-2']);
-    expect(result.pagarmeSubscriptionIds).toEqual(['sub_1']);
+    expect(result.pagarmeSubscriptionId).toBe('sub_1');
     expect(result.pagarmeCustomerId).toBe('cus_1');
 
     const seenStages = stages.map((s) => s.stage);
@@ -208,33 +211,75 @@ describe('FinalizeCheckoutUseCase — happy paths', () => {
     expect(seenStages).toContain(7);
     expect(seenStages.at(-1)).toBe(8);
 
-    // tokens chamado, customer chamado, subscription 1x, contract 1x
+    // tokens chamado, customer chamado, subscription 1x (não N), contract 1x
     expect(calls.filter((c) => c.url.includes('/tokens')).length).toBe(1);
     expect(calls.filter((c) => c.url.includes('/checkout/customer')).length).toBe(1);
     expect(calls.filter((c) => c.url.includes('/checkout/subscription')).length).toBe(1);
   });
 
-  it('should create N subscriptions for 3 pets and emit 6/{petIndex,petName} events', async () => {
-    let subCounter = 0;
+  it('should call /checkout/subscription once with petIds array for 3 pets', async () => {
     const { calls } = setupFetchMock({
       'api.pagar.me/core/v5/tokens': () => jsonResponse({ id: 'token_abc' }),
       '/v1/checkout/customer': () =>
-        jsonResponse({ pagarme_customer_id: 'cus_1', created: true }, 201),
+        jsonResponse({ pagarme_customer_id: 'cus_1', created: true, pagarme_card_id: 'card_1' }, 201),
       '/v1/checkout/subscription': () =>
-        jsonResponse({ pagarme_subscription_id: `sub_${++subCounter}` }, 201),
+        jsonResponse({
+          pagarme_subscription_id: 'sub_1',
+          items: [
+            { pet_id: 'pet-uuid-1', pagarme_subscription_item_id: 'si_1' },
+            { pet_id: 'pet-uuid-2', pagarme_subscription_item_id: 'si_2' },
+            { pet_id: 'pet-uuid-3', pagarme_subscription_item_id: 'si_3' },
+          ],
+        }, 201),
     });
 
     const stages: OnStageChangePayload[] = [];
     const useCase = makeUseCase();
     const result = await useCase.execute(buildInput(3), (p) => stages.push(p));
 
-    expect(result.pagarmeSubscriptionIds).toHaveLength(3);
-    expect(calls.filter((c) => c.url.includes('/checkout/subscription')).length).toBe(3);
+    // Exactly 1 call to /checkout/subscription (not 3)
+    const subscriptionCalls = calls.filter((c) => c.url.includes('/checkout/subscription'));
+    expect(subscriptionCalls.length).toBe(1);
 
-    const stage6Events = stages.filter((s) => s.stage === 6 && s.petIndex !== undefined);
-    expect(stage6Events.length).toBeGreaterThanOrEqual(3);
-    expect(stage6Events.map((s) => s.petName)).toContain('Pet1');
-    expect(stage6Events.map((s) => s.petName)).toContain('Pet3');
+    // Body must contain pet_ids array with 3 ids
+    const body = subscriptionCalls[0].body as { pet_ids: string[] };
+    expect(body.pet_ids).toHaveLength(3);
+
+    // Result has single subscription id
+    expect(result.pagarmeSubscriptionId).toBe('sub_1');
+
+    // Stage 6 emitted exactly once (no per-pet sub-stages)
+    const stage6Events = stages.filter((s) => s.stage === 6);
+    expect(stage6Events.length).toBe(1);
+  });
+
+  it('should pass consolidated subscription to register-contract', async () => {
+    setupFetchMock({
+      'api.pagar.me/core/v5/tokens': () => jsonResponse({ id: 'token_abc' }),
+      '/v1/checkout/customer': () =>
+        jsonResponse({ pagarme_customer_id: 'cus_1', pagarme_card_id: 'card_1' }, 201),
+      '/v1/checkout/subscription': () =>
+        jsonResponse({
+          pagarme_subscription_id: 'sub_1',
+          items: [
+            { pet_id: 'pet-uuid-1', pagarme_subscription_item_id: 'si_1' },
+            { pet_id: 'pet-uuid-2', pagarme_subscription_item_id: 'si_2' },
+          ],
+        }, 201),
+    });
+
+    const contractMock = {
+      execute: vi.fn().mockResolvedValue({ contract_id: 'c1', plan_ids: ['p1', 'p2'] }),
+    };
+    const useCase = makeUseCase({ contract: contractMock });
+    await useCase.execute(buildInput(2));
+
+    expect(contractMock.execute).toHaveBeenCalledTimes(1);
+    const callArg = contractMock.execute.mock.calls[0][0] as {
+      subscription?: { pagarme_subscription_id: string; items: unknown[] };
+    };
+    expect(callArg.subscription?.pagarme_subscription_id).toBe('sub_1');
+    expect(callArg.subscription?.items).toHaveLength(2);
   });
 });
 
@@ -314,7 +359,7 @@ describe('FinalizeCheckoutUseCase — errors per stage', () => {
     setupFetchMock({
       'api.pagar.me/core/v5/tokens': () => jsonResponse({ id: 'token_abc' }),
       '/v1/checkout/customer': () =>
-        jsonResponse({ pagarme_customer_id: 'cus_1' }, 201),
+        jsonResponse({ pagarme_customer_id: 'cus_1', pagarme_card_id: 'card_1' }, 201),
       '/v1/checkout/subscription': () =>
         jsonResponse({ code: 'CARD_DECLINED' }, 422),
     });
@@ -330,9 +375,12 @@ describe('FinalizeCheckoutUseCase — errors per stage', () => {
     setupFetchMock({
       'api.pagar.me/core/v5/tokens': () => jsonResponse({ id: 'token_abc' }),
       '/v1/checkout/customer': () =>
-        jsonResponse({ pagarme_customer_id: 'cus_1' }, 201),
+        jsonResponse({ pagarme_customer_id: 'cus_1', pagarme_card_id: 'card_1' }, 201),
       '/v1/checkout/subscription': () =>
-        jsonResponse({ pagarme_subscription_id: 'sub_1' }, 201),
+        jsonResponse({
+          pagarme_subscription_id: 'sub_1',
+          items: [{ pet_id: 'pet-uuid-1', pagarme_subscription_item_id: 'si_1' }],
+        }, 201),
     });
     const useCase = makeUseCase({
       contract: {
@@ -347,48 +395,20 @@ describe('FinalizeCheckoutUseCase — errors per stage', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Rollback fire-and-forget (post-stage 5)
+// Rollback fire-and-forget (post-stage 6) — consolidated subscription
 // ---------------------------------------------------------------------------
 
 describe('FinalizeCheckoutUseCase — rollback', () => {
-  it('should fire-and-forget POST /v1/checkout/rollback when stage 6 fails after creating ≥1 subscription', async () => {
-    let subCounter = 0;
+  it('should fire-and-forget POST /v1/checkout/rollback with single pagarme_subscription_id when stage 7 fails', async () => {
     const { calls } = setupFetchMock({
       'api.pagar.me/core/v5/tokens': () => jsonResponse({ id: 'token_abc' }),
       '/v1/checkout/customer': () =>
-        jsonResponse({ pagarme_customer_id: 'cus_1' }, 201),
-      '/v1/checkout/subscription': () => {
-        subCounter++;
-        if (subCounter === 1) {
-          return jsonResponse({ pagarme_subscription_id: 'sub_1' }, 201);
-        }
-        return jsonResponse({ code: 'CARD_DECLINED' }, 422);
-      },
-      '/v1/checkout/rollback': () => jsonResponse({}, 200),
-    });
-
-    const useCase = makeUseCase();
-    const error = await useCase.execute(buildInput(2)).catch((e) => e);
-
-    expect(error).toBeInstanceOf(CheckoutError);
-    expect(error.stage).toBe(6);
-    // Aguardamos um microtask para o fire-and-forget agendar
-    await Promise.resolve();
-    await Promise.resolve();
-    const rollbackCalls = calls.filter((c) => c.url.includes('/checkout/rollback'));
-    expect(rollbackCalls.length).toBe(1);
-    expect((rollbackCalls[0].body as { pagarme_subscription_ids: string[] }).pagarme_subscription_ids)
-      .toEqual(['sub_1']);
-  });
-
-  it('should fire-and-forget rollback when stage 7 fails with subscriptions already created', async () => {
-    let subCounter = 0;
-    const { calls } = setupFetchMock({
-      'api.pagar.me/core/v5/tokens': () => jsonResponse({ id: 'token_abc' }),
-      '/v1/checkout/customer': () =>
-        jsonResponse({ pagarme_customer_id: 'cus_1' }, 201),
+        jsonResponse({ pagarme_customer_id: 'cus_1', pagarme_card_id: 'card_1' }, 201),
       '/v1/checkout/subscription': () =>
-        jsonResponse({ pagarme_subscription_id: `sub_${++subCounter}` }, 201),
+        jsonResponse({
+          pagarme_subscription_id: 'sub_1',
+          items: [{ pet_id: 'pet-uuid-1', pagarme_subscription_item_id: 'si_1' }],
+        }, 201),
       '/v1/checkout/rollback': () => jsonResponse({}, 200),
     });
 
@@ -397,18 +417,19 @@ describe('FinalizeCheckoutUseCase — rollback', () => {
         execute: vi.fn().mockRejectedValue(new Error('boom')),
       },
     });
-    const error = await useCase.execute(buildInput(2)).catch((e) => e);
+    const error = await useCase.execute(buildInput(1)).catch((e) => e);
     expect(error).toBeInstanceOf(CheckoutError);
     expect(error.stage).toBe(7);
+
     await Promise.resolve();
     await Promise.resolve();
     const rollbackCalls = calls.filter((c) => c.url.includes('/checkout/rollback'));
     expect(rollbackCalls.length).toBe(1);
-    expect((rollbackCalls[0].body as { pagarme_subscription_ids: string[] }).pagarme_subscription_ids)
-      .toEqual(['sub_1', 'sub_2']);
+    const body = rollbackCalls[0].body as { pagarme_subscription_id: string };
+    expect(body.pagarme_subscription_id).toBe('sub_1');
   });
 
-  it('should NOT fire rollback when failure occurs before stage 6 creates any subscription', async () => {
+  it('should NOT fire rollback when failure occurs before stage 6 creates the subscription', async () => {
     const { calls } = setupFetchMock({
       'api.pagar.me/core/v5/tokens': () => jsonResponse({ id: 'token_abc' }),
       '/v1/checkout/customer': () =>
@@ -416,6 +437,21 @@ describe('FinalizeCheckoutUseCase — rollback', () => {
     });
     const useCase = makeUseCase();
     await useCase.execute(buildInput(1)).catch(() => undefined);
+    await Promise.resolve();
+    expect(calls.filter((c) => c.url.includes('/checkout/rollback')).length).toBe(0);
+  });
+
+  it('should NOT fire rollback when stage 6 itself fails (no subscription was created)', async () => {
+    const { calls } = setupFetchMock({
+      'api.pagar.me/core/v5/tokens': () => jsonResponse({ id: 'token_abc' }),
+      '/v1/checkout/customer': () =>
+        jsonResponse({ pagarme_customer_id: 'cus_1', pagarme_card_id: 'card_1' }, 201),
+      '/v1/checkout/subscription': () =>
+        jsonResponse({ code: 'CARD_DECLINED' }, 422),
+    });
+    const useCase = makeUseCase();
+    await useCase.execute(buildInput(3)).catch(() => undefined);
+    await Promise.resolve();
     await Promise.resolve();
     expect(calls.filter((c) => c.url.includes('/checkout/rollback')).length).toBe(0);
   });

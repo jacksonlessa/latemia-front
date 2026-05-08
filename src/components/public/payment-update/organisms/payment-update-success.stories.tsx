@@ -9,6 +9,9 @@
  * intentionally NOT a success state: it stays inline on the form so the
  * customer can try another card with the same (still-active) token.
  * See `payment-update-form.stories.tsx` for the failed-charge variant.
+ *
+ * Model: 1 client = 1 subscription with N items (pivô subscription consolidada).
+ * Success message now reflects chargesBehavior (immediate | next_cycle).
  */
 
 import type React from 'react';
@@ -56,25 +59,25 @@ type Story = {
 // Stories
 // ---------------------------------------------------------------------------
 
-/** Cartão atualizado sem cobrança — plano ativo/carência */
-export const CardUpdatedNoCharge: Story = {
-  name: 'Cartão atualizado (sem cobrança)',
-  args: {
-    outcome: 'card_updated_no_charge',
-  },
-};
-
-/** Cobrança aprovada — plano pendente/inadimplente, retry paid */
-export const ChargePaid: Story = {
-  name: 'Pagamento aprovado',
+/** success immediate — cobrança em atraso processada para todos os pets */
+export const SuccessImmediate: Story = {
+  name: 'success immediate (charge_paid)',
   args: {
     outcome: 'charge_paid',
   },
 };
 
-/** Cobrança em processamento — plano pendente/inadimplente, retry pending */
+/** success next_cycle — novo cartão usado no próximo ciclo */
+export const SuccessNextCycle: Story = {
+  name: 'success next_cycle (card_updated_no_charge)',
+  args: {
+    outcome: 'card_updated_no_charge',
+  },
+};
+
+/** Cobrança em processamento — retry pending */
 export const ChargePending: Story = {
-  name: 'Pagamento em processamento',
+  name: 'Pagamento em processamento (charge_pending)',
   args: {
     outcome: 'charge_pending',
   },
