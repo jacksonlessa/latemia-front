@@ -243,9 +243,10 @@ function buildCheckoutError(
   createdSubscriptionId: string | undefined,
   pagarmeCustomerId: string | undefined,
   requestId?: string,
+  apiMessage?: string,
 ): CheckoutError {
   const message =
-    BACKEND_ERROR_MESSAGES[code] ?? fallbackMessageForStage(stage);
+    BACKEND_ERROR_MESSAGES[code] ?? apiMessage ?? fallbackMessageForStage(stage);
   return new CheckoutError({
     stage,
     code,
@@ -478,8 +479,8 @@ export class FinalizeCheckoutUseCase {
         requestId,
       );
       if (!result.ok) {
-        const { code } = await readApiError(result.res);
-        const checkoutErr = buildCheckoutError(5, code, undefined, undefined, requestId);
+        const { code, message: apiMessage } = await readApiError(result.res);
+        const checkoutErr = buildCheckoutError(5, code, undefined, undefined, requestId, apiMessage);
         const stackHash = await hashStack('');
         reportClientError({
           requestId,
@@ -511,8 +512,8 @@ export class FinalizeCheckoutUseCase {
         requestId,
       );
       if (!result.ok) {
-        const { code } = await readApiError(result.res);
-        const checkoutErr = buildCheckoutError(6, code, undefined, pagarmeCustomerId, requestId);
+        const { code, message: apiMessage } = await readApiError(result.res);
+        const checkoutErr = buildCheckoutError(6, code, undefined, pagarmeCustomerId, requestId, apiMessage);
         const stackHash = await hashStack('');
         reportClientError({
           requestId,
