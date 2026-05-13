@@ -203,9 +203,13 @@ beforeEach(() => {
     totalCents: 4990,
   });
 
-  // crypto.randomUUID is available in jsdom but stub for determinism
+  // crypto.randomUUID is available in jsdom but stub for determinism.
+  // Preserve `subtle` so `sha256Hex` (Task 11.0) keeps working in tests
+  // that exercise the contract registration payload.
+  const realCrypto = globalThis.crypto;
   vi.stubGlobal('crypto', {
     randomUUID: vi.fn().mockReturnValue('pet-local-1'),
+    subtle: realCrypto?.subtle,
   });
 });
 
@@ -491,6 +495,122 @@ describe('ContratarPageClient — passo 0 dry-run validation', () => {
 
     // The isValidating guard ensures only one call is made despite two click events
     expect(mockValidateClientUseCase).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// H3 Tests — Public config (Task 9.0)
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// H4 Tests — OTP remediation in payment step (Task 11.0)
+// ---------------------------------------------------------------------------
+
+describe('ContratarPageClient — OTP remediation on payment failure', () => {
+  function renderAtStep3WithOtpDraft() {
+    vi.mocked(loadDraft).mockReturnValue({
+      ...validDraft,
+      contractAttemptId: 'attempt-uuid-1',
+      otpVerificationToken: 'opaque-token-1',
+    });
+    return render(<ContratarPageClient />);
+  }
+
+  it('should forward verificationToken, contractAttemptId and contract_text_hash to RegisterContractUseCase', async () => {
+    renderAtStep3WithOtpDraft();
+
+    const concluirButton = await screen.findByRole('button', {
+      name: /concluir/i,
+    });
+    fillCardForm();
+
+    await act(async () => {
+      fireEvent.click(concluirButton);
+    });
+
+    await waitFor(() => {
+      expect(mockContractExecute).toHaveBeenCalledTimes(1);
+    });
+
+    const callArg = mockContractExecute.mock.calls[0][0] as {
+      verificationToken?: string;
+      contractAttemptId?: string;
+      contractTextHash?: string;
+    };
+    expect(callArg.verificationToken).toBe('opaque-token-1');
+    expect(callArg.contractAttemptId).toBe('attempt-uuid-1');
+    // jsdom provides crypto.subtle so we expect a 64-char hex digest.
+    expect(callArg.contractTextHash).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it('should show the "Voltar ao contrato" remediation button when contract registration fails with OTP_VERIFICATION_REQUIRED', async () => {
+    mockContractExecute.mockRejectedValueOnce(
+      new ValidationError({
+        _form: 'Sua verificação expirou. Volte ao passo anterior para refazer o código.',
+        _code: 'OTP_VERIFICATION_REQUIRED',
+      }),
+    );
+
+    renderAtStep3WithOtpDraft();
+
+    const concluirButton = await screen.findByRole('button', {
+      name: /concluir/i,
+    });
+    fillCardForm();
+
+    await act(async () => {
+      fireEvent.click(concluirButton);
+    });
+
+    // The dedicated remediation button must appear; the generic
+    // "Tentar novamente" path is suppressed for OTP failures.
+    const backButton = await screen.findByRole('button', {
+      name: /voltar ao contrato/i,
+    });
+    expect(backButton).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /tentar novamente/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('should reset the wizard to step 2, clear the OTP token and preserve client/pets when "Voltar ao contrato" is clicked', async () => {
+    mockContractExecute.mockRejectedValueOnce(
+      new ValidationError({
+        _form: 'Sua verificação expirou. Volte ao passo anterior para refazer o código.',
+        _code: 'OTP_VERIFICATION_TOKEN_INVALID',
+      }),
+    );
+
+    renderAtStep3WithOtpDraft();
+
+    const concluirButton = await screen.findByRole('button', {
+      name: /concluir/i,
+    });
+    fillCardForm();
+
+    await act(async () => {
+      fireEvent.click(concluirButton);
+    });
+
+    const backButton = await screen.findByRole('button', {
+      name: /voltar ao contrato/i,
+    });
+
+    await act(async () => {
+      fireEvent.click(backButton);
+    });
+
+    // Wizard navigates back to step 2 — contract acceptance checkbox is rendered.
+    await waitFor(() => {
+      expect(
+        screen.getByRole('checkbox', { name: /li e concordo/i }),
+      ).toBeInTheDocument();
+    });
+
+    // The remediation overlay is gone.
+    expect(
+      screen.queryByRole('button', { name: /voltar ao contrato/i }),
+    ).not.toBeInTheDocument();
   });
 });
 

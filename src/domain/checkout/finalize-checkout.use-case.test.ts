@@ -284,6 +284,108 @@ describe('FinalizeCheckoutUseCase — happy paths', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Task 11.0 — OTP evidence fields propagation to RegisterContractUseCase
+// ---------------------------------------------------------------------------
+
+describe('FinalizeCheckoutUseCase — OTP evidence propagation', () => {
+  function setupHappyPathFetch(): void {
+    setupFetchMock({
+      'api.pagar.me/core/v5/tokens': () => jsonResponse({ id: 'token_abc' }),
+      '/v1/checkout/customer': () =>
+        jsonResponse(
+          { pagarme_customer_id: 'cus_1', pagarme_card_id: 'card_1' },
+          201,
+        ),
+      '/v1/checkout/subscription': () =>
+        jsonResponse(
+          {
+            pagarme_subscription_id: 'sub_1',
+            items: [
+              { pet_id: 'pet-uuid-1', pagarme_subscription_item_id: 'si_1' },
+            ],
+          },
+          201,
+        ),
+    });
+  }
+
+  it('should forward verificationToken, contractAttemptId and contractTextHash to RegisterContractUseCase', async () => {
+    setupHappyPathFetch();
+    const contractMock = {
+      execute: vi
+        .fn()
+        .mockResolvedValue({ contract_id: 'c1', plan_ids: ['p1'] }),
+    };
+    const useCase = makeUseCase({ contract: contractMock });
+
+    await useCase.execute(
+      buildInput(1, {
+        verificationToken: 'opaque-token-1',
+        contractAttemptId: 'attempt-uuid-1',
+        contractTextHash: 'a'.repeat(64),
+      }),
+    );
+
+    expect(contractMock.execute).toHaveBeenCalledTimes(1);
+    const callArg = contractMock.execute.mock.calls[0][0] as {
+      verificationToken?: string;
+      contractAttemptId?: string;
+      contractTextHash?: string;
+    };
+    expect(callArg.verificationToken).toBe('opaque-token-1');
+    expect(callArg.contractAttemptId).toBe('attempt-uuid-1');
+    expect(callArg.contractTextHash).toBe('a'.repeat(64));
+  });
+
+  it('should pass verificationToken=undefined to RegisterContractUseCase when not provided', async () => {
+    setupHappyPathFetch();
+    const contractMock = {
+      execute: vi
+        .fn()
+        .mockResolvedValue({ contract_id: 'c1', plan_ids: ['p1'] }),
+    };
+    const useCase = makeUseCase({ contract: contractMock });
+
+    await useCase.execute(buildInput(1));
+
+    expect(contractMock.execute).toHaveBeenCalledTimes(1);
+    const callArg = contractMock.execute.mock.calls[0][0] as {
+      verificationToken?: string;
+      contractAttemptId?: string;
+      contractTextHash?: string;
+    };
+    expect(callArg.verificationToken).toBeUndefined();
+    expect(callArg.contractAttemptId).toBeUndefined();
+    expect(callArg.contractTextHash).toBeUndefined();
+  });
+
+  it('should forward only the OTP fields that are present (partial state)', async () => {
+    setupHappyPathFetch();
+    const contractMock = {
+      execute: vi
+        .fn()
+        .mockResolvedValue({ contract_id: 'c1', plan_ids: ['p1'] }),
+    };
+    const useCase = makeUseCase({ contract: contractMock });
+
+    await useCase.execute(
+      buildInput(1, {
+        contractTextHash: 'b'.repeat(64),
+      }),
+    );
+
+    const callArg = contractMock.execute.mock.calls[0][0] as {
+      verificationToken?: string;
+      contractAttemptId?: string;
+      contractTextHash?: string;
+    };
+    expect(callArg.verificationToken).toBeUndefined();
+    expect(callArg.contractAttemptId).toBeUndefined();
+    expect(callArg.contractTextHash).toBe('b'.repeat(64));
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Errors per stage
 // ---------------------------------------------------------------------------
 

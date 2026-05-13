@@ -71,6 +71,25 @@ export interface FinalizeCheckoutInput {
     /** Subscription consolidada já criada (se houver). */
     pagarmeSubscriptionId?: string;
   };
+  /**
+   * Token opaco devolvido por `POST /v1/otp/contract/verify`. Propagado
+   * ao `RegisterContractUseCase` na etapa 7. Quando a flag
+   * `otp_contract_enabled` está ativa, o backend exige este campo —
+   * ausência → 403. Não-PII (PRD/TechSpec `otp-contrato` §F2/§Models).
+   */
+  verificationToken?: string;
+  /**
+   * UUID v4 de correlação OTP gerado pelo `StepContrato` no clique de
+   * "Avançar" do passo 2. Liga o token de verificação ao mesmo ciclo.
+   * Não-PII.
+   */
+  contractAttemptId?: string;
+  /**
+   * SHA-256 hex do `CONTRATO_TEXTO` exibido ao cliente, computado pelo
+   * `ContratarPageClient` via `sha256Hex`. Persistido pelo backend em
+   * `ContractAcceptanceEvidence`. Texto contratual é público — não-PII.
+   */
+  contractTextHash?: string;
 }
 
 export interface FinalizeCheckoutResult {
@@ -548,6 +567,13 @@ export class FinalizeCheckoutUseCase {
             }
           : undefined,
         idempotencyKey,
+        // Task 11.0 — propagate OTP evidence fields when present. Each is
+        // omitted from the use-case input when undefined so the body
+        // assembled by `RegisterContractUseCase` stays minimal for the
+        // legacy (flag-off) path.
+        verificationToken: input.verificationToken,
+        contractAttemptId: input.contractAttemptId,
+        contractTextHash: input.contractTextHash,
       });
       contractId = contractResult.contract_id;
       planIds = contractResult.plan_ids;

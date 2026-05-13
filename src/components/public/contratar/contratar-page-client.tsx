@@ -23,9 +23,10 @@ import {
 } from '@/domain/checkout/finalize-checkout.use-case';
 import type { CardFormValue } from '@/components/public/contratar/organisms/card-form';
 import { navigateToFieldStep } from '@/domain/client/field-to-step';
-import { CONTRACT_VERSION } from '@/content/contrato';
+import { CONTRACT_VERSION, CONTRATO_TEXTO } from '@/content/contrato';
 import { publicSite } from '@/config/public-site';
 import { loadDraft, saveDraft, clearDraft } from '@/lib/contratar-draft-storage';
+import { sha256Hex } from '@/lib/crypto';
 import { digitsToE164 } from '@/lib/to-e164';
 import type {
   AddressData,
@@ -97,6 +98,14 @@ interface ContratarState {
    * Não-PII.
    */
   otpVerificationToken: string | null;
+  /**
+   * Quando o backend rejeita o `POST /v1/register/contract` com
+   * `OTP_VERIFICATION_REQUIRED` ou `OTP_VERIFICATION_TOKEN_INVALID` (Task
+   * 11.0), guardamos o código aqui para que a UI possa oferecer o botão
+   * "Voltar ao contrato" — caminho dedicado de remediação que volta ao
+   * passo 2 e limpa o token expirado sem perder pets/cadastro.
+   */
+  checkoutOtpErrorCode: string | null;
 }
 
 const INITIAL_STATE: ContratarState = {
@@ -121,7 +130,16 @@ const INITIAL_STATE: ContratarState = {
   touchpoints: undefined,
   contractAttemptId: null,
   otpVerificationToken: null,
+  checkoutOtpErrorCode: null,
 };
+
+// Task 11.0 — backend error codes that mean the OTP verification token
+// is missing or expired. When we see either of these in stage 7 we must
+// send the user back to step 2 so they can request a fresh code.
+const OTP_VERIFICATION_FAILURE_CODES = new Set([
+  'OTP_VERIFICATION_REQUIRED',
+  'OTP_VERIFICATION_TOKEN_INVALID',
+]);
 
 const em = (word: string) => (
   <span style={{ color: '#5D7A5E' }}>{word}</span>
@@ -414,6 +432,7 @@ export function ContratarPageClient() {
       errorStage: undefined,
       errorMessage: undefined,
       errorRequestId: undefined,
+      checkoutOtpErrorCode: null,
       clearCvvOnError: false,
     }));
 
@@ -423,6 +442,12 @@ export function ContratarPageClient() {
         currentStage: payload.stage,
       }));
     };
+
+    // Task 11.0 — Compute SHA-256 of the contract text actually shown to
+    // the customer. The hash is part of the legal proof recorded in
+    // `ContractAcceptanceEvidence`. `sha256Hex` returns `''` on legacy
+    // browsers without `crypto.subtle`; backend tolerates the empty value.
+    const contractTextHash = await sha256Hex(CONTRATO_TEXTO);
 
     try {
       const useCase = new FinalizeCheckoutUseCase();
@@ -435,6 +460,12 @@ export function ContratarPageClient() {
           contractVersion: CONTRACT_VERSION,
           resume: resumed,
           touchpoints: state.touchpoints,
+          // OTP evidence — propagated only when present in state (i.e. the
+          // public-config flag was on for this session). Each `undefined`
+          // value is omitted downstream by `RegisterContractUseCase`.
+          verificationToken: state.otpVerificationToken ?? undefined,
+          contractAttemptId: state.contractAttemptId ?? undefined,
+          contractTextHash,
         },
         onStageChange,
       );
@@ -458,6 +489,12 @@ export function ContratarPageClient() {
       }));
     } catch (e) {
       if (e instanceof CheckoutError) {
+        // Task 11.0 — OTP token rejection from `POST /v1/register/contract`.
+        // The token expired or was missing; keep the wizard in error mode
+        // but expose the dedicated "Voltar ao contrato" remediation so the
+        // user can refresh the OTP without losing cadastro/pets/cartão.
+        const isOtpFailure = OTP_VERIFICATION_FAILURE_CODES.has(e.code);
+
         // RF12: pós-rollback (errorStage >= 6), reset do customer reference
         // local — usuário recomeça a partir da etapa 5 idempotente.
         const shouldClearCustomer = e.stage >= 6;
@@ -469,6 +506,7 @@ export function ContratarPageClient() {
           errorMessage: e.message,
           errorRequestId: e.requestId,
           errorRetryable: e.retryable,
+          checkoutOtpErrorCode: isOtpFailure ? e.code : null,
           checkoutResume: shouldClearCustomer
             ? {
                 clientId: prev.checkoutResume.clientId,
@@ -505,8 +543,35 @@ export function ContratarPageClient() {
       errorMessage: undefined,
       errorRequestId: undefined,
       errorRetryable: true,
+      checkoutOtpErrorCode: null,
       clearCvvOnError: true,
       isSubmitting: false,
+    }));
+  }
+
+  // -------------------------------------------------------------------------
+  // Task 11.0 — handleBackToContract
+  //
+  // Invoked from the payment-stage error panel when the backend rejected
+  // the contract registration with an OTP verification failure (token
+  // expired or invalid). Sends the user back to step 2 with the OTP token
+  // cleared so the next OTP cycle requests a brand-new code. We keep all
+  // captured `client`/`pets`/`contractAttemptId` so the customer does not
+  // re-enter data; only the expired token and the error overlay are reset.
+  // -------------------------------------------------------------------------
+  function handleBackToContract(): void {
+    setState((prev) => ({
+      ...prev,
+      step: 2,
+      paymentMode: 'form',
+      errorStage: undefined,
+      errorMessage: undefined,
+      errorRequestId: undefined,
+      errorRetryable: true,
+      checkoutOtpErrorCode: null,
+      otpVerificationToken: null,
+      isSubmitting: false,
+      clearCvvOnError: false,
     }));
   }
 
@@ -658,27 +723,62 @@ export function ContratarPageClient() {
       )}
 
       {state.step === 3 && state.summary === null && (
-        <StepPagamento
-          summary={{
-            clientName: (state.client as RegisterClientInput).name ?? '',
-            pets: state.pets.map((p) => ({
-              name: p.name,
-              species: p.species,
-            })),
-            pricePerPetCents: publicSite.price.perPetCents,
-            totalCents: state.pets.length * publicSite.price.perPetCents,
-          }}
-          onSubmit={handleFinalizeCheckout}
-          onBack={handleBack}
-          onRetry={state.errorRetryable ? handleRetryCheckout : undefined}
-          mode={state.paymentMode}
-          currentStage={state.currentStage}
-          errorStage={state.errorStage}
-          errorMessage={state.errorMessage}
-          formError={state.fieldErrors['_form']}
-          clearCvvOnError={state.clearCvvOnError}
-          requestId={state.errorRequestId}
-        />
+        <>
+          <StepPagamento
+            summary={{
+              clientName: (state.client as RegisterClientInput).name ?? '',
+              pets: state.pets.map((p) => ({
+                name: p.name,
+                species: p.species,
+              })),
+              pricePerPetCents: publicSite.price.perPetCents,
+              totalCents: state.pets.length * publicSite.price.perPetCents,
+            }}
+            onSubmit={handleFinalizeCheckout}
+            onBack={handleBack}
+            onRetry={
+              // Task 11.0 — when the failure was an OTP token rejection,
+              // a plain retry would hit the same 403. Hide "Tentar
+              // novamente" and surface the dedicated "Voltar ao contrato"
+              // button below instead.
+              state.errorRetryable && state.checkoutOtpErrorCode === null
+                ? handleRetryCheckout
+                : undefined
+            }
+            mode={state.paymentMode}
+            currentStage={state.currentStage}
+            errorStage={state.errorStage}
+            errorMessage={state.errorMessage}
+            formError={state.fieldErrors['_form']}
+            clearCvvOnError={state.clearCvvOnError}
+            requestId={state.errorRequestId}
+          />
+
+          {/* Task 11.0 — OTP remediation. Rendered only when the backend
+              rejected the contract registration because the OTP token
+              expired or was invalid. The button takes the user back to
+              step 2 and clears the stale token so the next attempt starts
+              a fresh OTP cycle. */}
+          {state.checkoutOtpErrorCode !== null ? (
+            <div
+              role="group"
+              aria-label="Refazer verificação por código"
+              className="rounded-lg border border-border bg-muted/30 p-4 space-y-2"
+            >
+              <p className="text-sm text-foreground">
+                Sua verificação expirou. Volte ao passo anterior para
+                refazer o código.
+              </p>
+              <button
+                type="button"
+                onClick={handleBackToContract}
+                className="inline-flex items-center justify-center rounded-md bg-[#4E8C75] px-4 py-2 text-sm font-medium text-white hover:bg-[#3d7260]"
+              >
+                Voltar ao contrato
+              </button>
+            </div>
+          ) : null}
+        </>
       )}
     </main>
   );
