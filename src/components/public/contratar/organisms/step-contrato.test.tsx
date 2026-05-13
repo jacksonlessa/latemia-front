@@ -45,4 +45,19 @@ describe('StepContrato', () => {
     fireEvent.click(voltarButton);
     expect(onBack).toHaveBeenCalledOnce();
   });
+
+  // Task 9.0 — `otpEnabled` is declared and propagated but not yet consumed.
+  // These tests pin the current behaviour so Task 10.0 can detect intentional
+  // changes when the overlay is wired in.
+  it('should render unchanged when otpEnabled is omitted (default false)', () => {
+    render(<StepContrato {...baseProps} accepted={true} />);
+    expect(screen.getByRole('button', { name: 'Avançar' })).not.toBeDisabled();
+    expect(screen.getByRole('checkbox')).toBeInTheDocument();
+  });
+
+  it('should accept otpEnabled prop without altering current rendering (Task 10.0 wires the overlay)', () => {
+    render(<StepContrato {...baseProps} accepted={true} otpEnabled={true} />);
+    expect(screen.getByRole('button', { name: 'Avançar' })).not.toBeDisabled();
+    expect(screen.getByRole('checkbox')).toBeInTheDocument();
+  });
 });

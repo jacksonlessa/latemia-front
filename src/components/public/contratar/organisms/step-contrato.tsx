@@ -8,6 +8,15 @@ export interface StepContratoProps {
   onAcceptedChange: (value: boolean) => void;
   onNext: () => void;
   onBack: () => void;
+  /**
+   * When `true`, the contract acceptance step will require an OTP verification
+   * flow before allowing the user to advance to payment (overlay rendered by
+   * Task 10.0). Defaults to `false` to preserve the current funnel behaviour
+   * until the backend flag is enabled. This prop is intentionally declared and
+   * propagated in Task 9.0 but not yet consumed — Task 10.0 implements the
+   * overlay flow.
+   */
+  otpEnabled?: boolean;
 }
 
 export function StepContrato({
@@ -15,7 +24,12 @@ export function StepContrato({
   onAcceptedChange,
   onNext,
   onBack,
+  otpEnabled: _otpEnabled = false,
 }: StepContratoProps) {
+  // `otpEnabled` is declared and propagated by Task 9.0 — the OTP overlay
+  // implementation lands in Task 10.0. Renaming to `_otpEnabled` documents the
+  // deliberate non-use without triggering the unused-variable lint rule.
+  void _otpEnabled;
   const checkboxId = 'contrato-aceite';
 
   return (

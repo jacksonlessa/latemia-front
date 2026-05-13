@@ -14,6 +14,7 @@ import { PetEntity } from '@/domain/pet/pet.entity';
 import { ValidationError } from '@/lib/validation-error';
 import { validateClientUseCase } from '@/domain/client/validate-client.use-case';
 import { ValidateCheckoutDraftUseCase } from '@/domain/checkout/validate-checkout-draft.use-case';
+import { getPublicConfig } from '@/domain/public-config/get-public-config.use-case';
 import {
   FinalizeCheckoutUseCase,
   CheckoutError,
@@ -149,6 +150,28 @@ function setNestedValue<T extends Record<string, unknown>>(
 export function ContratarPageClient() {
   const [state, setState] = useState<ContratarState>(INITIAL_STATE);
   const hydratedRef = useRef(false);
+
+  // -------------------------------------------------------------------------
+  // 9.0 Public config — OTP feature flag
+  //
+  // Fetched once on mount via `getPublicConfig()`. Stored as `boolean | null`
+  // (`null` during the initial fetch) so SSR/initial render is deterministic
+  // and we avoid hydration mismatches. The use-case never rejects; on any
+  // error path it resolves to `{ otpContractEnabled: false }`.
+  // -------------------------------------------------------------------------
+  const [otpContractEnabled, setOtpContractEnabled] = useState<boolean | null>(
+    null,
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    getPublicConfig().then((cfg) => {
+      if (!cancelled) setOtpContractEnabled(cfg.otpContractEnabled);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // -------------------------------------------------------------------------
   // 5.1 Hydrate state from sessionStorage on mount (SSR-safe via useEffect)
@@ -574,6 +597,7 @@ export function ContratarPageClient() {
           }
           onNext={handleNext}
           onBack={handleBack}
+          otpEnabled={otpContractEnabled ?? false}
         />
       )}
 

@@ -66,3 +66,19 @@ export const Aceito: Story = {
     onBack: noop,
   },
 };
+
+/**
+ * Flag de OTP habilitada — Task 9.0 apenas declara e propaga a prop;
+ * o overlay efetivo é implementado na Task 10.0. Até lá, o comportamento
+ * visual permanece idêntico ao estado `Aceito`.
+ */
+export const OtpEnabled: Story = {
+  name: 'OTP habilitado (Task 10.0)',
+  args: {
+    accepted: true,
+    onAcceptedChange: noop,
+    onNext: noop,
+    onBack: noop,
+    otpEnabled: true,
+  },
+};

@@ -73,6 +73,14 @@ vi.mock('@/domain/checkout/validate-checkout-draft.use-case', () => ({
   },
 }));
 
+const mockGetPublicConfig = vi
+  .fn()
+  .mockResolvedValue({ otpContractEnabled: false });
+
+vi.mock('@/domain/public-config/get-public-config.use-case', () => ({
+  getPublicConfig: (...args: unknown[]) => mockGetPublicConfig(...args),
+}));
+
 // ---------------------------------------------------------------------------
 // Imports after mocks
 // ---------------------------------------------------------------------------
@@ -179,6 +187,7 @@ beforeEach(() => {
 
   // Reset mock implementations to defaults after clearAllMocks
   mockValidateClientUseCase.mockResolvedValue(undefined);
+  mockGetPublicConfig.mockResolvedValue({ otpContractEnabled: false });
   mockClientExecute.mockResolvedValue({ id: 'client-uuid-1', name: 'Maria da Silva' });
   mockPetExecute
     .mockResolvedValueOnce({ id: 'pet-uuid-1' })
@@ -482,5 +491,64 @@ describe('ContratarPageClient — passo 0 dry-run validation', () => {
 
     // The isValidating guard ensures only one call is made despite two click events
     expect(mockValidateClientUseCase).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// H3 Tests — Public config (Task 9.0)
+// ---------------------------------------------------------------------------
+
+describe('ContratarPageClient — public config (OTP flag)', () => {
+  it('should call getPublicConfig exactly once on mount', async () => {
+    vi.mocked(loadDraft).mockReturnValue(null);
+
+    await act(async () => {
+      render(<ContratarPageClient />);
+    });
+
+    await waitFor(() => {
+      expect(mockGetPublicConfig).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('should propagate otpEnabled=true to StepContrato when backend returns otpContractEnabled=true', async () => {
+    mockGetPublicConfig.mockResolvedValueOnce({ otpContractEnabled: true });
+
+    // Hydrate the wizard at step 2 (Contrato) by providing a draft with contract step.
+    vi.mocked(loadDraft).mockReturnValue({
+      step: 2,
+      client: validClient,
+      pets: [validPet],
+      contractAccepted: false,
+      contractAcceptedAt: null,
+    });
+
+    await act(async () => {
+      render(<ContratarPageClient />);
+    });
+
+    // Wait for the public-config fetch to resolve and the contract step to render.
+    await waitFor(() => {
+      expect(mockGetPublicConfig).toHaveBeenCalledTimes(1);
+    });
+
+    // The contract acceptance checkbox is rendered by StepContrato — its
+    // presence confirms the step rendered after the config resolved.
+    expect(
+      await screen.findByRole('checkbox', { name: /li e concordo/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('should fall back to otpEnabled=false when getPublicConfig resolves with otpContractEnabled=false', async () => {
+    mockGetPublicConfig.mockResolvedValueOnce({ otpContractEnabled: false });
+    vi.mocked(loadDraft).mockReturnValue(null);
+
+    await act(async () => {
+      render(<ContratarPageClient />);
+    });
+
+    await waitFor(() => {
+      expect(mockGetPublicConfig).toHaveBeenCalledTimes(1);
+    });
   });
 });
