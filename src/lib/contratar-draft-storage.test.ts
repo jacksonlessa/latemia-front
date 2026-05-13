@@ -136,6 +136,68 @@ describe('contratar-draft-storage', () => {
     });
   });
 
+  describe('OTP fields (Task 10.0)', () => {
+    it('should persist contractAttemptId when present in the draft', () => {
+      const draft = makeDraft({
+        contractAttemptId: '11111111-2222-3333-4444-555555555555',
+      });
+      saveDraft(draft);
+      const loaded = loadDraft();
+      expect(loaded?.contractAttemptId).toBe(
+        '11111111-2222-3333-4444-555555555555',
+      );
+    });
+
+    it('should persist otpVerificationToken when present in the draft', () => {
+      const draft = makeDraft({ otpVerificationToken: 'tok_opaque_xyz' });
+      saveDraft(draft);
+      const loaded = loadDraft();
+      expect(loaded?.otpVerificationToken).toBe('tok_opaque_xyz');
+    });
+
+    it('should round-trip both OTP fields together', () => {
+      const draft = makeDraft({
+        contractAttemptId: '11111111-2222-3333-4444-555555555555',
+        otpVerificationToken: 'tok_opaque_xyz',
+      });
+      saveDraft(draft);
+      const loaded = loadDraft();
+      expect(loaded?.contractAttemptId).toBe(
+        '11111111-2222-3333-4444-555555555555',
+      );
+      expect(loaded?.otpVerificationToken).toBe('tok_opaque_xyz');
+    });
+
+    it('should tolerate legacy drafts (v2 without OTP fields) as undefined', () => {
+      // Simulate a draft saved before Task 10.0 — no OTP fields present.
+      const legacy: Record<string, unknown> = {
+        version: 2,
+        step: 2,
+        client: { name: 'Legacy User' },
+        pets: [],
+        contractAccepted: true,
+        contractAcceptedAt: '2026-04-18T12:00:00.000Z',
+      };
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(legacy));
+      const loaded = loadDraft();
+      expect(loaded).not.toBeNull();
+      expect(loaded?.contractAttemptId).toBeUndefined();
+      expect(loaded?.otpVerificationToken).toBeUndefined();
+    });
+
+    it('should not include OTP fields in serialized payload when not provided', () => {
+      const draft = makeDraft();
+      saveDraft(draft);
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      expect(raw).not.toBeNull();
+      const parsed = JSON.parse(raw!) as Record<string, unknown>;
+      // The JSON.stringify call drops `undefined` keys — so the serialized
+      // form does NOT carry the OTP keys at all.
+      expect('contractAttemptId' in parsed).toBe(false);
+      expect('otpVerificationToken' in parsed).toBe(false);
+    });
+  });
+
   describe('clearDraft', () => {
     it('should remove the draft key from sessionStorage when called after saving', () => {
       saveDraft(makeDraft());

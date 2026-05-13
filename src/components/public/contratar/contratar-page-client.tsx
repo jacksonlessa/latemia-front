@@ -26,6 +26,7 @@ import { navigateToFieldStep } from '@/domain/client/field-to-step';
 import { CONTRACT_VERSION } from '@/content/contrato';
 import { publicSite } from '@/config/public-site';
 import { loadDraft, saveDraft, clearDraft } from '@/lib/contratar-draft-storage';
+import { digitsToE164 } from '@/lib/to-e164';
 import type {
   AddressData,
   RegisterClientInput,
@@ -83,6 +84,19 @@ interface ContratarState {
    * `null` para a API (PRD seo-analytics-lgpd-utm §1.7 — task 7.0).
    */
   touchpoints?: { first?: Touchpoint; last?: Touchpoint };
+  /**
+   * UUID v4 de correlação OTP gerado pelo `StepContrato` quando o cliente
+   * clica em "Avançar" no passo 2 e a flag `otp_contract_enabled` está
+   * ativa. Persistido no draft para sobreviver a refresh. Não-PII.
+   */
+  contractAttemptId: string | null;
+  /**
+   * Token opaco devolvido pelo `POST /v1/otp/contract/verify` quando o
+   * cliente digita o código correto. Consumido por
+   * `POST /v1/register/contract` na etapa 7 do `FinalizeCheckoutUseCase`.
+   * Não-PII.
+   */
+  otpVerificationToken: string | null;
 }
 
 const INITIAL_STATE: ContratarState = {
@@ -105,6 +119,8 @@ const INITIAL_STATE: ContratarState = {
   clearCvvOnError: false,
   checkoutResume: {},
   touchpoints: undefined,
+  contractAttemptId: null,
+  otpVerificationToken: null,
 };
 
 const em = (word: string) => (
@@ -186,6 +202,9 @@ export function ContratarPageClient() {
         pets: draft.pets,
         contractAccepted: draft.contractAccepted,
         contractAcceptedAt: draft.contractAcceptedAt,
+        // OTP fields are optional in legacy drafts — default to null.
+        contractAttemptId: draft.contractAttemptId ?? null,
+        otpVerificationToken: draft.otpVerificationToken ?? null,
       }));
     }
     hydratedRef.current = true;
@@ -225,8 +244,20 @@ export function ContratarPageClient() {
       pets: state.pets,
       contractAccepted: state.contractAccepted,
       contractAcceptedAt: state.contractAcceptedAt,
+      // Persist the OTP fields only when they have a value — `undefined`
+      // keeps the serialized form lean and the load path defaults to null.
+      contractAttemptId: state.contractAttemptId ?? undefined,
+      otpVerificationToken: state.otpVerificationToken ?? undefined,
     });
-  }, [state.step, state.client, state.pets, state.contractAccepted, state.contractAcceptedAt]);
+  }, [
+    state.step,
+    state.client,
+    state.pets,
+    state.contractAccepted,
+    state.contractAcceptedAt,
+    state.contractAttemptId,
+    state.otpVerificationToken,
+  ]);
 
   // -------------------------------------------------------------------------
   // setStep — helper to update only the step field in state
@@ -251,6 +282,24 @@ export function ContratarPageClient() {
       ...prev,
       touchpoints: hasData ? bundle : undefined,
     }));
+  }
+
+  // -------------------------------------------------------------------------
+  // Task 10.0 — OTP handlers
+  //
+  // `StepContrato` owns the local OTP state machine; the parent only
+  // persists the two opaque tokens so the wizard can resume on refresh
+  // and so the verification token can flow into `FinalizeCheckoutUseCase`
+  // later.
+  // -------------------------------------------------------------------------
+  function handleContractAttemptIdAssigned(id: string): void {
+    setState((prev) =>
+      prev.contractAttemptId === id ? prev : { ...prev, contractAttemptId: id },
+    );
+  }
+
+  function handleOtpVerified(verificationToken: string): void {
+    setState((prev) => ({ ...prev, otpVerificationToken: verificationToken }));
   }
 
   // -------------------------------------------------------------------------
@@ -598,6 +647,13 @@ export function ContratarPageClient() {
           onNext={handleNext}
           onBack={handleBack}
           otpEnabled={otpContractEnabled ?? false}
+          // Phone digits collected at step 0 are stored as the BR mask
+          // (`(11) 98765-4321`). Convert to E.164 here — the helper is
+          // idempotent and tolerant of already-normalised values.
+          phone={digitsToE164((state.client as RegisterClientInput).phone ?? '')}
+          contractAttemptId={state.contractAttemptId}
+          onContractAttemptIdAssigned={handleContractAttemptIdAssigned}
+          onVerified={handleOtpVerified}
         />
       )}
 

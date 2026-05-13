@@ -2,7 +2,9 @@
  * Utilitário para persistência do rascunho do wizard de contratação em sessionStorage.
  *
  * LGPD: este módulo apenas grava localmente na sessão do navegador; nenhum dado
- * pessoal é logado ou transmitido para serviços externos.
+ * pessoal é logado ou transmitido para serviços externos. Os dois campos OTP
+ * (`contractAttemptId` e `otpVerificationToken`) são opacos — não carregam PII
+ * — então a sua persistência em sessionStorage não amplia o escopo de coleta.
  *
  * SSR-safe: todas as funções verificam `typeof window === 'undefined'` antes de
  * acessar o sessionStorage, garantindo compatibilidade com o runtime do servidor
@@ -11,7 +13,9 @@
  * Versionamento: o draft persistido carrega `version: 2`. Drafts em formato
  * antigo (v1) são descartados silenciosamente em `loadDraft`. A serialização
  * converte `birthDate` (Date) em string ISO; a desserialização rehidrata para
- * `Date`.
+ * `Date`. Os campos `contractAttemptId` e `otpVerificationToken` são opcionais
+ * — drafts gravados antes da Task 10.0 simplesmente não os trazem e são
+ * tratados como `null`/`undefined` pelos consumidores.
  */
 
 import type { RegisterClientInput } from '@/lib/types/client';
@@ -27,6 +31,19 @@ export interface ContratarDraft {
   pets: Array<RegisterPetInput & { _id: string }>;
   contractAccepted: boolean;
   contractAcceptedAt: string | null;
+  /**
+   * UUID v4 de correlação gerado pelo FE no clique de "Avançar" do passo 2
+   * (quando `otp_contract_enabled === true`). Permite retomar o ciclo OTP
+   * caso o usuário recarregue a página antes de completar a verificação.
+   * Opaco (não-PII).
+   */
+  contractAttemptId?: string;
+  /**
+   * Token opaco emitido por `POST /v1/otp/contract/verify` após o cliente
+   * digitar o código correto. Vive 5 min server-side; é consumido por
+   * `POST /v1/register/contract`. Não-PII.
+   */
+  otpVerificationToken?: string;
 }
 
 /** Forma serializada (em sessionStorage). `birthDate` é string ISO. */
@@ -42,12 +59,19 @@ interface SerializedDraft {
   pets: SerializedPet[];
   contractAccepted: boolean;
   contractAcceptedAt: string | null;
+  /** Opcional para tolerar drafts legados (gravados antes da Task 10.0). */
+  contractAttemptId?: string;
+  /** Opcional para tolerar drafts legados (gravados antes da Task 10.0). */
+  otpVerificationToken?: string;
 }
 
 /**
  * Lê o rascunho do sessionStorage.
  * Retorna `null` em ambiente SSR, se a chave não existir, se o JSON for inválido
  * ou se a versão for diferente da atual (descarte silencioso de drafts v1).
+ *
+ * Os campos `contractAttemptId` / `otpVerificationToken` retornam `undefined`
+ * quando ausentes — comportamento idêntico ao do draft legado.
  */
 export function loadDraft(): ContratarDraft | null {
   if (typeof window === 'undefined') return null;
@@ -65,6 +89,8 @@ export function loadDraft(): ContratarDraft | null {
       })),
       contractAccepted: parsed.contractAccepted,
       contractAcceptedAt: parsed.contractAcceptedAt,
+      contractAttemptId: parsed.contractAttemptId,
+      otpVerificationToken: parsed.otpVerificationToken,
     };
   } catch {
     return null;
@@ -87,6 +113,8 @@ export function saveDraft(draft: ContratarDraft): void {
     })),
     contractAccepted: draft.contractAccepted,
     contractAcceptedAt: draft.contractAcceptedAt,
+    contractAttemptId: draft.contractAttemptId,
+    otpVerificationToken: draft.otpVerificationToken,
   };
   sessionStorage.setItem(KEY, JSON.stringify(serialized));
 }
