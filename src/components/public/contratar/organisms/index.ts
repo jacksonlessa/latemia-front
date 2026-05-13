@@ -25,3 +25,9 @@ export {
   ANTI_FLICKER_MS,
 } from './checkout-progress-panel';
 export type { CheckoutProgressPanelProps } from './checkout-progress-panel';
+
+export { ContractOtpPanel } from './contract-otp-panel';
+export type {
+  ContractOtpPanelProps,
+  ContractOtpPanelHandle,
+} from './contract-otp-panel';
