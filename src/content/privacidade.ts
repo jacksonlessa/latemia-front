@@ -21,12 +21,12 @@ export const PRIVACY_POLICY_VERSION = 'v1.0';
 /**
  * Data de entrada em vigor desta versão (ISO YYYY-MM-DD).
  */
-export const PRIVACY_POLICY_EFFECTIVE_DATE = '2026-05-13';
+export const PRIVACY_POLICY_EFFECTIVE_DATE = '2026-05-14';
 
 export const POLITICA_PRIVACIDADE_TEXTO = `# POLÍTICA DE PRIVACIDADE
 ## Dr. Cleitinho — Plano Emergencial Veterinário
 
-**Versão do documento:** v1.0 — 2026-05-13
+**Versão do documento:** v1.0 — 14/05/2026
 
 > **Aviso a VOCÊ:** esta Política de Privacidade explica **como a Dr. Cleitinho trata seus dados pessoais** no âmbito do Plano Emergencial Veterinário Dr. Cleitinho. Ela é **parte integrante** dos Termos de Uso e Contrato de Prestação de Serviços e deve ser lida em conjunto com eles. Em caso de divergência, **prevalecem os Termos para questões contratuais** e **esta Política para questões de tratamento de dados pessoais**.
 
@@ -300,6 +300,8 @@ Para dirimir questões oriundas desta Política, aplica-se a mesma cláusula de 
 
 ## 16. Contato
 
-- **Encarregado de Proteção de Dados (DPO):** **dpo@drcleitinho.com.br**
+- **Encarregado de Proteção de Dados (DPO):** **dpo@drcleitinho.com.br** — exercício dos direitos do art. 18 da LGPD, dúvidas sobre esta Política, comunicação de incidentes e denúncia de uso indevido de dados.
+- **Atendimento ao Consumidor (SAC):** **sac@drcleitinho.com.br** — direito de arrependimento (Cláusula 8 dos TERMOS), cancelamento, reclamações e suporte ao uso do plano.
+- **Atendimento geral:** **contato@drcleitinho.com.br** — dúvidas comerciais, parcerias e demais assuntos não relacionados aos canais acima.
 - **Site:** site oficial da Dr. Cleitinho
 `;
