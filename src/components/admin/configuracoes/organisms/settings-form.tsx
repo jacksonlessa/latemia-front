@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -52,6 +53,9 @@ export function SettingsForm({ initialValues, saveAction, fetchError }: Settings
   const [paymentProvider, setPaymentProvider] = useState<string>(
     initialValues?.payment_provider ?? "",
   );
+  const [subscriptionPlanId, setSubscriptionPlanId] = useState<string>(
+    initialValues?.subscription_plan_id ?? "",
+  );
   const [subscriptionPlanPriceCents, setSubscriptionPlanPriceCents] = useState<number>(
     parseInt(initialValues?.subscription_plan_price_cents ?? "0", 10) || 0,
   );
@@ -62,6 +66,7 @@ export function SettingsForm({ initialValues, saveAction, fetchError }: Settings
   const savedPriceCents = parseInt(savedValues?.subscription_plan_price_cents ?? "0", 10) || 0;
   const isDirty =
     paymentProvider !== (savedValues?.payment_provider ?? "") ||
+    subscriptionPlanId !== (savedValues?.subscription_plan_id ?? "") ||
     subscriptionPlanPriceCents !== savedPriceCents;
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -71,6 +76,7 @@ export function SettingsForm({ initialValues, saveAction, fetchError }: Settings
 
     const payload: UpdateSystemSettingsInput = {};
     if (paymentProvider) payload.payment_provider = paymentProvider;
+    if (subscriptionPlanId) payload.subscription_plan_id = subscriptionPlanId;
     if (subscriptionPlanPriceCents > 0) payload.subscription_plan_price_cents = subscriptionPlanPriceCents;
 
     startTransition(async () => {
@@ -143,6 +149,32 @@ export function SettingsForm({ initialValues, saveAction, fetchError }: Settings
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="subscription_plan_id">ID do Plano de Assinatura</Label>
+        <Input
+          id="subscription_plan_id"
+          type="text"
+          value={subscriptionPlanId}
+          onChange={(e) => {
+            setSubscriptionPlanId(e.target.value);
+            setSuccessMessage(null);
+          }}
+          placeholder="Ex: plan_abc123"
+          disabled={isPending}
+          aria-describedby="subscription_plan_id_help"
+        />
+        <p id="subscription_plan_id_help" className="text-xs text-muted-foreground">
+          Copie o ID do plano shell (com item placeholder de preço 0) criado em{" "}
+          <a
+            href="/admin/configuracoes/planos-assinatura"
+            className="text-[#4E8C75] underline underline-offset-4 hover:opacity-80"
+          >
+            Planos de Assinatura
+          </a>
+          .
+        </p>
       </div>
 
       <div className="space-y-2">

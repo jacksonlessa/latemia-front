@@ -284,6 +284,108 @@ describe('FinalizeCheckoutUseCase — happy paths', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Task 11.0 — OTP evidence fields propagation to RegisterContractUseCase
+// ---------------------------------------------------------------------------
+
+describe('FinalizeCheckoutUseCase — OTP evidence propagation', () => {
+  function setupHappyPathFetch(): void {
+    setupFetchMock({
+      'api.pagar.me/core/v5/tokens': () => jsonResponse({ id: 'token_abc' }),
+      '/v1/checkout/customer': () =>
+        jsonResponse(
+          { pagarme_customer_id: 'cus_1', pagarme_card_id: 'card_1' },
+          201,
+        ),
+      '/v1/checkout/subscription': () =>
+        jsonResponse(
+          {
+            pagarme_subscription_id: 'sub_1',
+            items: [
+              { pet_id: 'pet-uuid-1', pagarme_subscription_item_id: 'si_1' },
+            ],
+          },
+          201,
+        ),
+    });
+  }
+
+  it('should forward verificationToken, contractAttemptId and contractTextHash to RegisterContractUseCase', async () => {
+    setupHappyPathFetch();
+    const contractMock = {
+      execute: vi
+        .fn()
+        .mockResolvedValue({ contract_id: 'c1', plan_ids: ['p1'] }),
+    };
+    const useCase = makeUseCase({ contract: contractMock });
+
+    await useCase.execute(
+      buildInput(1, {
+        verificationToken: 'opaque-token-1',
+        contractAttemptId: 'attempt-uuid-1',
+        contractTextHash: 'a'.repeat(64),
+      }),
+    );
+
+    expect(contractMock.execute).toHaveBeenCalledTimes(1);
+    const callArg = contractMock.execute.mock.calls[0][0] as {
+      verificationToken?: string;
+      contractAttemptId?: string;
+      contractTextHash?: string;
+    };
+    expect(callArg.verificationToken).toBe('opaque-token-1');
+    expect(callArg.contractAttemptId).toBe('attempt-uuid-1');
+    expect(callArg.contractTextHash).toBe('a'.repeat(64));
+  });
+
+  it('should pass verificationToken=undefined to RegisterContractUseCase when not provided', async () => {
+    setupHappyPathFetch();
+    const contractMock = {
+      execute: vi
+        .fn()
+        .mockResolvedValue({ contract_id: 'c1', plan_ids: ['p1'] }),
+    };
+    const useCase = makeUseCase({ contract: contractMock });
+
+    await useCase.execute(buildInput(1));
+
+    expect(contractMock.execute).toHaveBeenCalledTimes(1);
+    const callArg = contractMock.execute.mock.calls[0][0] as {
+      verificationToken?: string;
+      contractAttemptId?: string;
+      contractTextHash?: string;
+    };
+    expect(callArg.verificationToken).toBeUndefined();
+    expect(callArg.contractAttemptId).toBeUndefined();
+    expect(callArg.contractTextHash).toBeUndefined();
+  });
+
+  it('should forward only the OTP fields that are present (partial state)', async () => {
+    setupHappyPathFetch();
+    const contractMock = {
+      execute: vi
+        .fn()
+        .mockResolvedValue({ contract_id: 'c1', plan_ids: ['p1'] }),
+    };
+    const useCase = makeUseCase({ contract: contractMock });
+
+    await useCase.execute(
+      buildInput(1, {
+        contractTextHash: 'b'.repeat(64),
+      }),
+    );
+
+    const callArg = contractMock.execute.mock.calls[0][0] as {
+      verificationToken?: string;
+      contractAttemptId?: string;
+      contractTextHash?: string;
+    };
+    expect(callArg.verificationToken).toBeUndefined();
+    expect(callArg.contractAttemptId).toBeUndefined();
+    expect(callArg.contractTextHash).toBe('b'.repeat(64));
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Errors per stage
 // ---------------------------------------------------------------------------
 
@@ -454,5 +556,66 @@ describe('FinalizeCheckoutUseCase — rollback', () => {
     await Promise.resolve();
     await Promise.resolve();
     expect(calls.filter((c) => c.url.includes('/checkout/rollback')).length).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// requestId propagation (M1)
+// ---------------------------------------------------------------------------
+
+describe('FinalizeCheckoutUseCase — requestId propagation', () => {
+  it('should generate distinct requestIds for two consecutive execute() calls', async () => {
+    setupFetchMock({
+      'api.pagar.me/core/v5/tokens': () => jsonResponse({ id: 'token_abc' }),
+      '/v1/checkout/customer': () =>
+        jsonResponse({ pagarme_customer_id: 'cus_1', pagarme_card_id: 'card_1' }, 201),
+      '/v1/checkout/subscription': () =>
+        jsonResponse({ code: 'PROVIDER_UPSTREAM' }, 503),
+    });
+
+    const useCase = makeUseCase();
+    const err1 = await useCase.execute(buildInput(1)).catch((e) => e) as CheckoutError;
+    const err2 = await useCase.execute(buildInput(1)).catch((e) => e) as CheckoutError;
+
+    expect(err1).toBeInstanceOf(CheckoutError);
+    expect(err2).toBeInstanceOf(CheckoutError);
+    expect(err1.requestId).toBeTruthy();
+    expect(err2.requestId).toBeTruthy();
+    expect(err1.requestId).not.toBe(err2.requestId);
+  });
+
+  it('should carry requestId in CheckoutError thrown from stage 5 (http 5xx)', async () => {
+    setupFetchMock({
+      'api.pagar.me/core/v5/tokens': () => jsonResponse({ id: 'token_abc' }),
+      '/v1/checkout/customer': () =>
+        jsonResponse({ code: 'PROVIDER_UPSTREAM' }, 503),
+    });
+
+    const useCase = makeUseCase();
+    const err = await useCase.execute(buildInput(1)).catch((e) => e) as CheckoutError;
+
+    expect(err).toBeInstanceOf(CheckoutError);
+    expect(err.stage).toBe(5);
+    expect(typeof err.requestId).toBe('string');
+    expect(err.requestId!.length).toBeGreaterThan(0);
+  });
+
+  it('should carry requestId in CheckoutError thrown from network error (NETWORK_ERROR)', async () => {
+    // Simulate a network failure on /checkout/customer
+    const fetchMock = vi.fn(async (url: string) => {
+      if (String(url).includes('api.pagar.me')) {
+        return jsonResponse({ id: 'token_abc' });
+      }
+      throw new TypeError('Failed to fetch');
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const useCase = makeUseCase();
+    const err = await useCase.execute(buildInput(1)).catch((e) => e) as CheckoutError;
+
+    expect(err).toBeInstanceOf(CheckoutError);
+    expect(err.code).toBe('NETWORK_ERROR');
+    expect(typeof err.requestId).toBe('string');
+    expect(err.requestId!.length).toBeGreaterThan(0);
   });
 });

@@ -154,6 +154,149 @@ describe('RegisterContractUseCase.execute — success', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Task 11.0 — OTP evidence fields propagation
+// ---------------------------------------------------------------------------
+
+describe('RegisterContractUseCase.execute — OTP evidence fields', () => {
+  it('should include verification_token in body when verificationToken is provided', async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse(successResponse, 201));
+
+    const useCase = new RegisterContractUseCase();
+    await useCase.execute(
+      validInput({ verificationToken: 'opaque-token-1' }),
+    );
+
+    const [, init] = mockFetch.mock.calls[0];
+    const body = JSON.parse((init as RequestInit).body as string);
+    expect(body.verification_token).toBe('opaque-token-1');
+  });
+
+  it('should include contract_attempt_id in body when contractAttemptId is provided', async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse(successResponse, 201));
+
+    const useCase = new RegisterContractUseCase();
+    await useCase.execute(
+      validInput({ contractAttemptId: 'attempt-uuid-1' }),
+    );
+
+    const [, init] = mockFetch.mock.calls[0];
+    const body = JSON.parse((init as RequestInit).body as string);
+    expect(body.contract_attempt_id).toBe('attempt-uuid-1');
+  });
+
+  it('should include contract_text_hash in body when contractTextHash is provided', async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse(successResponse, 201));
+
+    const useCase = new RegisterContractUseCase();
+    await useCase.execute(
+      validInput({
+        contractTextHash:
+          'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad',
+      }),
+    );
+
+    const [, init] = mockFetch.mock.calls[0];
+    const body = JSON.parse((init as RequestInit).body as string);
+    expect(body.contract_text_hash).toBe(
+      'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad',
+    );
+  });
+
+  it('should omit all three OTP fields when none are provided', async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse(successResponse, 201));
+
+    const useCase = new RegisterContractUseCase();
+    await useCase.execute(validInput());
+
+    const [, init] = mockFetch.mock.calls[0];
+    const body = JSON.parse((init as RequestInit).body as string);
+    expect(body.verification_token).toBeUndefined();
+    expect(body.contract_attempt_id).toBeUndefined();
+    expect(body.contract_text_hash).toBeUndefined();
+  });
+
+  it('should send all three OTP fields together when provided', async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse(successResponse, 201));
+
+    const useCase = new RegisterContractUseCase();
+    await useCase.execute(
+      validInput({
+        verificationToken: 'opaque-token-1',
+        contractAttemptId: 'attempt-uuid-1',
+        contractTextHash: 'a'.repeat(64),
+      }),
+    );
+
+    const [, init] = mockFetch.mock.calls[0];
+    const body = JSON.parse((init as RequestInit).body as string);
+    expect(body.verification_token).toBe('opaque-token-1');
+    expect(body.contract_attempt_id).toBe('attempt-uuid-1');
+    expect(body.contract_text_hash).toBe('a'.repeat(64));
+  });
+
+  it('should omit verification_token when verificationToken is an empty string', async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(makeFetchResponse(successResponse, 201));
+
+    const useCase = new RegisterContractUseCase();
+    await useCase.execute(validInput({ verificationToken: '' }));
+
+    const [, init] = mockFetch.mock.calls[0];
+    const body = JSON.parse((init as RequestInit).body as string);
+    expect(body.verification_token).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Task 11.0 — OTP 403 error mapping
+// ---------------------------------------------------------------------------
+
+describe('RegisterContractUseCase.execute — OTP verification errors', () => {
+  it('should map 403 OTP_VERIFICATION_REQUIRED to user-facing OTP message', async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(
+      makeFetchResponse({ code: 'OTP_VERIFICATION_REQUIRED' }, 403),
+    );
+
+    const useCase = new RegisterContractUseCase();
+
+    try {
+      await useCase.execute(validInput());
+      throw new Error('expected ValidationError');
+    } catch (e) {
+      expect(e).toBeInstanceOf(ValidationError);
+      const ve = e as ValidationError;
+      expect(ve.fieldErrors._form).toContain('Sua verificação expirou');
+      expect(ve.fieldErrors._code).toBe('OTP_VERIFICATION_REQUIRED');
+    }
+  });
+
+  it('should map 403 OTP_VERIFICATION_TOKEN_INVALID to the same user-facing OTP message', async () => {
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce(
+      makeFetchResponse({ code: 'OTP_VERIFICATION_TOKEN_INVALID' }, 403),
+    );
+
+    const useCase = new RegisterContractUseCase();
+
+    try {
+      await useCase.execute(validInput());
+      throw new Error('expected ValidationError');
+    } catch (e) {
+      expect(e).toBeInstanceOf(ValidationError);
+      const ve = e as ValidationError;
+      expect(ve.fieldErrors._form).toContain('Sua verificação expirou');
+      expect(ve.fieldErrors._code).toBe('OTP_VERIFICATION_TOKEN_INVALID');
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Network failure
 // ---------------------------------------------------------------------------
 

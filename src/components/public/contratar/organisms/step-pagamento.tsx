@@ -32,6 +32,11 @@ export interface StepPagamentoProps {
   formError?: string;
   /** Quando true, força reset de CVV no CardForm (RF12). */
   clearCvvOnError?: boolean;
+  /**
+   * ID de correlação da tentativa — exibido na tela de erro para que o
+   * cliente possa reportar ao suporte. Propagado do `CheckoutError.requestId`.
+   */
+  requestId?: string;
 }
 
 export function StepPagamento({
@@ -45,6 +50,7 @@ export function StepPagamento({
   errorMessage,
   formError,
   clearCvvOnError,
+  requestId,
 }: StepPagamentoProps) {
   const [cardValue, setCardValue] = useState<CardFormValue>(
     EMPTY_CARD_FORM_VALUE,
@@ -157,6 +163,7 @@ export function StepPagamento({
           errorStage={mode === 'error' ? errorStage : undefined}
           errorMessage={mode === 'error' ? errorMessage : undefined}
           onRetry={mode === 'error' ? onRetry : undefined}
+          requestId={mode === 'error' ? requestId : undefined}
         />
       )}
     </div>

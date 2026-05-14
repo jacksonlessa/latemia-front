@@ -97,10 +97,10 @@ describe("RegisterClientUseCase.execute — success", () => {
     await useCase.execute(validInput());
 
     const [, init] = mockFetch.mock.calls[0];
+    const headers = (init as RequestInit).headers as Headers;
     expect((init as RequestInit).method).toBe("POST");
-    expect((init as RequestInit).headers).toMatchObject({
-      "Content-Type": "application/json",
-    });
+    // httpFetch wraps headers in a Headers instance — assert via .get()
+    expect(headers.get("Content-Type")).toBe("application/json");
   });
 
   it("should return the client detail when API responds with 201", async () => {
