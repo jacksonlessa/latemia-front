@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { MoneyInput } from "@/components/admin/planos-assinatura/atoms/money-input/MoneyInput";
 import type { SystemSettingsDto, UpdateSystemSettingsInput } from "@/lib/types/system-settings";
 
@@ -39,6 +40,8 @@ function getFeedbackMessage(code: string): string {
       return "ID do plano de assinatura inválido. Verifique o valor informado.";
     case "INVALID_SUBSCRIPTION_PLAN_PRICE":
       return "Preço do plano inválido. Informe um valor inteiro positivo em centavos.";
+    case "INVALID_OTP_CONTRACT_ENABLED":
+      return "Valor inválido para o OTP do contrato. Tente novamente.";
     case "EMPTY_UPDATE":
       return "Nenhuma alteração detectada. Modifique ao menos um campo antes de salvar.";
     case "UNAUTHORIZED":
@@ -59,15 +62,20 @@ export function SettingsForm({ initialValues, saveAction, fetchError }: Settings
   const [subscriptionPlanPriceCents, setSubscriptionPlanPriceCents] = useState<number>(
     parseInt(initialValues?.subscription_plan_price_cents ?? "0", 10) || 0,
   );
+  const [otpContractEnabled, setOtpContractEnabled] = useState<boolean>(
+    initialValues?.otp_contract_enabled === "true",
+  );
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const savedPriceCents = parseInt(savedValues?.subscription_plan_price_cents ?? "0", 10) || 0;
+  const savedOtpEnabled = savedValues?.otp_contract_enabled === "true";
   const isDirty =
     paymentProvider !== (savedValues?.payment_provider ?? "") ||
     subscriptionPlanId !== (savedValues?.subscription_plan_id ?? "") ||
-    subscriptionPlanPriceCents !== savedPriceCents;
+    subscriptionPlanPriceCents !== savedPriceCents ||
+    otpContractEnabled !== savedOtpEnabled;
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -78,6 +86,11 @@ export function SettingsForm({ initialValues, saveAction, fetchError }: Settings
     if (paymentProvider) payload.payment_provider = paymentProvider;
     if (subscriptionPlanId) payload.subscription_plan_id = subscriptionPlanId;
     if (subscriptionPlanPriceCents > 0) payload.subscription_plan_price_cents = subscriptionPlanPriceCents;
+    // Sempre enviar a flag — string literal 'true'/'false'. Diferente dos demais
+    // campos, a flag é booleana e ambos os valores são significativos.
+    if (otpContractEnabled !== savedOtpEnabled) {
+      payload.otp_contract_enabled = otpContractEnabled ? "true" : "false";
+    }
 
     startTransition(async () => {
       const result = await saveAction(payload);
@@ -189,6 +202,39 @@ export function SettingsForm({ initialValues, saveAction, fetchError }: Settings
           disabled={isPending}
           aria-describedby={errorMessage ? "settings-error" : undefined}
         />
+      </div>
+
+      <div className="space-y-3 rounded-md border border-gray-100 bg-white p-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-1 flex-col gap-1">
+            <Label
+              htmlFor="otp_contract_enabled"
+              className="cursor-pointer text-sm font-medium text-[#2C2C2E]"
+            >
+              OTP no aceite do contrato
+            </Label>
+            <p
+              id="otp_contract_enabled_help"
+              className="text-xs text-[#6B6B6E]"
+            >
+              Quando ativado, o cliente recebe um código SMS de 6 dígitos antes
+              de assinar o contrato. Necessário para fluxos com formalidade
+              reforçada.
+            </p>
+          </div>
+          <Switch
+            id="otp_contract_enabled"
+            checked={otpContractEnabled}
+            onCheckedChange={(next) => {
+              setOtpContractEnabled(next);
+              setSuccessMessage(null);
+            }}
+            disabled={isPending}
+            aria-describedby="otp_contract_enabled_help"
+            aria-label="Ativar OTP no aceite do contrato"
+            className="data-[state=checked]:bg-[#4E8C75]"
+          />
+        </div>
       </div>
 
       <div className="flex justify-end">
