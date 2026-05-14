@@ -20,7 +20,7 @@ export function HeroSection() {
           </h1>
 
           <p className="max-w-[480px] text-base leading-[1.55] text-ink-soft">
-            O Plano Emergência Late & Mia garante metade do valor dos atendimentos urgentes para o seu pet — de forma simples, com mensalidade fixa.
+            O Plano Emergência Dr. Cleitinho garante metade do valor dos atendimentos urgentes para o seu pet — de forma simples, com mensalidade fixa.
           </p>
 
           <div className="flex w-full flex-col gap-3 sm:flex-row sm:w-auto">
@@ -58,12 +58,12 @@ export function HeroSection() {
             <div className="text-[12.5px] leading-[1.35] text-ink-soft">
               <strong className="text-ink">Tutores que já confiam no plano.</strong>
               <br />
-              Atendimento 24h na Late & Mia, Camboriú.
+              Atendimento 24h no Dr. Cleitinho, Camboriú.
             </div>
           </div>
 
           <p className="text-[11px] leading-[1.45] text-ink-muted">
-            *Após carência de 180 dias, em emergências atendidas na unidade Late &amp; Mia (Camboriú), na fase aguda do quadro. Consulte exclusões e condições nos{' '}
+            *Após carência de 180 dias, em emergências atendidas na unidade Dr. Cleitinho (Camboriú), na fase aguda do quadro. Consulte exclusões e condições nos{' '}
             <Link href="/termos" className="underline underline-offset-2 hover:text-ink">
               termos do plano
             </Link>

@@ -1,5 +1,5 @@
 /**
- * Cidades atualmente atendidas pela Late & Mia.
+ * Cidades atualmente atendidas pela Dr. Cleitinho.
  *
  * A lista é mantida em forma canônica normalizada (sem acentos, em lowercase)
  * para comparações simétricas com a entrada do usuário.
@@ -32,7 +32,7 @@ export function normalizeCityName(input: string): string {
 
 /**
  * Retorna `true` se o nome informado corresponde a uma cidade atendida pela
- * Late & Mia. Aceita variações de caixa, acentuação e espaços extras nas
+ * Dr. Cleitinho. Aceita variações de caixa, acentuação e espaços extras nas
  * bordas. Entradas vazias, `null` ou `undefined` retornam `false`.
  */
 export function isServicedCity(input: string | null | undefined): boolean {

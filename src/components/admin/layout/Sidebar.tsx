@@ -198,13 +198,13 @@ export function Sidebar({ collapsed, onToggle, userRole }: SidebarProps) {
           {!collapsed ? (
             <div className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#4E8C75]">
-                <span className="text-sm font-bold text-white">L&M</span>
+                <span className="text-sm font-bold text-white">DC</span>
               </div>
-              <span className="font-semibold text-[#2C2C2E]">Late &amp; Mia</span>
+              <span className="font-semibold text-[#2C2C2E]">Dr. Cleitinho</span>
             </div>
           ) : (
             <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-lg bg-[#4E8C75]">
-              <span className="text-sm font-bold text-white">L&M</span>
+              <span className="text-sm font-bold text-white">DC</span>
             </div>
           )}
         </div>

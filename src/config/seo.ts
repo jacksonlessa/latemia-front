@@ -17,7 +17,7 @@ import type { Metadata } from 'next';
 
 const OG_IMAGE_FALLBACK = '/brand/logo.png';
 
-const BRAND_NAME = 'Late & Mia';
+const BRAND_NAME = 'Dr. Cleitinho';
 const TWITTER_CARD = 'summary_large_image' as const;
 
 type SeoEntry = {
@@ -29,13 +29,13 @@ type SeoEntry = {
 
 export const seoConfig = {
   '/': {
-    title: 'Plano de Emergência Veterinária — Late & Mia',
+    title: 'Plano de Emergência Veterinária — Dr. Cleitinho',
     description:
       'Garanta 50% de desconto nos atendimentos emergenciais do seu pet. Plano simples, mensalidade fixa por pet, sem surpresas — Camboriú, Balneário Camboriú, Itapema e Itajaí.',
     openGraph: {
       type: 'website',
       siteName: BRAND_NAME,
-      title: 'Plano de Emergência Veterinária — Late & Mia',
+      title: 'Plano de Emergência Veterinária — Dr. Cleitinho',
       description:
         'Plano simples com 50% de desconto em atendimentos emergenciais para o seu pet.',
       images: [
@@ -43,27 +43,27 @@ export const seoConfig = {
           url: OG_IMAGE_FALLBACK,
           width: 1200,
           height: 630,
-          alt: 'Late & Mia — Plano de Emergência Veterinária',
+          alt: 'Dr. Cleitinho — Plano de Emergência Veterinária',
         },
       ],
       locale: 'pt_BR',
     },
     twitter: {
       card: TWITTER_CARD,
-      title: 'Plano de Emergência Veterinária — Late & Mia',
+      title: 'Plano de Emergência Veterinária — Dr. Cleitinho',
       description:
         'Plano simples com 50% de desconto em atendimentos emergenciais para o seu pet.',
       images: [OG_IMAGE_FALLBACK],
     },
   },
   '/privacidade': {
-    title: 'Política de Privacidade — Late & Mia Clínica Veterinária',
+    title: 'Política de Privacidade — Dr. Cleitinho Clínica Veterinária',
     description:
-      'Saiba como a Late & Mia Clínica Veterinária coleta, usa e protege seus dados pessoais. Política de Privacidade em conformidade com a LGPD.',
+      'Saiba como a Dr. Cleitinho Clínica Veterinária coleta, usa e protege seus dados pessoais. Política de Privacidade em conformidade com a LGPD.',
     openGraph: {
       type: 'article',
       siteName: BRAND_NAME,
-      title: 'Política de Privacidade — Late & Mia',
+      title: 'Política de Privacidade — Dr. Cleitinho',
       description:
         'Como tratamos os seus dados pessoais no Plano Emergência Veterinária.',
       images: [
@@ -71,70 +71,70 @@ export const seoConfig = {
           url: OG_IMAGE_FALLBACK,
           width: 1200,
           height: 630,
-          alt: 'Late & Mia — Política de Privacidade',
+          alt: 'Dr. Cleitinho — Política de Privacidade',
         },
       ],
       locale: 'pt_BR',
     },
     twitter: {
       card: TWITTER_CARD,
-      title: 'Política de Privacidade — Late & Mia',
+      title: 'Política de Privacidade — Dr. Cleitinho',
       description:
         'Como tratamos os seus dados pessoais no Plano Emergência Veterinária.',
       images: [OG_IMAGE_FALLBACK],
     },
   },
   '/termos': {
-    title: 'Termos de Uso — Late & Mia Clínica Veterinária',
+    title: 'Termos de Uso — Dr. Cleitinho Clínica Veterinária',
     description:
-      'Termos de Uso do Plano Emergência Veterinária Late & Mia: cobertura, carência, mensalidade e condições de cancelamento.',
+      'Termos de Uso do Plano Emergência Veterinária Dr. Cleitinho: cobertura, carência, mensalidade e condições de cancelamento.',
     openGraph: {
       type: 'article',
       siteName: BRAND_NAME,
-      title: 'Termos de Uso — Late & Mia',
-      description: 'Condições de uso do Plano Emergência Veterinária Late & Mia.',
+      title: 'Termos de Uso — Dr. Cleitinho',
+      description: 'Condições de uso do Plano Emergência Veterinária Dr. Cleitinho.',
       images: [
         {
           url: OG_IMAGE_FALLBACK,
           width: 1200,
           height: 630,
-          alt: 'Late & Mia — Termos de Uso',
+          alt: 'Dr. Cleitinho — Termos de Uso',
         },
       ],
       locale: 'pt_BR',
     },
     twitter: {
       card: TWITTER_CARD,
-      title: 'Termos de Uso — Late & Mia',
-      description: 'Condições de uso do Plano Emergência Veterinária Late & Mia.',
+      title: 'Termos de Uso — Dr. Cleitinho',
+      description: 'Condições de uso do Plano Emergência Veterinária Dr. Cleitinho.',
       images: [OG_IMAGE_FALLBACK],
     },
   },
   '/lgpd': {
-    title: 'Direitos do Titular (LGPD) — Late & Mia Clínica Veterinária',
+    title: 'Direitos do Titular (LGPD) — Dr. Cleitinho Clínica Veterinária',
     description:
-      'Exerça os seus direitos LGPD: acesso, correção, portabilidade, eliminação e revogação de consentimento dos seus dados pessoais junto à Late & Mia.',
+      'Exerça os seus direitos LGPD: acesso, correção, portabilidade, eliminação e revogação de consentimento dos seus dados pessoais junto à Dr. Cleitinho.',
     openGraph: {
       type: 'article',
       siteName: BRAND_NAME,
-      title: 'Direitos do Titular (LGPD) — Late & Mia',
+      title: 'Direitos do Titular (LGPD) — Dr. Cleitinho',
       description:
-        'Como exercer os seus direitos como titular de dados pessoais junto à Late & Mia.',
+        'Como exercer os seus direitos como titular de dados pessoais junto à Dr. Cleitinho.',
       images: [
         {
           url: OG_IMAGE_FALLBACK,
           width: 1200,
           height: 630,
-          alt: 'Late & Mia — Direitos do Titular (LGPD)',
+          alt: 'Dr. Cleitinho — Direitos do Titular (LGPD)',
         },
       ],
       locale: 'pt_BR',
     },
     twitter: {
       card: TWITTER_CARD,
-      title: 'Direitos do Titular (LGPD) — Late & Mia',
+      title: 'Direitos do Titular (LGPD) — Dr. Cleitinho',
       description:
-        'Como exercer os seus direitos como titular de dados pessoais junto à Late & Mia.',
+        'Como exercer os seus direitos como titular de dados pessoais junto à Dr. Cleitinho.',
       images: [OG_IMAGE_FALLBACK],
     },
   },

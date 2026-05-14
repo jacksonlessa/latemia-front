@@ -70,7 +70,7 @@ export function BenefitsSection() {
           ))}
         </div>
         <p className="mt-6 text-[11px] leading-[1.45] text-ink-muted">
-          *Após carência de 180 dias, em emergências atendidas na unidade Late &amp; Mia (Camboriú), na fase aguda do quadro. Consulte exclusões e condições nos{' '}
+          *Após carência de 180 dias, em emergências atendidas na unidade Dr. Cleitinho (Camboriú), na fase aguda do quadro. Consulte exclusões e condições nos{' '}
           <Link href="/termos" className="underline underline-offset-2 hover:text-ink">
             termos do plano
           </Link>

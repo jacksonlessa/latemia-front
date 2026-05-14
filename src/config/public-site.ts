@@ -8,15 +8,15 @@
 // truth on the client.
 
 export const publicSite = {
-  siteName: 'Late & Mia',
+  siteName: 'Dr. Cleitinho',
   checkoutPath: '/contratar',
   brand: {
     logoSrc: '/brand/logo-transparente.png',
-    logoAlt: 'Late & Mia',
+    logoAlt: 'Dr. Cleitinho',
   },
   whatsapp: {
     number: '5547997077953',
     defaultMessage:
-      'Olá! Tenho interesse no Plano Emergência da Late & Mia e gostaria de mais informações.',
+      'Olá! Tenho interesse no Plano Emergência do Dr. Cleitinho e gostaria de mais informações.',
   },
 } as const;

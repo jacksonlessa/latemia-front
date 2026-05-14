@@ -50,7 +50,7 @@ const items: FaqEntry[] = [
   {
     question: 'Como utilizo o benefício quando precisar?',
     answer:
-      'Leve seu pet diretamente à Late & Mia informando que é assinante do plano. A equipe verifica o cadastro e aplica o desconto de 50% automaticamente. Sem reembolso posterior.',
+      'Leve seu pet diretamente ao Dr. Cleitinho informando que é assinante do plano. A equipe verifica o cadastro e aplica o desconto de 50% automaticamente. Sem reembolso posterior.',
   },
   {
     question: 'Posso incluir mais de um pet?',

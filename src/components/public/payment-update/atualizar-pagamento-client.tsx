@@ -237,7 +237,7 @@ export function AtualizarPagamentoClient() {
 
       <p className="text-xs text-muted-foreground text-center">
         Seus dados de cartão são criptografados e processados diretamente pelo
-        Pagar.me — nunca passam pelos servidores da Late &amp; Mia.
+        Pagar.me — nunca passam pelos servidores do Dr. Cleitinho.
       </p>
     </div>
   );
