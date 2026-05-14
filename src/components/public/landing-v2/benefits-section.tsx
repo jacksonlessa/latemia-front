@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import Link from 'next/link';
 
 interface BenefitItem {
   title: string;
@@ -8,7 +9,7 @@ interface BenefitItem {
 
 const items: BenefitItem[] = [
   {
-    title: '50% em emergências',
+    title: '50% em emergências*',
     description:
       'Metade do valor dos atendimentos urgentes fica por conta do plano. Você paga menos no pior momento.',
     icon: (
@@ -68,6 +69,13 @@ export function BenefitsSection() {
             </div>
           ))}
         </div>
+        <p className="mt-6 text-[11px] leading-[1.45] text-ink-muted">
+          *Após carência de 180 dias, em emergências atendidas na unidade Late &amp; Mia (Camboriú), na fase aguda do quadro. Consulte exclusões e condições nos{' '}
+          <Link href="/termos" className="underline underline-offset-2 hover:text-ink">
+            termos do plano
+          </Link>
+          .
+        </p>
       </div>
     </section>
   );
