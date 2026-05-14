@@ -8,6 +8,7 @@ import { TestimonialsSection } from '@/components/public/landing-v2/testimonials
 import { FaqSection } from '@/components/public/landing-v2/faq-section';
 import { ContactSection } from '@/components/public/landing-v2/contact-section';
 import { getSeoMetadata, SITE_URL } from '@/config/seo';
+import { getPublicConfigSSR } from '@/domain/public-config/get-public-config.server';
 
 export const metadata: Metadata = getSeoMetadata('/');
 
@@ -40,36 +41,46 @@ const orgLd = {
   },
 };
 
-const serviceLd = {
-  '@context': 'https://schema.org',
-  '@type': 'Service',
-  name: 'Plano de Emergência Veterinária',
-  serviceType: 'Plano de desconto para atendimentos veterinários emergenciais',
-  provider: {
-    '@type': 'Organization',
-    name: 'Late & Mia Clínica Veterinária',
-    url: SITE_URL,
-  },
-  areaServed: [
-    { '@type': 'City', name: 'Camboriú' },
-    { '@type': 'City', name: 'Balneário Camboriú' },
-    { '@type': 'City', name: 'Itapema' },
-    { '@type': 'City', name: 'Itajaí' },
-  ],
-  offers: {
-    '@type': 'Offer',
-    price: '25.00',
-    priceCurrency: 'BRL',
-    priceSpecification: {
-      '@type': 'UnitPriceSpecification',
-      price: '25.00',
-      priceCurrency: 'BRL',
-      unitText: 'pet/mês',
+function buildServiceLd(pricePerPetCents: number) {
+  // JSON-LD Offer price uses a `\d+\.\d{2}` string (e.g. "25.00"). Format
+  // strictly from the cents value to keep the structured data aligned with
+  // the live setting that drives both the landing and the Pagar.me item.
+  const priceString = (pricePerPetCents / 100).toFixed(2);
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: 'Plano de Emergência Veterinária',
+    serviceType:
+      'Plano de desconto para atendimentos veterinários emergenciais',
+    provider: {
+      '@type': 'Organization',
+      name: 'Late & Mia Clínica Veterinária',
+      url: SITE_URL,
     },
-  },
-};
+    areaServed: [
+      { '@type': 'City', name: 'Camboriú' },
+      { '@type': 'City', name: 'Balneário Camboriú' },
+      { '@type': 'City', name: 'Itapema' },
+      { '@type': 'City', name: 'Itajaí' },
+    ],
+    offers: {
+      '@type': 'Offer',
+      price: priceString,
+      priceCurrency: 'BRL',
+      priceSpecification: {
+        '@type': 'UnitPriceSpecification',
+        price: priceString,
+        priceCurrency: 'BRL',
+        unitText: 'pet/mês',
+      },
+    },
+  };
+}
 
-export default function HomePage() {
+export default async function HomePage() {
+  const { pricePerPetCents } = await getPublicConfigSSR();
+  const serviceLd = buildServiceLd(pricePerPetCents);
+
   return (
     <main>
       <script
@@ -84,9 +95,9 @@ export default function HomePage() {
       <BenefitsSection />
       <CoverageSection />
       <CarenceSection />
-      <PriceSection />
+      <PriceSection pricePerPetCents={pricePerPetCents} />
       <TestimonialsSection />
-      <FaqSection />
+      <FaqSection pricePerPetCents={pricePerPetCents} />
       <ContactSection />
     </main>
   );

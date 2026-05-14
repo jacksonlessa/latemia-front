@@ -14,7 +14,11 @@ import { PetEntity } from '@/domain/pet/pet.entity';
 import { ValidationError } from '@/lib/validation-error';
 import { validateClientUseCase } from '@/domain/client/validate-client.use-case';
 import { ValidateCheckoutDraftUseCase } from '@/domain/checkout/validate-checkout-draft.use-case';
-import { getPublicConfig } from '@/domain/public-config/get-public-config.use-case';
+import {
+  getPublicConfig,
+  FALLBACK_PRICE_PER_PET_CENTS,
+  type PublicConfig,
+} from '@/domain/public-config/get-public-config.use-case';
 import {
   FinalizeCheckoutUseCase,
   CheckoutError,
@@ -24,7 +28,6 @@ import {
 import type { CardFormValue } from '@/components/public/contratar/organisms/card-form';
 import { navigateToFieldStep } from '@/domain/client/field-to-step';
 import { CONTRACT_VERSION, CONTRATO_TEXTO } from '@/content/contrato';
-import { publicSite } from '@/config/public-site';
 import { loadDraft, saveDraft, clearDraft } from '@/lib/contratar-draft-storage';
 import { sha256Hex } from '@/lib/crypto';
 import { digitsToE164 } from '@/lib/to-e164';
@@ -186,21 +189,23 @@ export function ContratarPageClient() {
   const hydratedRef = useRef(false);
 
   // -------------------------------------------------------------------------
-  // 9.0 Public config — OTP feature flag
+  // 9.0 Public config — OTP feature flag + subscription price.
   //
-  // Fetched once on mount via `getPublicConfig()`. Stored as `boolean | null`
-  // (`null` during the initial fetch) so SSR/initial render is deterministic
-  // and we avoid hydration mismatches. The use-case never rejects; on any
-  // error path it resolves to `{ otpContractEnabled: false }`.
+  // Fetched once on mount via `getPublicConfig()`. We initialise with the
+  // fail-safe defaults the use-case itself would return on any error path
+  // so SSR/initial render is deterministic and hydration mismatches are
+  // impossible. The use-case never rejects; on any error path it resolves
+  // to `{ otpContractEnabled: false, pricePerPetCents: FALLBACK_PRICE_PER_PET_CENTS }`.
   // -------------------------------------------------------------------------
-  const [otpContractEnabled, setOtpContractEnabled] = useState<boolean | null>(
-    null,
-  );
+  const [publicConfig, setPublicConfig] = useState<PublicConfig>({
+    otpContractEnabled: false,
+    pricePerPetCents: FALLBACK_PRICE_PER_PET_CENTS,
+  });
 
   useEffect(() => {
     let cancelled = false;
     getPublicConfig().then((cfg) => {
-      if (!cancelled) setOtpContractEnabled(cfg.otpContractEnabled);
+      if (!cancelled) setPublicConfig(cfg);
     });
     return () => {
       cancelled = true;
@@ -401,11 +406,14 @@ export function ContratarPageClient() {
     const validateUseCase = new ValidateCheckoutDraftUseCase();
     let summary: CheckoutSummary;
     try {
-      summary = validateUseCase.execute({
-        client: state.client as RegisterClientInput,
-        pets: state.pets,
-        contractAcceptedAt: state.contractAcceptedAt,
-      });
+      summary = validateUseCase.execute(
+        {
+          client: state.client as RegisterClientInput,
+          pets: state.pets,
+          contractAcceptedAt: state.contractAcceptedAt,
+        },
+        { pricePerPetCents: publicConfig.pricePerPetCents },
+      );
     } catch (e) {
       if (e instanceof ValidationError) {
         setState((prev) => ({ ...prev, fieldErrors: e.fieldErrors }));
@@ -699,7 +707,7 @@ export function ContratarPageClient() {
           onRemovePet={handleRemovePet}
           onNext={handleNext}
           onBack={handleBack}
-          pricePerPetCents={publicSite.price.perPetCents}
+          pricePerPetCents={publicConfig.pricePerPetCents}
         />
       )}
 
@@ -711,7 +719,7 @@ export function ContratarPageClient() {
           }
           onNext={handleNext}
           onBack={handleBack}
-          otpEnabled={otpContractEnabled ?? false}
+          otpEnabled={publicConfig.otpContractEnabled}
           // Phone digits collected at step 0 are stored as the BR mask
           // (`(11) 98765-4321`). Convert to E.164 here — the helper is
           // idempotent and tolerant of already-normalised values.
@@ -731,8 +739,8 @@ export function ContratarPageClient() {
                 name: p.name,
                 species: p.species,
               })),
-              pricePerPetCents: publicSite.price.perPetCents,
-              totalCents: state.pets.length * publicSite.price.perPetCents,
+              pricePerPetCents: publicConfig.pricePerPetCents,
+              totalCents: state.pets.length * publicConfig.pricePerPetCents,
             }}
             onSubmit={handleFinalizeCheckout}
             onBack={handleBack}

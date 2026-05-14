@@ -9,6 +9,7 @@ import { TestimonialsSection } from '@/components/public/organisms/testimonials-
 import { FaqSection } from '@/components/public/organisms/faq-section';
 import { ContactSection } from '@/components/public/organisms/contact-section';
 import { landingContent } from '@/content/landing';
+import { getPublicConfigSSR } from '@/domain/public-config/get-public-config.server';
 
 export const metadata: Metadata = {
   title: 'Plano de Emergência Veterinária — Late & Mia (v1)',
@@ -16,7 +17,9 @@ export const metadata: Metadata = {
     'Garanta 50% de desconto nos atendimentos emergenciais do seu pet. Plano simples, preço por pet, sem surpresas.',
 };
 
-export default function HomePageV1() {
+export default async function HomePageV1() {
+  const { pricePerPetCents } = await getPublicConfigSSR();
+
   return (
     <main>
       <HeroSection data={landingContent.hero} />
@@ -24,9 +27,15 @@ export default function HomePageV1() {
       <CoverageSection data={landingContent.coverage} />
       <ExclusionsSection data={landingContent.exclusions} />
       <GracePeriodSection data={landingContent.gracePeriod} />
-      <PricingSection data={landingContent.pricing} />
+      <PricingSection
+        data={landingContent.pricing}
+        priceCentsOverride={pricePerPetCents}
+      />
       <TestimonialsSection data={landingContent.testimonials} />
-      <FaqSection data={landingContent.faq} />
+      <FaqSection
+        data={landingContent.faq}
+        pricePerPetCents={pricePerPetCents}
+      />
       <ContactSection data={landingContent.contact} />
     </main>
   );

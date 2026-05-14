@@ -75,10 +75,11 @@ vi.mock('@/domain/checkout/validate-checkout-draft.use-case', () => ({
 
 const mockGetPublicConfig = vi
   .fn()
-  .mockResolvedValue({ otpContractEnabled: false });
+  .mockResolvedValue({ otpContractEnabled: false, pricePerPetCents: 2500 });
 
 vi.mock('@/domain/public-config/get-public-config.use-case', () => ({
   getPublicConfig: (...args: unknown[]) => mockGetPublicConfig(...args),
+  FALLBACK_PRICE_PER_PET_CENTS: 2500,
 }));
 
 // ---------------------------------------------------------------------------
@@ -187,7 +188,10 @@ beforeEach(() => {
 
   // Reset mock implementations to defaults after clearAllMocks
   mockValidateClientUseCase.mockResolvedValue(undefined);
-  mockGetPublicConfig.mockResolvedValue({ otpContractEnabled: false });
+  mockGetPublicConfig.mockResolvedValue({
+    otpContractEnabled: false,
+    pricePerPetCents: 2500,
+  });
   mockClientExecute.mockResolvedValue({ id: 'client-uuid-1', name: 'Maria da Silva' });
   mockPetExecute
     .mockResolvedValueOnce({ id: 'pet-uuid-1' })
@@ -632,7 +636,10 @@ describe('ContratarPageClient — public config (OTP flag)', () => {
   });
 
   it('should propagate otpEnabled=true to StepContrato when backend returns otpContractEnabled=true', async () => {
-    mockGetPublicConfig.mockResolvedValueOnce({ otpContractEnabled: true });
+    mockGetPublicConfig.mockResolvedValueOnce({
+      otpContractEnabled: true,
+      pricePerPetCents: 2500,
+    });
 
     // Hydrate the wizard at step 2 (Contrato) by providing a draft with contract step.
     vi.mocked(loadDraft).mockReturnValue({
@@ -660,7 +667,10 @@ describe('ContratarPageClient — public config (OTP flag)', () => {
   });
 
   it('should fall back to otpEnabled=false when getPublicConfig resolves with otpContractEnabled=false', async () => {
-    mockGetPublicConfig.mockResolvedValueOnce({ otpContractEnabled: false });
+    mockGetPublicConfig.mockResolvedValueOnce({
+      otpContractEnabled: false,
+      pricePerPetCents: 2500,
+    });
     vi.mocked(loadDraft).mockReturnValue(null);
 
     await act(async () => {

@@ -203,7 +203,7 @@ export const landingContent: LandingContent = {
       {
         question: 'Posso contratar para mais de um pet?',
         answer:
-          'Sim! O plano é por pet, então você pode incluir todos os seus companheiros. O valor mensal total é calculado multiplicando R$ 25,00 pelo número de pets cadastrados no contrato.',
+          'Sim! O plano é por pet, então você pode incluir todos os seus companheiros. O valor mensal total é calculado multiplicando {{pricePerPet}} pelo número de pets cadastrados no contrato.',
       },
       {
         question: 'Posso cancelar o plano a qualquer momento?',

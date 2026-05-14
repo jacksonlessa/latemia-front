@@ -7,6 +7,30 @@ interface FaqEntry {
   answer: string;
 }
 
+interface FaqSectionProps {
+  /**
+   * Per-pet monthly price in cents — when provided, replaces the
+   * `{{pricePerPet}}` placeholder inside any FAQ answer string with the
+   * formatted BRL value (e.g. "R$ 25,00"). Omitting it keeps the
+   * placeholder visible, which would be a developer-visible bug — so the
+   * parent page must always pass it.
+   */
+  pricePerPetCents?: number;
+}
+
+const priceFormatter = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+});
+
+function applyPlaceholders(text: string, pricePerPetCents?: number): string {
+  if (pricePerPetCents === undefined) return text;
+  return text.replaceAll(
+    '{{pricePerPet}}',
+    priceFormatter.format(pricePerPetCents / 100),
+  );
+}
+
 const items: FaqEntry[] = [
   {
     question: 'Como funciona a carência de 6 meses?',
@@ -31,7 +55,7 @@ const items: FaqEntry[] = [
   {
     question: 'Posso incluir mais de um pet?',
     answer:
-      'Sim! O plano é por pet — você pode incluir todos os seus companheiros. O total mensal é R$ 25,00 multiplicado pelo número de pets cadastrados.',
+      'Sim! O plano é por pet — você pode incluir todos os seus companheiros. O total mensal é {{pricePerPet}} multiplicado pelo número de pets cadastrados.',
   },
   {
     question: 'Posso cancelar a qualquer momento?',
@@ -40,7 +64,7 @@ const items: FaqEntry[] = [
   },
 ];
 
-export function FaqSection() {
+export function FaqSection({ pricePerPetCents }: FaqSectionProps = {}) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
@@ -97,7 +121,9 @@ export function FaqSection() {
                   }`}
                 >
                   <div className="min-h-0 overflow-hidden">
-                    <p className="text-sm leading-[1.65] text-ink-soft">{item.answer}</p>
+                    <p className="text-sm leading-[1.65] text-ink-soft">
+                      {applyPlaceholders(item.answer, pricePerPetCents)}
+                    </p>
                   </div>
                 </div>
               </div>
