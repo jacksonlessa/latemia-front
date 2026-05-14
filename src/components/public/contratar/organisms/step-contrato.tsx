@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CONTRATO_TEXTO } from '@/content/contrato';
 import { Button } from '@/components/ui/button';
+import { MarkdownProse } from '@/components/ui/markdown-prose';
 import {
   ContractOtpPanel,
   type ContractOtpPanelHandle,
@@ -275,15 +276,19 @@ export function StepContrato({
 
   return (
     <div className="space-y-6">
-      {/* Contract text with fixed-height scrollable area */}
+      {/* Contract text with fixed-height scrollable area.
+          O hash SHA-256 enviado ao backend (`contractTextHash`) é calculado
+          sobre `CONTRATO_TEXTO` — a string-fonte exata. A renderização via
+          react-markdown é apenas visual: a versão hashable é a mesma string
+          consumida pela página /termos. */}
       <div
-        className="rounded-lg border border-border bg-muted/30 p-4 overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed text-foreground"
-        style={{ height: '200px' }}
+        className="rounded-lg border border-border bg-muted/30 p-4 overflow-y-auto text-foreground"
+        style={{ height: '240px' }}
         role="region"
         aria-label="Texto do contrato"
         tabIndex={0}
       >
-        {CONTRATO_TEXTO}
+        <MarkdownProse>{CONTRATO_TEXTO}</MarkdownProse>
       </div>
 
       {/* Acceptance checkbox */}
