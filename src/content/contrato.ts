@@ -19,18 +19,18 @@
  * backend e usada para identificar exatamente qual edição cada cliente
  * aceitou. NUNCA alterar sem subir um novo snapshot do texto.
  */
-export const CONTRACT_VERSION = 'v1.0';
+export const CONTRACT_VERSION = 'v1.1';
 
 /**
  * Data de entrada em vigor desta versão dos TERMOS (ISO YYYY-MM-DD).
  * Exibida ao usuário ao lado de `CONTRACT_VERSION`.
  */
-export const CONTRACT_EFFECTIVE_DATE = '2026-05-14';
+export const CONTRACT_EFFECTIVE_DATE = '2026-05-15';
 
 export const CONTRATO_TEXTO = `# TERMOS DE USO E CONTRATO DE PRESTAÇÃO DE SERVIÇOS
 ## Plano Emergencial Veterinário Dr. Cleitinho
 
-**Versão do documento:** v1.0 — 14/05/2026
+**Versão do documento:** v1.1 — 15/05/2026
 
 > **Aviso a VOCÊ:** este é o texto que VOCÊ está aceitando ao contratar o Plano Emergencial Veterinário Dr. Cleitinho. **Leia com atenção.** Ao concluir o aceite eletrônico no fluxo de contratação, VOCÊ **declara ter lido, compreendido e concordado** com cada uma das cláusulas a seguir, bem como com a **[Política de Privacidade](https://plano.drcleitinho.com.br/privacidade)** da Dr. Cleitinho, que é parte integrante destes TERMOS.
 
@@ -73,7 +73,7 @@ Para os fins destes TERMOS, as expressões abaixo, quando grafadas com inicial m
 
 **1.12.** **TERMOS** ou **CONTRATO:** este documento, em sua versão vigente identificada pela VERSÃO DO CONTRATO.
 
-**1.13.** **VERSÃO DO CONTRATO:** identificador único que individualiza cada edição destes TERMOS, composto pelo número de versão e data de entrada em vigor (exemplo: \`v1.0 — 14/05/2026\`). A VERSÃO DO CONTRATO aceita por VOCÊ no momento do aceite eletrônico é registrada no log de auditoria descrito na Cláusula 5.3 e preservada em snapshot para fins probatórios.
+**1.13.** **VERSÃO DO CONTRATO:** identificador único que individualiza cada edição destes TERMOS, composto pelo número de versão e data de entrada em vigor (exemplo: \`v1.1 — 15/05/2026\`). A VERSÃO DO CONTRATO aceita por VOCÊ no momento do aceite eletrônico é registrada no log de auditoria descrito na Cláusula 5.3 e preservada em snapshot para fins probatórios.
 
 **1.14.** **POLÍTICA DE PRIVACIDADE:** documento separado, parte integrante destes TERMOS, que descreve em detalhe o tratamento de dados pessoais pela Dr. Cleitinho.
 
@@ -93,27 +93,19 @@ Para os fins destes TERMOS, as expressões abaixo, quando grafadas com inicial m
 
 A Dr. Cleitinho oferece, no âmbito do Clube de Vantagens, **descontos em procedimentos não-emergenciais** prestados diretamente pela CLÍNICA, **disponíveis a VOCÊ a partir da Confirmação do Primeiro Pagamento** (sem carência).
 
-**Configuração vigente na data de aceite destes TERMOS:**
+A Dr. Cleitinho disponibiliza a **Tabela do Clube de Vantagens** com os procedimentos contemplados e respectivos percentuais de desconto em página dedicada do site: **https://plano.drcleitinho.com.br/beneficios**. A tabela vigente apresenta a configuração atual e pode ser consultada a qualquer momento.
 
-| Procedimento | Desconto |
-|--------------|----------|
-| Microchipagem | **30%** |
-| Consultas eletivas e de especialidades | **30%** |
-| Exames de sangue laboratoriais | **10%** |
-| Exames de imagem (Raio-X e Ultrassom) | **5%** |
-| Cirurgias eletivas | **10%** |
+Aplicam-se à Tabela do Clube de Vantagens as seguintes regras assimétricas:
 
-**Tabela do Clube de Vantagens (página atualizável).** A Dr. Cleitinho **disponibilizará e manterá** a Tabela do Clube de Vantagens em **página dedicada do site oficial**, permitindo a atualização da lista de procedimentos e respectivos percentuais conforme as seguintes regras assimétricas:
+**(a) Inclusões** de novos procedimentos e **aumentos** dos percentuais de desconto vigentes podem ser feitos pela Dr. Cleitinho **a qualquer momento, sem aviso prévio** — pois beneficiam exclusivamente a VOCÊ, passando a vigorar imediatamente após a publicação;
 
-**(a)** **INCLUSÕES** de novos procedimentos no Clube de Vantagens e **AUMENTOS** dos percentuais de desconto vigentes podem ser feitas pela Dr. Cleitinho **a qualquer momento, sem aviso prévio** — pois beneficiam exclusivamente a VOCÊ, passando a vigorar imediatamente após a publicação;
+**(b) Reduções** de percentual de desconto ou **exclusões** de procedimentos previamente listados ficam **sujeitas a aviso prévio mínimo de 30 (trinta) dias** por e-mail. Nesse prazo, VOCÊ poderá **rejeitar a alteração exercendo o cancelamento** (Cláusula 9) sem qualquer ônus, ou seguir vinculado às novas condições caso opte por continuar com o PLANO.
 
-**(b)** **REDUÇÕES** de percentual de desconto ou **EXCLUSÕES** de procedimentos previamente listados ficam **sujeitas a aviso prévio mínimo de 30 (trinta) dias** por e-mail. Nesse prazo, VOCÊ poderá **rejeitar a alteração exercendo o cancelamento** (Cláusula 9) sem qualquer ônus, ou seguir vinculado às novas condições caso opte por continuar com o PLANO.
+Para consultar versões anteriores da Tabela do Clube de Vantagens, entre em contato com nosso SAC: **sac@drcleitinho.com.br**.
 
-A Dr. Cleitinho **manterá histórico das versões anteriores** da Tabela do Clube de Vantagens acessível a VOCÊ, para verificação da configuração vigente em qualquer momento da relação contratual.
+**Em qualquer cenário, alterações da Tabela não afetam:** (i) o benefício emergencial (Cláusula 2.2.1); (ii) a CARÊNCIA (Cláusula 4); (iii) o valor mensal do PLANO (Cláusula 6.1); (iv) a regra de reajuste (Cláusula 7).
 
-**Em qualquer cenário, alterações da Tabela do Clube de Vantagens não afetam:** (i) a essência e os limites do benefício emergencial (Cláusula 2.2.1); (ii) a CARÊNCIA (Cláusula 4); (iii) o valor mensal do PLANO (Cláusula 6.1); (iv) a regra de reajuste (Cláusula 7).
-
-**Os descontos do Clube de Vantagens não são cumulativos** com outras promoções da Dr. Cleitinho, **aplicam-se exclusivamente a serviços prestados pela CLÍNICA** e **não abrangem serviços terceirizados**.
+Os descontos do Clube de Vantagens **não são cumulativos** com outras promoções da Dr. Cleitinho, **aplicam-se exclusivamente a serviços prestados pela CLÍNICA** e **não abrangem serviços terceirizados**.
 
 ### 2.2.3. Canal de orientação por WhatsApp
 

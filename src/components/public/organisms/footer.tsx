@@ -23,6 +23,9 @@ export function Footer() {
         </span>
       </Link>
       <nav className="flex flex-wrap justify-center gap-x-5 gap-y-2">
+        <Link href="/beneficios" className={FOOTER_NAV_LINK_CLASS}>
+          Clube de Vantagens
+        </Link>
         <Link href="/privacidade" className={FOOTER_NAV_LINK_CLASS}>
           Política de Privacidade
         </Link>

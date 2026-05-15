@@ -14,6 +14,7 @@ import {
   SlidersHorizontal,
   Bell,
   Inbox,
+  Gift,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -100,6 +101,13 @@ const menuItems: MenuItem[] = [
         path: "/admin/configuracoes/buffer-notificacoes",
         label: "Buffer de Notificações",
         icon: Inbox,
+        roles: ["admin"],
+      },
+      {
+        kind: "leaf",
+        path: "/admin/configuracoes/clube-vantagens",
+        label: "Clube de Vantagens",
+        icon: Gift,
         roles: ["admin"],
       },
     ],
