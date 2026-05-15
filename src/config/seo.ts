@@ -138,9 +138,37 @@ export const seoConfig = {
       images: [OG_IMAGE_FALLBACK],
     },
   },
+  '/beneficios': {
+    title: 'Clube de Vantagens — Dr. Cleitinho Clínica Veterinária',
+    description:
+      'Tabela vigente do Clube de Vantagens: descontos em procedimentos eletivos prestados pela Dr. Cleitinho aos clientes do Plano Emergência Veterinária.',
+    openGraph: {
+      type: 'article',
+      siteName: BRAND_NAME,
+      title: 'Clube de Vantagens — Dr. Cleitinho',
+      description:
+        'Tabela de descontos do Clube de Vantagens do Plano Emergência Veterinária Dr. Cleitinho.',
+      images: [
+        {
+          url: OG_IMAGE_FALLBACK,
+          width: 1200,
+          height: 630,
+          alt: 'Dr. Cleitinho — Clube de Vantagens',
+        },
+      ],
+      locale: 'pt_BR',
+    },
+    twitter: {
+      card: TWITTER_CARD,
+      title: 'Clube de Vantagens — Dr. Cleitinho',
+      description:
+        'Tabela de descontos do Clube de Vantagens do Plano Emergência Veterinária Dr. Cleitinho.',
+      images: [OG_IMAGE_FALLBACK],
+    },
+  },
 } as const satisfies Record<SeoRoutePath, SeoEntry>;
 
-export type SeoRoutePath = '/' | '/privacidade' | '/termos' | '/lgpd';
+export type SeoRoutePath = '/' | '/privacidade' | '/termos' | '/lgpd' | '/beneficios';
 
 export function getSeoMetadata(path: SeoRoutePath): Metadata {
   const entry = seoConfig[path];

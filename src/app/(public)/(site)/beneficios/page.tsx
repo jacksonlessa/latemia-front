@@ -1,20 +1,12 @@
-import type { Metadata } from 'next';
 import {
   CLUBE_VANTAGENS_VERSION,
   CLUBE_VANTAGENS_EFFECTIVE_DATE,
   CLUBE_VANTAGENS_ITENS,
   CLUBE_VANTAGENS_NOTAS,
 } from '@/content/beneficios';
+import { getSeoMetadata } from '@/config/seo';
 
-// NOTE(tabela-clube-vantagens-publica:3): metadata será migrada para
-// `getSeoMetadata('/beneficios')` na tarefa 3.0, que adiciona a rota ao
-// union `SeoRoutePath` em `src/config/seo.ts`. Mantemos a metadata inline
-// aqui para evitar quebra de typecheck antes daquela tarefa.
-export const metadata: Metadata = {
-  title: 'Clube de Vantagens — Dr. Cleitinho Clínica Veterinária',
-  description:
-    'Tabela vigente do Clube de Vantagens: descontos em procedimentos eletivos prestados pela Dr. Cleitinho aos clientes do Plano Emergência Veterinária.',
-};
+export const metadata = getSeoMetadata('/beneficios');
 
 const SAC_EMAIL = 'sac@drcleitinho.com.br';
 
