@@ -51,12 +51,25 @@ export default meta;
 
 const mockSaveSuccess = async (_payload: UpdateSystemSettingsInput) => ({
   success: true as const,
-  data: { payment_provider: "pagarme", subscription_plan_id: "plan_abc123", subscription_plan_price_cents: "4990" } as SystemSettingsDto,
+  data: {
+    payment_provider: "pagarme",
+    subscription_plan_id: "plan_abc123",
+    subscription_plan_price_cents: "4990",
+    otp_contract_enabled: "false",
+  } as SystemSettingsDto,
 });
 
 const mockSaveError = async (_payload: UpdateSystemSettingsInput) => ({
   success: false as const,
   error: { code: "INVALID_SUBSCRIPTION_PLAN_PRICE", message: "Preço inválido." },
+});
+
+const mockSaveOtpError = async (_payload: UpdateSystemSettingsInput) => ({
+  success: false as const,
+  error: {
+    code: "INVALID_OTP_CONTRACT_ENABLED",
+    message: "otp_contract_enabled must be 'true' or 'false'.",
+  },
 });
 
 const mockSavePending = (): Promise<never> => new Promise(() => {});
@@ -65,6 +78,12 @@ const filledValues: SystemSettingsDto = {
   payment_provider: "pagarme",
   subscription_plan_id: "plan_abc123",
   subscription_plan_price_cents: "4990",
+  otp_contract_enabled: "false",
+};
+
+const filledValuesOtpOn: SystemSettingsDto = {
+  ...filledValues,
+  otp_contract_enabled: "true",
 };
 
 // ---------------------------------------------------------------------------
@@ -126,4 +145,33 @@ export const Disabled: StoryObj<typeof SettingsForm> = {
     initialValues: filledValues,
     saveAction: mockSaveSuccess,
   },
+};
+
+/** Toggle do OTP no aceite do contrato — estado ligado */
+export const OtpEnabled: StoryObj<typeof SettingsForm> = {
+  name: "OTP do contrato ativado",
+  args: {
+    initialValues: filledValuesOtpOn,
+    saveAction: mockSaveSuccess,
+  },
+};
+
+/** Toggle do OTP no aceite do contrato — estado desligado */
+export const OtpDisabled: StoryObj<typeof SettingsForm> = {
+  name: "OTP do contrato desativado",
+  args: {
+    initialValues: filledValues,
+    saveAction: mockSaveSuccess,
+  },
+};
+
+/** Erro específico do backend ao salvar a flag do OTP */
+export const OtpSaveError: StoryObj<typeof SettingsForm> = {
+  name: "Erro ao salvar OTP do contrato",
+  render: () => (
+    <SettingsForm
+      initialValues={filledValues}
+      saveAction={mockSaveOtpError}
+    />
+  ),
 };

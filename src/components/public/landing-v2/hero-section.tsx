@@ -12,7 +12,7 @@ export function HeroSection() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <path d="M12 3l8 3v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-3z" />
             </svg>
-            50% de desconto em emergências
+            50% de desconto* em emergências
           </div>
 
           <h1 className="font-display text-[clamp(36px,10vw,58px)] leading-[1.05] tracking-[-0.03em] text-ink">
@@ -20,7 +20,7 @@ export function HeroSection() {
           </h1>
 
           <p className="max-w-[480px] text-base leading-[1.55] text-ink-soft">
-            O Plano Emergência Late & Mia garante metade do valor dos atendimentos urgentes para o seu pet — de forma simples, com mensalidade fixa.
+            O Plano Emergência Dr. Cleitinho garante metade do valor dos atendimentos urgentes para o seu pet — de forma simples, com mensalidade fixa.
           </p>
 
           <div className="flex w-full flex-col gap-3 sm:flex-row sm:w-auto">
@@ -58,9 +58,17 @@ export function HeroSection() {
             <div className="text-[12.5px] leading-[1.35] text-ink-soft">
               <strong className="text-ink">Tutores que já confiam no plano.</strong>
               <br />
-              Atendimento 24h na Late & Mia, Camboriú.
+              Atendimento 24h no Dr. Cleitinho, Camboriú.
             </div>
           </div>
+
+          <p className="text-[11px] leading-[1.45] text-ink-muted">
+            *Após carência de 180 dias, em emergências atendidas na unidade Dr. Cleitinho (Camboriú), na fase aguda do quadro. Consulte exclusões e condições nos{' '}
+            <Link href="/termos" className="underline underline-offset-2 hover:text-ink">
+              termos do plano
+            </Link>
+            .
+          </p>
         </div>
 
         <div className="relative mx-5 mb-6 h-[280px] sm:mx-0 sm:mr-5 sm:my-5 sm:h-auto sm:min-h-[420px] lg:min-h-[480px]">
@@ -80,7 +88,7 @@ export function HeroSection() {
             </div>
             <div>
               <div className="text-[10px] font-semibold uppercase tracking-[1px] text-ink-muted">
-                Desconto garantido
+                Desconto garantido*
               </div>
               <div className="mt-0.5 font-display text-[22px] leading-none text-ink">50% off</div>
             </div>

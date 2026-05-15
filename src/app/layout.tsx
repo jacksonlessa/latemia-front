@@ -14,7 +14,7 @@ const dmSerifDisplay = DM_Serif_Display({ subsets: ['latin'], weight: '400', sty
 // its own.
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "Late & Mia",
+  title: "Dr. Cleitinho",
   description: "Plano de Emergência Veterinária — 50% de desconto em atendimentos emergenciais para o seu pet.",
 };
 

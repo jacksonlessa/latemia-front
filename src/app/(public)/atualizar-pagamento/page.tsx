@@ -22,7 +22,7 @@ export default function AtualizarPagamentoPage() {
           Atualizar forma de pagamento
         </h1>
         <p className="text-sm text-muted-foreground">
-          Late &amp; Mia — Plano de Emergência Veterinária
+          Dr. Cleitinho — Plano de Emergência Veterinária
         </p>
       </div>
 

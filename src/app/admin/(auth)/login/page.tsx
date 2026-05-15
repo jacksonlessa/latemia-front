@@ -47,9 +47,9 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center gap-2">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#4E8C75]">
-            <span className="text-lg font-bold text-white">L&M</span>
+            <span className="text-lg font-bold text-white">DC</span>
           </div>
-          <h1 className="text-xl font-semibold text-[#2C2C2E]">Late &amp; Mia</h1>
+          <h1 className="text-xl font-semibold text-[#2C2C2E]">Dr. Cleitinho</h1>
           <p className="text-sm text-[#6B6B6E]">Acesso ao painel administrativo</p>
         </div>
 

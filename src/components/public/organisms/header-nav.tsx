@@ -12,7 +12,7 @@ export function HeaderNav() {
         <Link href="/" aria-label="Ir para a página inicial" className="flex items-center gap-2.5">
           <BrandLogo width={34} height={34} priority />
           <div>
-            <div className="font-display text-[17px] leading-none text-ink">Late & Mia</div>
+            <div className="font-display text-[17px] leading-none text-ink">Dr. Cleitinho</div>
             <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-[1px] text-ink-muted">
               Clínica Veterinária
             </div>

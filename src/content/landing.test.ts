@@ -1,11 +1,16 @@
 import { describe, it, expect } from 'vitest';
 import { landingContent } from './landing';
 import { publicSite } from '@/config/public-site';
+import { FALLBACK_PRICE_PER_PET_CENTS } from '@/domain/public-config/get-public-config.use-case';
 
 describe('landing content integrity', () => {
-  it('should have priceCents === 2500 in both landingContent and publicSite', () => {
-    expect(landingContent.pricing.priceCents).toBe(2500);
-    expect(publicSite.price.perPetCents).toBe(2500);
+  it('should keep the static landing fallback price in sync with FALLBACK_PRICE_PER_PET_CENTS', () => {
+    // `landingContent.pricing.priceCents` is the build-time fallback used
+    // when the parent page does not (yet) inject the live price coming
+    // from `/v1/public-config`. It must always match the client-side
+    // fail-safe constant so the user never sees two different prices on
+    // the same render.
+    expect(landingContent.pricing.priceCents).toBe(FALLBACK_PRICE_PER_PET_CENTS);
   });
 
   it('should have whatsapp.number === 5547997077953 in both sources', () => {

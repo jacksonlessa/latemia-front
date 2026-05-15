@@ -38,6 +38,17 @@ export function Footer() {
         © {year} {publicSite.siteName}. Todos os direitos reservados.
       </p>
       <p className="text-[10.5px] text-white/20">
+        Desenvolvido por{' '}
+        <a
+          href="https://www.jackssolutions.com.br/"
+          target="_blank"
+          rel="noopener"
+          className="underline-offset-2 transition-colors hover:text-white/40 hover:underline"
+        >
+          Jackson Lessa · Jack's Solutions
+        </a>
+      </p>
+      <p className="text-[10.5px] text-white/20">
         Fotografias:{' '}
         <a
           href="https://www.pexels.com/pt-br/@kaboompics"

@@ -66,7 +66,7 @@ function validDraft(overrides: Partial<CheckoutDraft> = {}): CheckoutDraft {
 describe("ValidateCheckoutDraftUseCase", () => {
   it("should return summary when client and all pets are valid", () => {
     const useCase = new ValidateCheckoutDraftUseCase();
-    const summary = useCase.execute(validDraft());
+    const summary = useCase.execute(validDraft(), { pricePerPetCents: 2500 });
 
     expect(summary.clientName).toBe("Maria da Silva");
     expect(summary.pets).toHaveLength(1);
@@ -79,10 +79,12 @@ describe("ValidateCheckoutDraftUseCase", () => {
     const useCase = new ValidateCheckoutDraftUseCase();
     const draft = validDraft({ client: validClient({ name: "" }) });
 
-    expect(() => useCase.execute(draft)).toThrow(ValidationError);
+    expect(() => useCase.execute(draft, { pricePerPetCents: 2500 })).toThrow(
+      ValidationError,
+    );
 
     try {
-      useCase.execute(draft);
+      useCase.execute(draft, { pricePerPetCents: 2500 });
     } catch (e) {
       expect((e as ValidationError).fieldErrors["name"]).toBeDefined();
     }
@@ -94,10 +96,12 @@ describe("ValidateCheckoutDraftUseCase", () => {
       pets: [validPet({ species: "reptil" as "canino" })],
     });
 
-    expect(() => useCase.execute(draft)).toThrow(ValidationError);
+    expect(() => useCase.execute(draft, { pricePerPetCents: 2500 })).toThrow(
+      ValidationError,
+    );
 
     try {
-      useCase.execute(draft);
+      useCase.execute(draft, { pricePerPetCents: 2500 });
     } catch (e) {
       expect((e as ValidationError).fieldErrors["species"]).toBeDefined();
     }
@@ -110,10 +114,20 @@ describe("ValidateCheckoutDraftUseCase", () => {
       validPet({ name: "Luna", species: "felino" }),
       validPet({ name: "Buddy" }),
     ];
-    const summary = useCase.execute(validDraft({ pets }));
+    const summary = useCase.execute(validDraft({ pets }), {
+      pricePerPetCents: 2500,
+    });
 
     expect(summary.pricePerPetCents).toBe(2500);
     expect(summary.totalCents).toBe(pets.length * 2500);
     expect(summary.totalCents).toBe(7500);
+  });
+
+  it("should propagate an injected non-default price", () => {
+    const useCase = new ValidateCheckoutDraftUseCase();
+    const summary = useCase.execute(validDraft(), { pricePerPetCents: 4990 });
+
+    expect(summary.pricePerPetCents).toBe(4990);
+    expect(summary.totalCents).toBe(4990);
   });
 });

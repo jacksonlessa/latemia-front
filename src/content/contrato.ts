@@ -25,12 +25,12 @@ export const CONTRACT_VERSION = 'v1.0';
  * Data de entrada em vigor desta versão dos TERMOS (ISO YYYY-MM-DD).
  * Exibida ao usuário ao lado de `CONTRACT_VERSION`.
  */
-export const CONTRACT_EFFECTIVE_DATE = '2026-05-13';
+export const CONTRACT_EFFECTIVE_DATE = '2026-05-14';
 
 export const CONTRATO_TEXTO = `# TERMOS DE USO E CONTRATO DE PRESTAÇÃO DE SERVIÇOS
 ## Plano Emergencial Veterinário Dr. Cleitinho
 
-**Versão do documento:** v1.0 — 2026-05-13
+**Versão do documento:** v1.0 — 14/05/2026
 
 > **Aviso a VOCÊ:** este é o texto que VOCÊ está aceitando ao contratar o Plano Emergencial Veterinário Dr. Cleitinho. **Leia com atenção.** Ao concluir o aceite eletrônico no fluxo de contratação, VOCÊ **declara ter lido, compreendido e concordado** com cada uma das cláusulas a seguir, bem como com a **[Política de Privacidade](https://plano.drcleitinho.com.br/privacidade)** da Dr. Cleitinho, que é parte integrante destes TERMOS.
 
@@ -73,7 +73,7 @@ Para os fins destes TERMOS, as expressões abaixo, quando grafadas com inicial m
 
 **1.12.** **TERMOS** ou **CONTRATO:** este documento, em sua versão vigente identificada pela VERSÃO DO CONTRATO.
 
-**1.13.** **VERSÃO DO CONTRATO:** identificador único que individualiza cada edição destes TERMOS, composto pelo número de versão e data de entrada em vigor (exemplo: \`v1.0 — 2026-05-13\`). A VERSÃO DO CONTRATO aceita por VOCÊ no momento do aceite eletrônico é registrada no log de auditoria descrito na Cláusula 5.3 e preservada em snapshot para fins probatórios.
+**1.13.** **VERSÃO DO CONTRATO:** identificador único que individualiza cada edição destes TERMOS, composto pelo número de versão e data de entrada em vigor (exemplo: \`v1.0 — 14/05/2026\`). A VERSÃO DO CONTRATO aceita por VOCÊ no momento do aceite eletrônico é registrada no log de auditoria descrito na Cláusula 5.3 e preservada em snapshot para fins probatórios.
 
 **1.14.** **POLÍTICA DE PRIVACIDADE:** documento separado, parte integrante destes TERMOS, que descreve em detalhe o tratamento de dados pessoais pela Dr. Cleitinho.
 
@@ -224,7 +224,7 @@ A Dr. Cleitinho mantém canal de orientação por WhatsApp para esclarecimento d
 
 **8.2.** O exercício do direito de arrependimento **não impõe a VOCÊ qualquer ônus**: a Dr. Cleitinho realizará o **reembolso integral** do valor pago, mediante estorno no cartão de crédito utilizado, no prazo previsto pelo Processador de Pagamento.
 
-**8.3.** A manifestação da desistência deverá ser encaminhada por VOCÊ ao canal oficial de exercício do direito de arrependimento: **arrependimento@drcleitinho.com.br** — com indicação clara da intenção de exercer o direito de arrependimento. A Dr. Cleitinho enviará retorno automático de protocolo confirmando o recebimento.
+**8.3.** A manifestação da desistência deverá ser encaminhada por VOCÊ ao canal oficial de Atendimento ao Consumidor (SAC) da Dr. Cleitinho: **sac@drcleitinho.com.br** — com indicação clara da intenção de exercer o direito de arrependimento. A Dr. Cleitinho enviará retorno automático de protocolo confirmando o recebimento.
 
 **8.4.** O direito de arrependimento **não se aplica** caso VOCÊ já tenha utilizado qualquer dos benefícios do PLANO no período de 7 dias.
 
@@ -236,7 +236,7 @@ A Dr. Cleitinho mantém canal de orientação por WhatsApp para esclarecimento d
 
 **9.2.** O cancelamento pode ser solicitado:
 
-(i) **diretamente** em canal oficial de atendimento da Dr. Cleitinho (e-mail, WhatsApp ou telefone); ou
+(i) **diretamente** em canal oficial de Atendimento ao Consumidor (SAC) da Dr. Cleitinho — e-mail **sac@drcleitinho.com.br**, WhatsApp ou telefone; ou
 (ii) mediante **link público de confirmação** enviado por atendente da Dr. Cleitinho, com validade de **7 (sete) dias** — após esse prazo o link expira automaticamente, e novo link gerado invalida o anterior.
 
 **9.3.** A cobertura **permanece ativa até o final do ciclo já pago** (\`coveredUntil\`). **Não há reembolso proporcional** dos dias remanescentes do ciclo em curso.

@@ -3,7 +3,23 @@ import { publicSite } from '@/config/public-site';
 
 const whatsappHref = `https://wa.me/${publicSite.whatsapp.number}`;
 
-export function PriceSection() {
+interface PriceSectionProps {
+  /** Per-pet monthly price in cents — injected by the page (SSR fetch). */
+  pricePerPetCents: number;
+}
+
+const formatter = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
+
+export function PriceSection({ pricePerPetCents }: PriceSectionProps) {
+  // `25` na cópia original; agora deriva do back. Sempre cents → real,
+  // sem decimais para preservar o layout do bloco hero da landing.
+  const display = formatter.format(Math.round(pricePerPetCents / 100));
+
   return (
     <section id="contratar" className="bg-forest-deep py-16">
       <div className="mx-auto w-full max-w-[1120px] px-5">
@@ -20,9 +36,11 @@ export function PriceSection() {
             <div className="text-[12px] font-semibold uppercase tracking-[1.4px] text-white/60">
               Preço justo, sem surpresas
             </div>
-            <div className="flex items-baseline gap-1.5 font-display text-[72px] leading-none tracking-[-2px] text-white">
-              <span className="text-[28px] font-medium">R$</span>
-              <span>25</span>
+            <div
+              className="flex items-baseline gap-1.5 font-display text-[72px] leading-none tracking-[-2px] text-white"
+              aria-label={`${display} por pet por mês`}
+            >
+              <span>{display}</span>
               <span className="ml-1 font-sans text-base font-medium tracking-normal text-white/70">
                 /pet · mês
               </span>
