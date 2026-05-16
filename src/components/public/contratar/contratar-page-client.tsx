@@ -144,15 +144,6 @@ const OTP_VERIFICATION_FAILURE_CODES = new Set([
   'OTP_VERIFICATION_TOKEN_INVALID',
 ]);
 
-// TEMPORARY — instrumentação para reproduzir o bug "OTP token perdido
-// após retry" em homolog (docs/debug/2026-05-16-otp-token-perdido-apos-retry.md).
-// Remover quando a causa raiz estiver isolada. Mascara o token para não
-// vazar valor inteiro nos logs do navegador.
-function maskOtp(v: string | null | undefined): string | null {
-  if (!v) return null;
-  return v.length <= 6 ? `${v}***` : `${v.slice(0, 6)}...`;
-}
-
 const em = (word: string) => (
   <span style={{ color: '#5D7A5E' }}>{word}</span>
 );
@@ -226,14 +217,6 @@ export function ContratarPageClient() {
   // -------------------------------------------------------------------------
   useEffect(() => {
     const draft = loadDraft();
-    // eslint-disable-next-line no-console
-    console.info('[otp-trace]', {
-      marker: 'hydrate',
-      hasDraft: draft !== null,
-      step: draft?.step,
-      contractAttemptId: maskOtp(draft?.contractAttemptId),
-      otpVerificationToken: maskOtp(draft?.otpVerificationToken),
-    });
     if (draft !== null) {
       setState((prev) => ({
         ...prev,
@@ -278,13 +261,6 @@ export function ContratarPageClient() {
     if (!hydratedRef.current) return;
     // Do not persist terminal step (success) — clearDraft handles that
     if (state.step === 4) return;
-    // eslint-disable-next-line no-console
-    console.info('[otp-trace]', {
-      marker: 'saveDraft',
-      step: state.step,
-      contractAttemptId: maskOtp(state.contractAttemptId),
-      otpVerificationToken: maskOtp(state.otpVerificationToken),
-    });
     saveDraft({
       step: state.step as 0 | 1 | 2 | 3,
       client: state.client,
@@ -340,23 +316,12 @@ export function ContratarPageClient() {
   // later.
   // -------------------------------------------------------------------------
   function handleContractAttemptIdAssigned(id: string): void {
-    // eslint-disable-next-line no-console
-    console.info('[otp-trace]', {
-      marker: 'handleContractAttemptIdAssigned',
-      contractAttemptId: maskOtp(id),
-    });
     setState((prev) =>
       prev.contractAttemptId === id ? prev : { ...prev, contractAttemptId: id },
     );
   }
 
   function handleOtpVerified(verificationToken: string): void {
-    // eslint-disable-next-line no-console
-    console.info('[otp-trace]', {
-      marker: 'handleOtpVerified',
-      otpVerificationToken: maskOtp(verificationToken),
-      hasToken: Boolean(verificationToken),
-    });
     setState((prev) => ({ ...prev, otpVerificationToken: verificationToken }));
   }
 
@@ -437,30 +402,13 @@ export function ContratarPageClient() {
   async function handleFinalizeCheckout(cardInput: CardFormValue): Promise<void> {
     if (!state.contractAcceptedAt) return;
 
-    // eslint-disable-next-line no-console
-    console.info('[otp-trace]', {
-      marker: 'handleFinalizeCheckout:start',
-      step: state.step,
-      otpEnabled: publicConfig.otpContractEnabled,
-      contractAttemptId: maskOtp(state.contractAttemptId),
-      otpVerificationToken: maskOtp(state.otpVerificationToken),
-    });
-
-    // Guarda — quando OTP de contrato está ON, o par (verificationToken,
-    // contractAttemptId) tem que existir antes do submit. Sem isso, o
-    // backend rejeitaria com OTP_VERIFICATION_REQUIRED após queimar
-    // stages 3-5 toda vez. Falhar cedo na UI e oferecer o caminho de
-    // recuperação ("Voltar ao contrato").
+    // Guard — when OTP is enabled, both tokens must be present before
+    // submitting. Without this, the backend would reject with
+    // OTP_VERIFICATION_REQUIRED after burning stages 3–5 unnecessarily.
     if (
       publicConfig.otpContractEnabled &&
       (!state.otpVerificationToken || !state.contractAttemptId)
     ) {
-      // eslint-disable-next-line no-console
-      console.warn('[otp-trace]', {
-        marker: 'handleFinalizeCheckout:guard:blocked',
-        contractAttemptId: maskOtp(state.contractAttemptId),
-        otpVerificationToken: maskOtp(state.otpVerificationToken),
-      });
       setState((prev) => ({
         ...prev,
         isSubmitting: false,
@@ -641,8 +589,6 @@ export function ContratarPageClient() {
   // re-enter data; only the expired token and the error overlay are reset.
   // -------------------------------------------------------------------------
   function handleBackToContract(): void {
-    // eslint-disable-next-line no-console
-    console.info('[otp-trace]', { marker: 'handleBackToContract' });
     setState((prev) => ({
       ...prev,
       step: 2,
@@ -665,11 +611,6 @@ export function ContratarPageClient() {
   // -------------------------------------------------------------------------
   function handleBack(): void {
     if (state.step === 0) return;
-    // eslint-disable-next-line no-console
-    console.info('[otp-trace]', {
-      marker: 'handleBack',
-      fromStep: state.step,
-    });
     setState((prev) => ({
       ...prev,
       step: (prev.step - 1) as WizardStep,
