@@ -526,6 +526,15 @@ export class FinalizeCheckoutUseCase {
           client_id: clientId,
           pet_ids: petIds,
           card_token: cardToken,
+          // Quando OTP de contrato está ON, o backend faz peek do token aqui
+          // antes de chamar a Pagar.me — evita cobrança com token já expirado.
+          // O consume atômico continua acontecendo no stage 7.
+          ...(input.verificationToken
+            ? { verification_token: input.verificationToken }
+            : {}),
+          ...(input.contractAttemptId
+            ? { contract_attempt_id: input.contractAttemptId }
+            : {}),
         },
         { idempotent: true, idempotencyKey },
         requestId,
