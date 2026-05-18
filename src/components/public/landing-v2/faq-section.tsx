@@ -38,19 +38,34 @@ const items: FaqEntry[] = [
       'Após o primeiro pagamento confirmado, o plano fica em carência por 6 meses. O contrato está ativo, mas o desconto emergencial ainda não pode ser utilizado. A partir do 7.º mês, o benefício está disponível integralmente.',
   },
   {
+    question: 'E se eu precisar de emergência durante a carência?',
+    answer:
+      'O desconto emergencial de 50% ainda não está disponível nos primeiros 6 meses. Mas os descontos do Clube de Vantagens — em consultas, vacinas e outros procedimentos na clínica — já valem desde o primeiro dia.',
+  },
+  {
     question: 'O que é considerado emergência veterinária?',
     answer:
-      'Qualquer situação que coloca a vida do animal em risco imediato ou causa sofrimento intenso e agudo — traumas, convulsões, intoxicações, hemorragias e dificuldade respiratória. Consultas de rotina ou procedimentos eletivos não se enquadram.',
+      'Situações que colocam a vida do pet em risco imediato ou que precisam de atendimento urgente para evitar piora grave — como traumas, convulsões, intoxicações, hemorragias e dificuldade respiratória. Consultas de rotina e procedimentos agendados não estão incluídos.',
+  },
+  {
+    question: 'O benefício funciona em qualquer clínica veterinária?',
+    answer:
+      'Não. O desconto de 50% é aplicado exclusivamente na Dr. Cleitinho. Ao chegar, basta informar que você é assinante — a equipe verifica o cadastro e aplica o desconto na hora.',
+  },
+  {
+    question: 'O desconto de 50% cobre internação e cirurgia?',
+    answer:
+      'Cobre toda a fase aguda da emergência: consulta, medicações administradas durante o atendimento e cirurgia de emergência se necessária. Internação de continuidade e cirurgias eletivas não estão incluídas no desconto.',
   },
   {
     question: 'Como o pagamento é feito?',
     answer:
-      'O plano é cobrado mensalmente via débito recorrente. O valor é fixo por pet e não sofre reajustes surpresa ao longo do período anual.',
+      'A cobrança é mensal e automática no seu cartão de crédito. O valor é reajustado uma vez por ano pelo IPCA (inflação oficial), sempre com aviso de 30 dias de antecedência.',
   },
   {
-    question: 'Como utilizo o benefício quando precisar?',
+    question: 'Meus dados de cartão ficam salvos com vocês?',
     answer:
-      'Leve seu pet diretamente ao Dr. Cleitinho informando que é assinante do plano. A equipe verifica o cadastro e aplica o desconto de 50% automaticamente. Sem reembolso posterior.',
+      'Não. Os dados do cartão são processados diretamente pelo Pagar.me, nosso provedor de pagamento, e nunca passam pelos nossos servidores. Guardamos apenas uma referência anônima gerada pelo Pagar.me para realizar as cobranças mensais.',
   },
   {
     question: 'Posso incluir mais de um pet?',
@@ -60,7 +75,12 @@ const items: FaqEntry[] = [
   {
     question: 'Posso cancelar a qualquer momento?',
     answer:
-      'Sim. O cancelamento pode ser solicitado a qualquer momento sem multa. O plano permanece ativo até o fim do período já pago. Entre em contato pelo WhatsApp.',
+      'Sim, sem multa e sem aviso prévio. O plano continua ativo até o fim do mês já pago. Se quiser retomar depois, é só contratar novamente. Fale com a gente pelo WhatsApp ou e-mail.',
+  },
+  {
+    question: 'Posso me arrepender e pedir reembolso?',
+    answer:
+      'Sim. Você tem 7 dias a partir da contratação para cancelar e receber o valor integral de volta, desde que ainda não tenha utilizado nenhum benefício. Basta entrar em contato pelo WhatsApp ou e-mail.',
   },
 ];
 
