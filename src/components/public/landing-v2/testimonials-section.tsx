@@ -11,21 +11,21 @@ const items: Testimonial[] = [
     petLine: 'Tutora da Mel 🐾',
     initial: 'A',
     quote:
-      '"A Mel foi atendida às 2h da manhã. Graças ao plano, paguei metade e o atendimento foi impecável. Recomendo para todo tutor responsável!"',
+      '"A equipe é extremamente atenciosa e cuidadosa. Senti que a Mel estava em boas mãos do primeiro minuto. Explicaram cada passo do atendimento com paciência e carinho."',
   },
   {
     name: 'Carlos M.',
     petLine: 'Tutor do Thor 🐕',
     initial: 'C',
     quote:
-      '"Meu cachorro engoliu algo que não devia e precisou de atendimento urgente. O plano cobriu 50% e o processo foi simples, sem burocracia."',
+      '"Clínica organizada, limpa e com profissionais muito preparados. O Dr. e a equipe trataram o Thor com o mesmo carinho que eu trataria. Atendimento humano de verdade."',
   },
   {
     name: 'Fernanda R.',
     petLine: 'Tutora da Luna 🐈',
     initial: 'F',
     quote:
-      '"Ótimo custo-benefício. Mensalidade acessível e quando precisei o desconto foi aplicado na hora. Plano simples e honesto como prometido."',
+      '"Estrutura excelente e atendimento ágil. A Luna sempre fica tranquila durante as consultas — isso só acontece quando o ambiente e as pessoas transmitem confiança."',
   },
 ];
 
