@@ -402,6 +402,27 @@ export function ContratarPageClient() {
   async function handleFinalizeCheckout(cardInput: CardFormValue): Promise<void> {
     if (!state.contractAcceptedAt) return;
 
+    // Guard — when OTP is enabled, both tokens must be present before
+    // submitting. Without this, the backend would reject with
+    // OTP_VERIFICATION_REQUIRED after burning stages 3–5 unnecessarily.
+    if (
+      publicConfig.otpContractEnabled &&
+      (!state.otpVerificationToken || !state.contractAttemptId)
+    ) {
+      setState((prev) => ({
+        ...prev,
+        isSubmitting: false,
+        paymentMode: 'error',
+        errorStage: 6,
+        errorMessage:
+          'Sua sessão de verificação expirou. Volte ao contrato e gere um novo código.',
+        errorRequestId: undefined,
+        errorRetryable: true,
+        checkoutOtpErrorCode: 'OTP_VERIFICATION_REQUIRED',
+      }));
+      return;
+    }
+
     // Build summary synchronously (used to render success screen)
     const validateUseCase = new ValidateCheckoutDraftUseCase();
     let summary: CheckoutSummary;
@@ -584,7 +605,9 @@ export function ContratarPageClient() {
   }
 
   // -------------------------------------------------------------------------
-  // handleBack — decrement step, clear errors
+  // handleBack — decrement step, clear errors. Also clears the OTP token
+  // (paridade com handleBackToContract) — qualquer caminho que sai do step
+  // de pagamento de volta para o de contrato precisa de um OTP fresco.
   // -------------------------------------------------------------------------
   function handleBack(): void {
     if (state.step === 0) return;
@@ -592,6 +615,7 @@ export function ContratarPageClient() {
       ...prev,
       step: (prev.step - 1) as WizardStep,
       fieldErrors: {},
+      otpVerificationToken: null,
     }));
   }
 
