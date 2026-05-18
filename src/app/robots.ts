@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { SITE_URL } from '@/config/seo';
+import { SITE_URL, siteAbsoluteUrl } from '@/config/seo';
 
 // Generates `/robots.txt`:
 //   - Allows crawling of every public route under `(public)`.
@@ -16,7 +16,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/admin/', '/api/', '/contratar/sucesso'],
       },
     ],
-    sitemap: `${SITE_URL}/sitemap.xml`,
+    sitemap: siteAbsoluteUrl('/sitemap.xml'),
     host: SITE_URL,
   };
 }

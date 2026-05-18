@@ -180,5 +180,24 @@ export function getSeoMetadata(path: SeoRoutePath): Metadata {
   };
 }
 
-export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://latemia.com.br';
+const DEFAULT_SITE_URL = 'https://latemia.com.br';
+
+/** Strips trailing slashes so `${SITE_URL}/path` never becomes `//path`. */
+function normalizeSiteUrl(raw: string): string {
+  return raw.trim().replace(/\/+$/, '');
+}
+
+export const SITE_URL = normalizeSiteUrl(
+  process.env.NEXT_PUBLIC_SITE_URL ?? DEFAULT_SITE_URL,
+);
+
+/**
+ * Absolute URL for a public path. Safe when `NEXT_PUBLIC_SITE_URL` ends with `/`.
+ */
+export function siteAbsoluteUrl(path: string = '/'): string {
+  if (!path || path === '/') {
+    return `${SITE_URL}/`;
+  }
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${SITE_URL}${normalizedPath}`;
+}
