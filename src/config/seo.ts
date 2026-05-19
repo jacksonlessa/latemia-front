@@ -17,7 +17,8 @@ import type { Metadata } from 'next';
 
 const OG_IMAGE_FALLBACK = '/brand/logo.png';
 
-const BRAND_NAME = 'Dr. Cleitinho';
+const CLINIC_NAME = 'Late&Mia Clínica Veterinária';
+const PRODUCT_COMMERCIAL_NAME = 'Plano Emergencial Pet Dr. Cleitinho';
 const TWITTER_CARD = 'summary_large_image' as const;
 
 type SeoEntry = {
@@ -29,13 +30,13 @@ type SeoEntry = {
 
 export const seoConfig = {
   '/': {
-    title: 'Plano de Emergência Veterinária — Dr. Cleitinho',
+    title: `${PRODUCT_COMMERCIAL_NAME} — ${CLINIC_NAME}`,
     description:
       'Garanta 50% de desconto nos atendimentos emergenciais do seu pet. Plano simples, mensalidade fixa por pet, sem surpresas — Camboriú, Balneário Camboriú, Itapema e Itajaí.',
     openGraph: {
       type: 'website',
-      siteName: BRAND_NAME,
-      title: 'Plano de Emergência Veterinária — Dr. Cleitinho',
+      siteName: CLINIC_NAME,
+      title: `${PRODUCT_COMMERCIAL_NAME} — ${CLINIC_NAME}`,
       description:
         'Plano simples com 50% de desconto em atendimentos emergenciais para o seu pet.',
       images: [
@@ -43,126 +44,126 @@ export const seoConfig = {
           url: OG_IMAGE_FALLBACK,
           width: 1200,
           height: 630,
-          alt: 'Dr. Cleitinho — Plano de Emergência Veterinária',
+          alt: `${CLINIC_NAME} — ${PRODUCT_COMMERCIAL_NAME}`,
         },
       ],
       locale: 'pt_BR',
     },
     twitter: {
       card: TWITTER_CARD,
-      title: 'Plano de Emergência Veterinária — Dr. Cleitinho',
+      title: `${PRODUCT_COMMERCIAL_NAME} — ${CLINIC_NAME}`,
       description:
         'Plano simples com 50% de desconto em atendimentos emergenciais para o seu pet.',
       images: [OG_IMAGE_FALLBACK],
     },
   },
   '/privacidade': {
-    title: 'Política de Privacidade — Dr. Cleitinho Clínica Veterinária',
+    title: `Política de Privacidade — ${CLINIC_NAME}`,
     description:
-      'Saiba como a Dr. Cleitinho Clínica Veterinária coleta, usa e protege seus dados pessoais. Política de Privacidade em conformidade com a LGPD.',
+      `Saiba como a ${CLINIC_NAME} coleta, usa e protege seus dados pessoais no âmbito do ${PRODUCT_COMMERCIAL_NAME}. Política em conformidade com a LGPD.`,
     openGraph: {
       type: 'article',
-      siteName: BRAND_NAME,
-      title: 'Política de Privacidade — Dr. Cleitinho',
+      siteName: CLINIC_NAME,
+      title: `Política de Privacidade — ${CLINIC_NAME}`,
       description:
-        'Como tratamos os seus dados pessoais no Plano Emergência Veterinária.',
+        `Como tratamos os seus dados pessoais no ${PRODUCT_COMMERCIAL_NAME}.`,
       images: [
         {
           url: OG_IMAGE_FALLBACK,
           width: 1200,
           height: 630,
-          alt: 'Dr. Cleitinho — Política de Privacidade',
+          alt: `${CLINIC_NAME} — Política de Privacidade`,
         },
       ],
       locale: 'pt_BR',
     },
     twitter: {
       card: TWITTER_CARD,
-      title: 'Política de Privacidade — Dr. Cleitinho',
+      title: `Política de Privacidade — ${CLINIC_NAME}`,
       description:
-        'Como tratamos os seus dados pessoais no Plano Emergência Veterinária.',
+        `Como tratamos os seus dados pessoais no ${PRODUCT_COMMERCIAL_NAME}.`,
       images: [OG_IMAGE_FALLBACK],
     },
   },
   '/termos': {
-    title: 'Termos de Uso — Dr. Cleitinho Clínica Veterinária',
+    title: `Termos de Uso — ${PRODUCT_COMMERCIAL_NAME}`,
     description:
-      'Termos de Uso do Plano Emergência Veterinária Dr. Cleitinho: cobertura, carência, mensalidade e condições de cancelamento.',
+      `Termos de Uso do ${PRODUCT_COMMERCIAL_NAME}: cobertura, carência, mensalidade e condições de cancelamento. Produto da ${CLINIC_NAME}.`,
     openGraph: {
       type: 'article',
-      siteName: BRAND_NAME,
-      title: 'Termos de Uso — Dr. Cleitinho',
-      description: 'Condições de uso do Plano Emergência Veterinária Dr. Cleitinho.',
+      siteName: CLINIC_NAME,
+      title: `Termos de Uso — ${PRODUCT_COMMERCIAL_NAME}`,
+      description: `Condições de uso do ${PRODUCT_COMMERCIAL_NAME}.`,
       images: [
         {
           url: OG_IMAGE_FALLBACK,
           width: 1200,
           height: 630,
-          alt: 'Dr. Cleitinho — Termos de Uso',
+          alt: `${CLINIC_NAME} — Termos de Uso`,
         },
       ],
       locale: 'pt_BR',
     },
     twitter: {
       card: TWITTER_CARD,
-      title: 'Termos de Uso — Dr. Cleitinho',
-      description: 'Condições de uso do Plano Emergência Veterinária Dr. Cleitinho.',
+      title: `Termos de Uso — ${PRODUCT_COMMERCIAL_NAME}`,
+      description: `Condições de uso do ${PRODUCT_COMMERCIAL_NAME}.`,
       images: [OG_IMAGE_FALLBACK],
     },
   },
   '/lgpd': {
-    title: 'Direitos do Titular (LGPD) — Dr. Cleitinho Clínica Veterinária',
+    title: `Direitos do Titular (LGPD) — ${CLINIC_NAME}`,
     description:
-      'Exerça os seus direitos LGPD: acesso, correção, portabilidade, eliminação e revogação de consentimento dos seus dados pessoais junto à Dr. Cleitinho.',
+      `Exerça os seus direitos LGPD: acesso, correção, portabilidade, eliminação e revogação de consentimento dos seus dados pessoais junto à ${CLINIC_NAME}.`,
     openGraph: {
       type: 'article',
-      siteName: BRAND_NAME,
-      title: 'Direitos do Titular (LGPD) — Dr. Cleitinho',
+      siteName: CLINIC_NAME,
+      title: `Direitos do Titular (LGPD) — ${CLINIC_NAME}`,
       description:
-        'Como exercer os seus direitos como titular de dados pessoais junto à Dr. Cleitinho.',
+        `Como exercer os seus direitos como titular de dados pessoais junto à ${CLINIC_NAME}.`,
       images: [
         {
           url: OG_IMAGE_FALLBACK,
           width: 1200,
           height: 630,
-          alt: 'Dr. Cleitinho — Direitos do Titular (LGPD)',
+          alt: `${CLINIC_NAME} — Direitos do Titular (LGPD)`,
         },
       ],
       locale: 'pt_BR',
     },
     twitter: {
       card: TWITTER_CARD,
-      title: 'Direitos do Titular (LGPD) — Dr. Cleitinho',
+      title: `Direitos do Titular (LGPD) — ${CLINIC_NAME}`,
       description:
-        'Como exercer os seus direitos como titular de dados pessoais junto à Dr. Cleitinho.',
+        `Como exercer os seus direitos como titular de dados pessoais junto à ${CLINIC_NAME}.`,
       images: [OG_IMAGE_FALLBACK],
     },
   },
   '/beneficios': {
-    title: 'Clube de Vantagens — Dr. Cleitinho Clínica Veterinária',
+    title: `Clube de Vantagens — ${PRODUCT_COMMERCIAL_NAME}`,
     description:
-      'Tabela vigente do Clube de Vantagens: descontos em procedimentos eletivos prestados pela Dr. Cleitinho aos clientes do Plano Emergência Veterinária.',
+      `Tabela vigente do Clube de Vantagens: descontos em procedimentos eletivos prestados pela ${CLINIC_NAME} aos clientes do ${PRODUCT_COMMERCIAL_NAME}.`,
     openGraph: {
       type: 'article',
-      siteName: BRAND_NAME,
-      title: 'Clube de Vantagens — Dr. Cleitinho',
+      siteName: CLINIC_NAME,
+      title: `Clube de Vantagens — ${PRODUCT_COMMERCIAL_NAME}`,
       description:
-        'Tabela de descontos do Clube de Vantagens do Plano Emergência Veterinária Dr. Cleitinho.',
+        `Tabela de descontos do Clube de Vantagens do ${PRODUCT_COMMERCIAL_NAME}.`,
       images: [
         {
           url: OG_IMAGE_FALLBACK,
           width: 1200,
           height: 630,
-          alt: 'Dr. Cleitinho — Clube de Vantagens',
+          alt: `${CLINIC_NAME} — Clube de Vantagens`,
         },
       ],
       locale: 'pt_BR',
     },
     twitter: {
       card: TWITTER_CARD,
-      title: 'Clube de Vantagens — Dr. Cleitinho',
+      title: `Clube de Vantagens — ${PRODUCT_COMMERCIAL_NAME}`,
       description:
-        'Tabela de descontos do Clube de Vantagens do Plano Emergência Veterinária Dr. Cleitinho.',
+        `Tabela de descontos do Clube de Vantagens do ${PRODUCT_COMMERCIAL_NAME}.`,
       images: [OG_IMAGE_FALLBACK],
     },
   },
@@ -180,5 +181,24 @@ export function getSeoMetadata(path: SeoRoutePath): Metadata {
   };
 }
 
-export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://latemia.com.br';
+const DEFAULT_SITE_URL = 'https://latemia.com.br';
+
+/** Strips trailing slashes so `${SITE_URL}/path` never becomes `//path`. */
+function normalizeSiteUrl(raw: string): string {
+  return raw.trim().replace(/\/+$/, '');
+}
+
+export const SITE_URL = normalizeSiteUrl(
+  process.env.NEXT_PUBLIC_SITE_URL ?? DEFAULT_SITE_URL,
+);
+
+/**
+ * Absolute URL for a public path. Safe when `NEXT_PUBLIC_SITE_URL` ends with `/`.
+ */
+export function siteAbsoluteUrl(path: string = '/'): string {
+  if (!path || path === '/') {
+    return `${SITE_URL}/`;
+  }
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${SITE_URL}${normalizedPath}`;
+}

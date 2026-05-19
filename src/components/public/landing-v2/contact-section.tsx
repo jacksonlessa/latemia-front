@@ -26,7 +26,7 @@ export function ContactSection() {
               allowFullScreen
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              title="Localização Dr. Cleitinho"
+              title="Localização Late&Mia Clínica Veterinária"
               className="h-full w-full rounded-[18px] border-none"
             />
           </div>

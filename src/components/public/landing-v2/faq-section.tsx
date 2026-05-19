@@ -50,7 +50,7 @@ const items: FaqEntry[] = [
   {
     question: 'O benefício funciona em qualquer clínica veterinária?',
     answer:
-      'Não. O desconto de 50% é aplicado exclusivamente na Dr. Cleitinho. Ao chegar, basta informar que você é assinante — a equipe verifica o cadastro e aplica o desconto na hora.',
+      'Não. O desconto de 50% é aplicado exclusivamente na Late&Mia Clínica Veterinária. Ao chegar, basta informar que você é assinante — a equipe verifica o cadastro e aplica o desconto na hora.',
   },
   {
     question: 'O desconto de 50% cobre internação e cirurgia?',

@@ -18,7 +18,7 @@ export const metadata: Metadata = getSeoMetadata('/');
 const orgLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
-  name: 'Dr. Cleitinho Clínica Veterinária',
+  name: 'Late&Mia Clínica Veterinária',
   url: SITE_URL,
   logo: `${SITE_URL}/brand/logo.png`,
   // TODO(seo-analytics-lgpd-utm): preencher `sameAs` com Instagram/Facebook
@@ -49,12 +49,12 @@ function buildServiceLd(pricePerPetCents: number) {
   return {
     '@context': 'https://schema.org',
     '@type': 'Service',
-    name: 'Plano de Emergência Veterinária',
+    name: 'Plano Emergencial Pet Dr. Cleitinho',
     serviceType:
-      'Plano de desconto para atendimentos veterinários emergenciais',
+      'Plano emergencial veterinário com desconto em atendimentos urgentes',
     provider: {
       '@type': 'Organization',
-      name: 'Dr. Cleitinho Clínica Veterinária',
+      name: 'Late&Mia Clínica Veterinária',
       url: SITE_URL,
     },
     areaServed: [

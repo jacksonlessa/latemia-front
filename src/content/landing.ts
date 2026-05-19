@@ -83,7 +83,7 @@ export interface LandingContent {
 
 export const landingContent: LandingContent = {
   hero: {
-    title: 'Plano de Emergência Veterinária para o seu pet',
+    title: 'Plano Emergencial Pet Dr. Cleitinho para o seu pet',
     subtitle:
       'Garanta 50% de desconto nos atendimentos de emergência 24h para o seu companheiro, sem surpresas no final do mês.',
     ctaLabel: 'Contratar plano',
@@ -91,7 +91,7 @@ export const landingContent: LandingContent = {
   },
 
   benefits: {
-    heading: 'Por que contratar o Plano Emergência Dr. Cleitinho?',
+    heading: 'Por que contratar o Plano Emergencial Pet Dr. Cleitinho?',
     items: [
       {
         title: '50% de desconto em emergências',
@@ -198,7 +198,7 @@ export const landingContent: LandingContent = {
       {
         question: 'Como utilizo o benefício quando precisar?',
         answer:
-          'Leve seu pet diretamente à clínica Dr. Cleitinho informando que é assinante do plano. A equipe verificará o cadastro e aplicará o desconto de 50% automaticamente na hora do atendimento. Não é necessário reembolso posterior.',
+          'Leve seu pet diretamente à Late&Mia Clínica Veterinária informando que é assinante do plano. A equipe verificará o cadastro e aplicará o desconto de 50% automaticamente na hora do atendimento. Não é necessário reembolso posterior.',
       },
       {
         question: 'Posso contratar para mais de um pet?',
@@ -227,7 +227,7 @@ export const landingContent: LandingContent = {
     whatsapp: {
       number: '5547997077953',
       defaultMessage:
-        'Olá! Tenho interesse no Plano Emergência do Dr. Cleitinho e gostaria de mais informações.',
+        'Olá! Tenho interesse no Plano Emergencial Pet Dr. Cleitinho e gostaria de mais informações.',
     },
   },
 } as const;
