@@ -10,10 +10,10 @@ import {
 import { TouchpointProvider } from '@/domain/touchpoints/touchpoint-provider';
 
 export const metadata: Metadata = {
-  title: 'Plano de Emergência Veterinária — Dr. Cleitinho',
+  title: 'Plano Emergencial Pet Dr. Cleitinho — Late&Mia Clínica Veterinária',
   description:
-    'Tenha 50% de desconto em emergências veterinárias no Dr. Cleitinho (Camboriú), após carência de 180 dias. Plano simples, transparente e sem surpresas.',
-  applicationName: 'Dr. Cleitinho',
+    'Tenha 50% de desconto em emergências veterinárias na Late&Mia Clínica Veterinária (Camboriú), após carência de 180 dias. Plano simples, transparente e sem surpresas.',
+  applicationName: 'Late&Mia',
 };
 
 /**

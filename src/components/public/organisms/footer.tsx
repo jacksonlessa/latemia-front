@@ -19,7 +19,7 @@ export function Footer() {
           className="h-7 w-7 rounded-lg bg-white object-contain"
         />
         <span className="font-display text-[15px] text-white/80">
-          {publicSite.siteName} Clínica Veterinária
+          {publicSite.clinicName}
         </span>
       </Link>
       <nav className="flex flex-wrap justify-center gap-x-5 gap-y-2">

@@ -9,8 +9,8 @@ import { PublicCancelPlanForm } from './components/PublicCancelPlanForm';
 import { InvalidTokenState } from './components/InvalidTokenState';
 
 export const metadata: Metadata = {
-  title: 'Cancelar Plano — Dr. Cleitinho',
-  description: 'Confirme o cancelamento do seu plano de emergência veterinária.',
+  title: 'Cancelar Plano — Plano Emergencial Pet Dr. Cleitinho',
+  description: 'Confirme o cancelamento do Plano Emergencial Pet Dr. Cleitinho.',
 };
 
 /**
@@ -48,7 +48,7 @@ export default async function CancelarPlanoPage({
             Cancelar plano
           </h1>
           <p className="text-sm text-muted-foreground">
-            Dr. Cleitinho — Plano de Emergência Veterinária
+            Late&Mia — Plano Emergencial Pet Dr. Cleitinho
           </p>
         </div>
         <PublicCancelPlanForm preview={preview} token={token} />

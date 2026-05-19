@@ -70,7 +70,7 @@ export const CLUBE_VANTAGENS_ITENS: ClubeVantagensItem[] = [
  * integralmente na página pública, abaixo da tabela.
  */
 export const CLUBE_VANTAGENS_NOTAS: string[] = [
-  'Não cumulativos com outras promoções da Dr. Cleitinho.',
+  'Não cumulativos com outras promoções da Late&Mia Clínica Veterinária.',
   'Aplicam-se exclusivamente a serviços prestados pela CLÍNICA.',
   'Não abrangem serviços terceirizados.',
 ];

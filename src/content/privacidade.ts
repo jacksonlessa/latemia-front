@@ -1,6 +1,6 @@
 /**
- * Texto oficial da Política de Privacidade da Dr. Cleitinho — Plano
- * Emergencial Veterinário.
+ * Texto oficial da Política de Privacidade da Late&Mia Clínica Veterinária —
+ * Plano Emergencial Pet Dr. Cleitinho (Plano Emergencial Veterinário).
  *
  * Fonte de verdade única — consumida pela página /privacidade.
  *
@@ -16,19 +16,19 @@
  * parte integrante dos TERMOS aceitos no fluxo de contratação). Mantida como
  * label estável para histórico interno e exibição ao usuário.
  */
-export const PRIVACY_POLICY_VERSION = 'v1.0';
+export const PRIVACY_POLICY_VERSION = 'v1.1';
 
 /**
  * Data de entrada em vigor desta versão (ISO YYYY-MM-DD).
  */
-export const PRIVACY_POLICY_EFFECTIVE_DATE = '2026-05-14';
+export const PRIVACY_POLICY_EFFECTIVE_DATE = '2026-05-19';
 
 export const POLITICA_PRIVACIDADE_TEXTO = `# POLÍTICA DE PRIVACIDADE
-## Dr. Cleitinho — Plano Emergencial Veterinário
+## Late&Mia Clínica Veterinária — Plano Emergencial Pet Dr. Cleitinho
 
-**Versão do documento:** v1.0 — 14/05/2026
+**Versão do documento:** v1.1 — 19/05/2026
 
-> **Aviso a VOCÊ:** esta Política de Privacidade explica **como a Dr. Cleitinho trata seus dados pessoais** no âmbito do Plano Emergencial Veterinário Dr. Cleitinho. Ela é **parte integrante** dos Termos de Uso e Contrato de Prestação de Serviços e deve ser lida em conjunto com eles. Em caso de divergência, **prevalecem os Termos para questões contratuais** e **esta Política para questões de tratamento de dados pessoais**.
+> **Aviso a VOCÊ:** esta Política de Privacidade explica **como a Late&Mia Clínica Veterinária trata seus dados pessoais** no âmbito do **Plano Emergencial Pet Dr. Cleitinho** (também referido formalmente como **Plano Emergencial Veterinário**). Ela é **parte integrante** dos Termos de Uso e Contrato de Prestação de Serviços e deve ser lida em conjunto com eles. Em caso de divergência, **prevalecem os Termos para questões contratuais** e **esta Política para questões de tratamento de dados pessoais**.
 
 ---
 
@@ -36,19 +36,19 @@ export const POLITICA_PRIVACIDADE_TEXTO = `# POLÍTICA DE PRIVACIDADE
 
 Esta Política descreve, de forma transparente e em linguagem clara (CDC art. 6º, III; LGPD art. 6º, VI), **quais dados pessoais coletamos, por que coletamos, com quem compartilhamos, por quanto tempo guardamos e quais direitos VOCÊ tem** sobre eles, nos termos da **Lei nº 13.709/2018 (LGPD)**.
 
-A Dr. Cleitinho adota uma postura de **minimização de dados**: coletamos apenas o que é necessário para prestar o serviço contratado por VOCÊ.
+A Late&Mia Clínica Veterinária adota uma postura de **minimização de dados**: coletamos apenas o que é necessário para prestar o serviço contratado por VOCÊ.
 
 ---
 
 ## 2. Quem somos (Controladora)
 
-**LATE E MIA VETERINARIA LTDA**, pessoa jurídica de direito privado, inscrita no CNPJ sob o n. **47.937.233/0001-89**, com sede em **Camboriú/SC** (Rua Osvaldo Minella, 56 — Bairro Lídia Duarte, CEP 88340-000), que atua sob o nome fantasia **Dr. Cleitinho**, é a **Controladora** dos dados pessoais tratados no âmbito do Plano Emergencial Veterinário Dr. Cleitinho, nos termos do **art. 5º, VI da LGPD**.
+**LATE E MIA VETERINARIA LTDA**, pessoa jurídica de direito privado, inscrita no CNPJ sob o n. **47.937.233/0001-89**, com sede em **Camboriú/SC** (Rua Osvaldo Minella, 56 — Bairro Lídia Duarte, CEP 88340-000), que atua sob o nome fantasia **Late&Mia Clínica Veterinária**, é a **Controladora** dos dados pessoais tratados no âmbito do **Plano Emergencial Pet Dr. Cleitinho**, nos termos do **art. 5º, VI da LGPD**.
 
 ---
 
 ## 3. Quando coletamos seus dados
 
-A coleta de dados pessoais ocorre **em um único momento**: quando VOCÊ **conclui** o passo a passo de contratação no fluxo \`/contratar\` da Dr. Cleitinho.
+A coleta de dados pessoais ocorre **em um único momento**: quando VOCÊ **conclui** o passo a passo de contratação no fluxo \`/contratar\` do **Plano Emergencial Pet Dr. Cleitinho**.
 
 **Importante para VOCÊ saber:** o fluxo de contratação tem 4 (quatro) etapas (cadastro, pets, contrato, pagamento). Durante as etapas 1 a 3, os dados ficam **somente no estado local** do navegador de VOCÊ. **Se VOCÊ abandonar o fluxo antes de finalizar o pagamento, nenhum dado pessoal é gravado** em nossos servidores.
 
@@ -102,7 +102,7 @@ Coletamos automaticamente, da URL ou da sessão de navegação, os seguintes par
 
 ### 4.5. Dados de pagamento
 
-**Os dados do cartão de crédito (número/PAN, código de verificação/CVV, validade, nome do titular do cartão) nunca chegam aos servidores da Dr. Cleitinho.** Eles são **tokenizados** diretamente no navegador de VOCÊ pelo Processador de Pagamento (Pagar.me).
+**Os dados do cartão de crédito (número/PAN, código de verificação/CVV, validade, nome do titular do cartão) nunca chegam aos servidores da Late&Mia Clínica Veterinária.** Eles são **tokenizados** diretamente no navegador de VOCÊ pelo Processador de Pagamento (Pagar.me).
 
 Mantemos em nossos sistemas apenas **referências opacas** geradas pelo Processador:
 
@@ -110,7 +110,7 @@ Mantemos em nossos sistemas apenas **referências opacas** geradas pelo Processa
 - \`pagarmeSubscriptionId\` (identificador anônimo da assinatura);
 - \`pagarmeSubscriptionItemId\` (identificador anônimo do item da assinatura, por PET).
 
-Conformidade **PCI-DSS** por construção: a Dr. Cleitinho não armazena, processa nem transmite dados de cartão em texto claro.
+Conformidade **PCI-DSS** por construção: a Late&Mia Clínica Veterinária não armazena, processa nem transmite dados de cartão em texto claro.
 
 ### 4.6. Dados de uso do benefício
 
@@ -148,7 +148,7 @@ Compartilhamos dados pessoais **estritamente o necessário** com **operadores** 
 | **Pagar.me Pagamentos S.A.** | Gateway de pagamento e cobrança recorrente | Cartão tokenizado, CPF, e-mail, endereço, valor da fatura |
 | **Twilio Inc.** | Entrega de SMS — OTP do aceite e mensagens transacionais | Telefone celular, conteúdo da mensagem |
 | **Resend Inc.** | Envio de e-mails transacionais | E-mail, nome, conteúdo da mensagem |
-| **CLÍNICA Dr. Cleitinho** | Comprovação de uso do benefício | Identificação do tutor e do PET, evento de uso |
+| **Late&Mia Clínica Veterinária** | Comprovação de uso do benefício | Identificação do tutor e do PET, evento de uso |
 
 Cada operador atua **sob nossas instruções** e está submetido a obrigações contratuais de **confidencialidade e segurança da informação**.
 
@@ -166,7 +166,7 @@ Atualmente, **não há nenhuma operação de cessão, venda ou cruzamento de dad
 
 **Twilio Inc.** e **Resend Inc.** operam infraestrutura predominantemente nos **Estados Unidos da América**. Eventual transferência internacional residual de dados pessoais (telefone celular para Twilio; e-mail para Resend) decorrente da utilização desses operadores observa o **art. 33 da LGPD**.
 
-A Dr. Cleitinho assegura-se de que esses operadores adotam **cláusulas-padrão contratuais e medidas técnicas adequadas** para garantir nível de proteção compatível com o exigido pela legislação brasileira.
+A Late&Mia Clínica Veterinária assegura-se de que esses operadores adotam **cláusulas-padrão contratuais e medidas técnicas adequadas** para garantir nível de proteção compatível com o exigido pela legislação brasileira.
 
 ---
 
@@ -180,7 +180,7 @@ A Dr. Cleitinho assegura-se de que esses operadores adotam **cláusulas-padrão 
 | Dados fiscais e tributários | Conforme legislação tributária aplicável | Obrigação legal |
 | Dados de touchpoint (UTM) | 5 (cinco) anos da coleta | Análise histórica de aquisição |
 
-**Após o término do prazo aplicável**, os dados são **eliminados ou anonimizados** conforme procedimento técnico documentado pela Dr. Cleitinho.
+**Após o término do prazo aplicável**, os dados são **eliminados ou anonimizados** conforme procedimento técnico documentado pela Late&Mia Clínica Veterinária.
 
 **Fundamento da retenção de 5 anos:**
 
@@ -222,7 +222,7 @@ Caso a resposta não seja satisfatória, VOCÊ pode peticionar à **Autoridade N
 
 ## 10. Cookies e tecnologias similares
 
-O site da Dr. Cleitinho pode utilizar:
+O site da Late&Mia Clínica Veterinária pode utilizar:
 
 - **Cookies estritamente necessários** ao funcionamento do fluxo de contratação (sessão, segurança, prevenção a fraude);
 - **Cookies analíticos** para mensuração da origem do tráfego (parâmetros UTM e referrer).
@@ -235,7 +235,7 @@ A eventual inclusão futura de cookies não-essenciais será precedida de **bann
 
 ## 11. Segurança da informação
 
-A Dr. Cleitinho adota medidas técnicas e administrativas razoáveis para proteger os dados pessoais contra acesso não autorizado, perda, alteração ou destruição, incluindo:
+A Late&Mia Clínica Veterinária adota medidas técnicas e administrativas razoáveis para proteger os dados pessoais contra acesso não autorizado, perda, alteração ou destruição, incluindo:
 
 - **comunicação criptografada** (TLS/HTTPS) em todas as camadas externas;
 - **tokenização** de dados sensíveis (cartão de crédito) por construção (PCI-DSS);
@@ -246,13 +246,13 @@ A Dr. Cleitinho adota medidas técnicas e administrativas razoáveis para proteg
 
 ### Em caso de incidente
 
-Em caso de **incidente de segurança relevante** envolvendo dados pessoais (LGPD art. 48), a Dr. Cleitinho comunicará a **ANPD** e os titulares afetados nos prazos e na forma da legislação.
+Em caso de **incidente de segurança relevante** envolvendo dados pessoais (LGPD art. 48), a Late&Mia Clínica Veterinária comunicará a **ANPD** e os titulares afetados nos prazos e na forma da legislação.
 
 ---
 
 ## 12. O que NÃO fazemos com seus dados
 
-Para evitar dúvidas, registramos explicitamente — atualmente, a Dr. Cleitinho **não realiza** nenhuma das seguintes operações:
+Para evitar dúvidas, registramos explicitamente — atualmente, a Late&Mia Clínica Veterinária **não realiza** nenhuma das seguintes operações:
 
 - **marketing direto**, e-mail marketing promocional ou push de campanhas;
 - **recuperação de carrinho** (cart abandonment) — não capturamos dados antes da finalização do pagamento;
@@ -284,7 +284,7 @@ Use este canal para:
 
 Esta Política pode ser revisada periodicamente para refletir mudanças operacionais, legais ou regulatórias.
 
-**Mudanças relevantes** serão comunicadas a VOCÊ por **e-mail** e pela disponibilização da nova versão na página de privacidade do site da Dr. Cleitinho, com **30 (trinta) dias** de antecedência da entrada em vigor.
+**Mudanças relevantes** serão comunicadas a VOCÊ por **e-mail** e pela disponibilização da nova versão na página de privacidade do site da Late&Mia Clínica Veterinária, com **30 (trinta) dias** de antecedência da entrada em vigor.
 
 **Versões anteriores** ficam preservadas em arquivo interno e podem ser solicitadas ao DPO.
 
@@ -303,5 +303,5 @@ Para dirimir questões oriundas desta Política, aplica-se a mesma cláusula de 
 - **Encarregado de Proteção de Dados (DPO):** **dpo@drcleitinho.com.br** — exercício dos direitos do art. 18 da LGPD, dúvidas sobre esta Política, comunicação de incidentes e denúncia de uso indevido de dados.
 - **Atendimento ao Consumidor (SAC):** **sac@drcleitinho.com.br** — direito de arrependimento (Cláusula 8 dos TERMOS), cancelamento, reclamações e suporte ao uso do plano.
 - **Atendimento geral:** **contato@drcleitinho.com.br** — dúvidas comerciais, parcerias e demais assuntos não relacionados aos canais acima.
-- **Site:** site oficial da Dr. Cleitinho
+- **Site:** site oficial da Late&Mia Clínica Veterinária
 `;

@@ -306,7 +306,7 @@ export function StepContrato({
           className="text-sm leading-snug cursor-pointer select-none"
         >
           Li e concordo com todos os termos e condições do Contrato de Prestação de Serviços do
-          Plano Emergência Veterinária.
+          Plano Emergencial Pet Dr. Cleitinho.
         </label>
       </div>
 

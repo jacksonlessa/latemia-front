@@ -8,15 +8,18 @@
 // truth on the client.
 
 export const publicSite = {
-  siteName: 'Dr. Cleitinho',
+  clinicName: 'Late&Mia Clínica Veterinária',
+  siteName: 'Late&Mia',
+  productCommercialName: 'Plano Emergencial Pet Dr. Cleitinho',
+  productFormalName: 'Plano Emergencial Veterinário',
   checkoutPath: '/contratar',
   brand: {
     logoSrc: '/brand/logo-transparente.png',
-    logoAlt: 'Dr. Cleitinho',
+    logoAlt: 'Late&Mia Clínica Veterinária',
   },
   whatsapp: {
     number: '5547997077953',
     defaultMessage:
-      'Olá! Tenho interesse no Plano Emergência do Dr. Cleitinho e gostaria de mais informações.',
+      'Olá! Tenho interesse no Plano Emergencial Pet Dr. Cleitinho e gostaria de mais informações.',
   },
 } as const;

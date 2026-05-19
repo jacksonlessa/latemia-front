@@ -16,9 +16,9 @@ export default function LgpdPage() {
         <p>
           Esta página descreve os direitos garantidos a você como titular de dados
           pessoais pela <strong>Lei Geral de Proteção de Dados</strong> (LGPD,
-          Lei 13.709/2018) e como exercê-los junto à <strong>Dr. Cleitinho
+          Lei 13.709/2018) e como exercê-los junto à <strong>Late&amp;Mia
           Clínica Veterinária</strong>, controladora dos dados coletados por meio
-          do site e do Plano Emergência Veterinária.
+          do site e do Plano Emergencial Pet Dr. Cleitinho.
         </p>
 
         <p className="text-xs text-forest/60 italic">
