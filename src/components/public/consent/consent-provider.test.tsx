@@ -281,11 +281,15 @@ describe('ConsentProvider — third-party signal sync', () => {
       screen.getByTestId('accept').click();
     });
     expect(fbqSpy).toHaveBeenCalledWith('consent', 'grant');
+    expect(fbqSpy).toHaveBeenCalledWith('track', 'PageView');
 
     act(() => {
       screen.getByTestId('reject').click();
     });
     expect(fbqSpy).toHaveBeenCalledWith('consent', 'revoke');
+    expect(
+      fbqSpy.mock.calls.filter((c) => c[0] === 'track' && c[1] === 'PageView'),
+    ).toHaveLength(1);
   });
 
   it('should no-op gracefully when neither gtag nor fbq are loaded', () => {
