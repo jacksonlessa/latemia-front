@@ -74,12 +74,7 @@ describe('MetaPixel', () => {
     const body = script?.getAttribute('data-script-body') ?? '';
     // Official snippet markers
     expect(body).toContain('fbevents.js');
-    expect(body).toContain("console.log('fbq dispatched'");
-    expect(body).toContain('Array.prototype.slice.call(arguments)');
-    const wrapperIndex = body.indexOf("console.log('fbq dispatched'");
-    const initIndex = body.indexOf("fbq('init', '987654321')");
-    expect(wrapperIndex).toBeGreaterThanOrEqual(0);
-    expect(initIndex).toBeGreaterThan(wrapperIndex);
+    expect(body).not.toContain("console.log('fbq dispatched'");
     expect(body).toContain("fbq('init', '987654321')");
     // Consent default-revoked → flipped to grant by ConsentProvider
     expect(body).toContain("fbq('consent', 'revoke')");

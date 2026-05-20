@@ -5,13 +5,12 @@
  * absent so missing env vars do not break the build or inject placeholder
  * tracking calls.
  *
- * The inline body is the official Meta snippet, with:
- *   - a debug proxy that logs every `fbq` call as
- *     `console.log('fbq dispatched', …args)` (init, consent, track, trackCustom);
- *   - an explicit `fbq('consent', 'revoke')` after `init`, so events stay queued
- *     until `ConsentProvider` calls `fbq('consent','grant')`.
+ * The inline body is the official Meta snippet, with an explicit
+ * `fbq('consent', 'revoke')` after `init` so events stay queued until
+ * `ConsentProvider` calls `fbq('consent','grant')`.
  *
- * Logged arguments mirror what is sent to Meta — callers must not pass PII.
+ * Do not wrap `window.fbq` for debugging — replacing the stub breaks
+ * `fbevents.js` initialization ("Multiple pixels with conflicting versions").
  *
  * `<noscript>` fallback is intentionally omitted: it requires inlining a 1x1
  * tracking image that fires unconditionally, which conflicts with our LGPD
@@ -25,8 +24,6 @@ const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 const META_TEST_EVENT_CODE =
   process.env.NEXT_PUBLIC_META_TEST_EVENT_CODE?.trim() ?? '';
 
-/** Installed after the official stub; logs every fbq invocation before forwarding. */
-const FBQ_LOG_WRAPPER = `(function(){var o=window.fbq;window.fbq=function(){console.log('fbq dispatched',Array.prototype.slice.call(arguments));return o.apply(this,arguments);};})();`;
 
 function buildFbqInitLine(pixelId: string): string {
   if (META_TEST_EVENT_CODE.length === 0) {
@@ -49,7 +46,6 @@ n.queue=[];t=b.createElement(e);t.async=!0;
 t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
-${FBQ_LOG_WRAPPER}
 ${initLine}
 fbq('consent', 'revoke');`;
 
