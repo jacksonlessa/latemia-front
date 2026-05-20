@@ -45,8 +45,21 @@ describe('MetaPixel', () => {
     expect(container.querySelector('[data-testid="next-script-mock"]')).toBeNull();
   });
 
+  it('should include test_event_code in init when NEXT_PUBLIC_META_TEST_EVENT_CODE is set', async () => {
+    vi.stubEnv('NEXT_PUBLIC_META_PIXEL_ID', '987654321');
+    vi.stubEnv('NEXT_PUBLIC_META_TEST_EVENT_CODE', 'TEST93608');
+    const { MetaPixel } = await import('./meta-pixel');
+    const { container } = render(<MetaPixel />);
+    const body =
+      container
+        .querySelector('[data-testid="next-script-mock"]')
+        ?.getAttribute('data-script-body') ?? '';
+    expect(body).toContain("test_event_code: 'TEST93608'");
+  });
+
   it('should render the official snippet with init + revoked consent when the ID is set', async () => {
     vi.stubEnv('NEXT_PUBLIC_META_PIXEL_ID', '987654321');
+    vi.stubEnv('NEXT_PUBLIC_META_TEST_EVENT_CODE', '');
     const { MetaPixel } = await import('./meta-pixel');
     const { container } = render(<MetaPixel />);
 
@@ -61,6 +74,12 @@ describe('MetaPixel', () => {
     const body = script?.getAttribute('data-script-body') ?? '';
     // Official snippet markers
     expect(body).toContain('fbevents.js');
+    expect(body).toContain("console.log('fbq dispatched'");
+    expect(body).toContain('Array.prototype.slice.call(arguments)');
+    const wrapperIndex = body.indexOf("console.log('fbq dispatched'");
+    const initIndex = body.indexOf("fbq('init', '987654321')");
+    expect(wrapperIndex).toBeGreaterThanOrEqual(0);
+    expect(initIndex).toBeGreaterThan(wrapperIndex);
     expect(body).toContain("fbq('init', '987654321')");
     // Consent default-revoked → flipped to grant by ConsentProvider
     expect(body).toContain("fbq('consent', 'revoke')");
