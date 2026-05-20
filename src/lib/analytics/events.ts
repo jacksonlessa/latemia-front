@@ -1,6 +1,7 @@
 /**
- * Single front-door for analytics event dispatch. Mirrors a single event to
- * GA4 (`gtag('event', ...)`) and Meta Pixel (`fbq('trackCustom', ...)`).
+ * Single front-door for analytics event dispatch. Mirrors events to GA4
+ * (`gtag('event', ...)`) and Meta Pixel (`fbq('trackCustom', ...)`). Route
+ * `page_view` also sends the standard Meta event `fbq('track', 'PageView')`.
  *
  * No-op when:
  *   - running on the server (SSR / RSC) — `typeof window === 'undefined'`
@@ -22,6 +23,9 @@
  * here avoids drift between callers (e.g. `step-sucesso` and `analytics`
  * dashboards) and makes it trivial to rename a single event.
  */
+/** Fired by `MetaPixel` when the inline stub has run and `window.fbq` exists. */
+export const FBQ_READY_EVENT = 'lm:fbq-ready';
+
 export const Events = {
   PageView: 'page_view',
   PageviewLanding: 'pageview_landing',
@@ -48,6 +52,9 @@ export function track(
   if (typeof window.fbq === 'function') {
     try {
       window.fbq('trackCustom', eventName, params);
+      if (eventName === Events.PageView) {
+        window.fbq('track', 'PageView', params);
+      }
     } catch {
       // Swallow — analytics is best-effort.
     }

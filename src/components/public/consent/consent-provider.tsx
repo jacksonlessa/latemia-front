@@ -19,17 +19,21 @@
  *   5. Dispatches a `lm:consent-changed` `CustomEvent` on `window` so other
  *      parts of the app (e.g. the touchpoint provider) can react without
  *      re-rendering through Context.
+ *   6. Re-syncs Meta consent when `MetaPixel` fires `lm:fbq-ready` (the
+ *      hydrate effect often runs before `window.fbq` exists).
  *
  * SSR: the initial render returns `denied/denied/decidedAt:null` to avoid
  * hydration mismatches; `localStorage` is read once on mount.
  */
 
+import { FBQ_READY_EVENT } from '@/lib/analytics/events';
 import {
   createContext,
   useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -178,6 +182,8 @@ export function ConsentProvider({
   const [state, setState] = useState<ConsentState>(DEFAULT_STATE);
   const [hydrated, setHydrated] = useState<boolean>(false);
   const [preferencesOpen, setPreferencesOpen] = useState<boolean>(false);
+  const stateRef = useRef<ConsentState>(DEFAULT_STATE);
+  stateRef.current = state;
 
   // Hydrate from localStorage once on mount. Hydration mismatch is avoided
   // because the banner uses `needsDecision` which depends on `decidedAt`,
@@ -192,6 +198,25 @@ export function ConsentProvider({
       syncToFbq(stored, DEFAULT_STATE.marketing);
     }
     setHydrated(true);
+  }, []);
+
+  // Meta Pixel loads after this provider's mount effect; re-apply grant/revoke.
+  useEffect(() => {
+    const onFbqReady = (): void => {
+      const stored = safeReadStoredState();
+      const effective = stored ?? stateRef.current;
+      const previousMarketing: ConsentSignal =
+        effective.marketing === 'granted' ? 'denied' : effective.marketing;
+      syncToFbq(effective, previousMarketing);
+    };
+
+    window.addEventListener(FBQ_READY_EVENT, onFbqReady);
+    if (typeof window.fbq === 'function') {
+      onFbqReady();
+    }
+    return () => {
+      window.removeEventListener(FBQ_READY_EVENT, onFbqReady);
+    };
   }, []);
 
   const persist = useCallback((next: ConsentState): void => {

@@ -18,6 +18,7 @@
  */
 
 import Script from 'next/script';
+import { FBQ_READY_EVENT } from '@/lib/analytics/events';
 
 const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 /** Optional — copy from Events Manager → Test events (format TEST12345). Local/dev only. */
@@ -49,11 +50,21 @@ s.parentNode.insertBefore(t,s)}(window, document,'script',
 ${initLine}
 fbq('consent', 'revoke');`;
 
+  const onPixelReady = (): void => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.dispatchEvent(new CustomEvent(FBQ_READY_EVENT));
+    } catch {
+      // CustomEvent unsupported — consent hydrate may still sync if fbq exists.
+    }
+  };
+
   return (
     <Script
       id="meta-pixel"
       strategy="afterInteractive"
       dangerouslySetInnerHTML={{ __html: body }}
+      onLoad={onPixelReady}
     />
   );
 }

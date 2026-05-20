@@ -15,6 +15,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
+import { FBQ_READY_EVENT } from '@/lib/analytics/events';
 import {
   CONSENT_CHANGED_EVENT,
   CONSENT_STORAGE_KEY,
@@ -290,6 +291,36 @@ describe('ConsentProvider — third-party signal sync', () => {
     expect(
       fbqSpy.mock.calls.filter((c) => c[0] === 'track' && c[1] === 'PageView'),
     ).toHaveLength(1);
+  });
+
+  it('should call fbq grant when lm:fbq-ready fires and marketing was already granted in storage', () => {
+    const fbqSpy = vi.fn();
+    (window as unknown as { fbq: typeof fbqSpy }).fbq = fbqSpy;
+
+    window.localStorage.setItem(
+      CONSENT_STORAGE_KEY,
+      JSON.stringify({
+        analytics: 'granted',
+        marketing: 'granted',
+        version: CONSENT_VERSION,
+        decidedAt: '2026-05-05T00:00:00.000Z',
+      }),
+    );
+
+    render(
+      <ConsentProvider>
+        <Probe />
+      </ConsentProvider>,
+    );
+
+    fbqSpy.mockClear();
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent(FBQ_READY_EVENT));
+    });
+
+    expect(fbqSpy).toHaveBeenCalledWith('consent', 'grant');
+    expect(fbqSpy).toHaveBeenCalledWith('track', 'PageView');
   });
 
   it('should no-op gracefully when neither gtag nor fbq are loaded', () => {
