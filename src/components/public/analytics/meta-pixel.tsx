@@ -5,10 +5,11 @@
  * absent so missing env vars do not break the build or inject placeholder
  * tracking calls.
  *
- * The inline body is the official Meta snippet, with `fbq('consent', 'revoke')`
- * after `init`, then an immediate `grant` when `lm_consent_v1` already has
- * marketing granted (return visits). `ConsentProvider` still syncs on accept
- * and on `lm:fbq-ready` when React mounts before/after the stub.
+ * The inline body is the official Meta snippet, then consent is applied from
+ * `lm_consent_v1` (grant if marketing already accepted, else revoke) — never
+ * revoke-then-grant on return visits. `init` runs once per pixel ID to avoid
+ * double-init when Next re-executes the script. `ConsentProvider` re-syncs on
+ * accept and on `lm:fbq-ready`.
  *
  * Do not wrap `window.fbq` for debugging — replacing the stub breaks
  * `fbevents.js` initialization ("Multiple pixels with conflicting versions").
@@ -30,17 +31,22 @@ const META_TEST_EVENT_CODE =
 const CONSENT_STORAGE_KEY = 'lm_consent_v1';
 const CONSENT_VERSION = 1;
 
-/** Re-applies grant on return visits before React hydrates (fixes revoke-after-init). */
-const FBQ_GRANT_FROM_STORAGE = `(function(){try{var r=localStorage.getItem('${CONSENT_STORAGE_KEY}');if(!r)return;var c=JSON.parse(r);if(c.version!==${CONSENT_VERSION})return;if(c.marketing==='granted')fbq('consent','grant');}catch(e){}})();`;
+/** grant or revoke from storage — avoids unconditional revoke before grant. */
+const FBQ_CONSENT_FROM_STORAGE = `(function(){try{var r=localStorage.getItem('${CONSENT_STORAGE_KEY}');if(!r){fbq('consent','revoke');return;}var c=JSON.parse(r);if(c.version!==${CONSENT_VERSION}||c.marketing!=='granted'){fbq('consent','revoke');return;}fbq('consent','grant');}catch(e){fbq('consent','revoke');}})();`;
 
 const FBQ_READY_DISPATCH = `try{window.dispatchEvent(new CustomEvent('${FBQ_READY_EVENT}'));}catch(e){}`;
 
+function escapeForInlineJsString(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
 function buildFbqInitLine(pixelId: string): string {
-  if (META_TEST_EVENT_CODE.length === 0) {
-    return `fbq('init', '${pixelId}');`;
-  }
-  const code = META_TEST_EVENT_CODE.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-  return `fbq('init', '${pixelId}', {}, {test_event_code: '${code}'});`;
+  const id = escapeForInlineJsString(pixelId);
+  const initCall =
+    META_TEST_EVENT_CODE.length === 0
+      ? `fbq('init','${id}');`
+      : `fbq('init','${id}',{},${JSON.stringify({ test_event_code: META_TEST_EVENT_CODE })});`;
+  return `(function(){if(window.__lmMetaPixelInit==='${id}')return;window.__lmMetaPixelInit='${id}';${initCall}})();`;
 }
 
 export function MetaPixel(): React.ReactElement | null {
@@ -57,8 +63,7 @@ t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
 ${initLine}
-fbq('consent', 'revoke');
-${FBQ_GRANT_FROM_STORAGE}
+${FBQ_CONSENT_FROM_STORAGE}
 ${FBQ_READY_DISPATCH};`;
 
   const onPixelReady = (): void => {

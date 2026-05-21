@@ -29,6 +29,29 @@ vi.mock('next/navigation', async () => {
 });
 
 const trackMock = vi.fn();
+
+const consentMock = vi.hoisted(() => ({
+  marketing: 'granted' as 'granted' | 'denied',
+}));
+
+vi.mock('@/components/public/consent/consent-provider', () => ({
+  useConsent: () => ({
+    state: {
+      analytics: 'granted',
+      marketing: consentMock.marketing,
+      version: 1,
+      decidedAt: '2026-01-01T00:00:00.000Z',
+    },
+    needsDecision: false,
+    preferencesOpen: false,
+    accept: () => {},
+    reject: () => {},
+    update: () => {},
+    openPreferences: () => {},
+    closePreferences: () => {},
+  }),
+}));
+
 vi.mock('@/lib/analytics/events', () => ({
   Events: {
     PageView: 'page_view',
@@ -43,6 +66,7 @@ import { RouteChangeTracker } from './route-change-tracker';
 
 beforeEach(() => {
   trackMock.mockClear();
+  consentMock.marketing = 'granted';
   navigationState.pathname = '/';
   navigationState.search = '';
 });
@@ -120,6 +144,13 @@ describe('RouteChangeTracker', () => {
     );
     expect(pageViewCalls).toHaveLength(2);
     expect(pageViewCalls[1]?.[1]).toEqual({ page_path: '/contratar' });
+  });
+
+  it('should not emit page_view when marketing consent is denied', () => {
+    consentMock.marketing = 'denied';
+    navigationState.pathname = '/contratar';
+    render(<RouteChangeTracker />);
+    expect(trackMock).not.toHaveBeenCalled();
   });
 
   it('should not duplicate page_view when re-rendered with the same pathname/search', () => {
