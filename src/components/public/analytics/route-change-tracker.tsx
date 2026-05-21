@@ -9,8 +9,8 @@
  *   - GA4's automatic page_view is disabled in `ga4.tsx` (`send_page_view:
  *     false`). Letting it auto-fire on the SPA shell would either miss App
  *     Router transitions or double-count them.
- *   - `track(Events.PageView)` sends GA4 `page_view` and Meta
- *     `trackCustom('page_view')` on each navigation.
+ *   - `track(Events.PageView)` runs only when marketing consent is `granted`,
+ *     so events are not queued under `fbq('consent','revoke')` before hydrate.
  *
  * Suspense boundary:
  *   `useSearchParams` triggers the App Router's CSR bailout for static
@@ -25,6 +25,7 @@
 
 import { Suspense, useEffect, useRef } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
+import { useConsent } from '@/components/public/consent/consent-provider';
 import { Events, track } from '@/lib/analytics/events';
 
 export function RouteChangeTracker(): React.ReactElement {
@@ -38,10 +39,17 @@ export function RouteChangeTracker(): React.ReactElement {
 function RouteChangeTrackerInner(): null {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { state } = useConsent();
+  const marketingGranted = state.marketing === 'granted';
   const lastSignatureRef = useRef<string | null>(null);
   const landingEmittedRef = useRef<boolean>(false);
 
   useEffect(() => {
+    if (!marketingGranted) {
+      lastSignatureRef.current = null;
+      landingEmittedRef.current = false;
+      return;
+    }
     if (pathname === null) return;
     const search = searchParams !== null ? searchParams.toString() : '';
     const signature = `${pathname}?${search}`;
@@ -55,7 +63,7 @@ function RouteChangeTrackerInner(): null {
       landingEmittedRef.current = true;
       track(Events.PageviewLanding, { page_path: pagePath });
     }
-  }, [pathname, searchParams]);
+  }, [pathname, searchParams, marketingGranted]);
 
   return null;
 }
