@@ -29,10 +29,26 @@ export const Events = {
   PageView: 'page_view',
   PageviewLanding: 'pageview_landing',
   BeginCheckout: 'begin_checkout',
+  CompletedTutor: 'completed_tutor',
+  AddedPet: 'added_pet',
+  EditedPet: 'edited_pet',
+  RemovedPet: 'removed_pet',
+  CompletedPet: 'completed_pet',
+  ConsentedContract: 'consented_contract',
+  SolicitedOtp: 'solicited_otp',
+  OtpSendError: 'otp_send_error',
+  OtpValidationError: 'otp_validation_error',
+  ResolicitedOtp: 'resolicited_otp',
+  FinishedOtp: 'finished_otp',
+  CompletedContract: 'completed_contract',
+  CompletedPayment: 'completed_payment',
   RegisterContractCompleted: 'register_contract_completed',
 } as const;
 
 export type EventName = (typeof Events)[keyof typeof Events];
+
+const DEFAULT_DEDUPE_WINDOW_MS = 2500;
+const recentEventEmission = new Map<string, number>();
 
 export function track(
   eventName: string,
@@ -55,4 +71,23 @@ export function track(
       // Swallow — analytics is best-effort.
     }
   }
+}
+
+/**
+ * Emits an event unless the same key has been emitted in a short cooldown
+ * window. Useful for guarding against dev-only double effects/handlers.
+ */
+export function trackWithCooldown(
+  key: string,
+  eventName: string,
+  params?: Record<string, unknown>,
+  cooldownMs: number = DEFAULT_DEDUPE_WINDOW_MS,
+): void {
+  const now = Date.now();
+  const lastEmissionAt = recentEventEmission.get(key);
+  if (lastEmissionAt !== undefined && now - lastEmissionAt < cooldownMs) {
+    return;
+  }
+  recentEventEmission.set(key, now);
+  track(eventName, params);
 }

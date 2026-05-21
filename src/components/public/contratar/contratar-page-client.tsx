@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Events, track } from '@/lib/analytics/events';
+import { Events, track, trackWithCooldown } from '@/lib/analytics/events';
 import { ContratarStepper } from '@/components/public/contratar/atoms/contratar-stepper';
 import {
   StepCadastro,
@@ -180,6 +180,11 @@ function setNestedValue<T extends Record<string, unknown>>(
   };
 }
 
+function buildCheckoutPathSignature(): string {
+  if (typeof window === 'undefined') return '/contratar';
+  return `${window.location.pathname}${window.location.search}`;
+}
+
 // ---------------------------------------------------------------------------
 // ContratarPageClient
 // ---------------------------------------------------------------------------
@@ -238,7 +243,12 @@ export function ContratarPageClient() {
   // gating is delegated to `track()`/Consent Mode (no-ops without consent).
   // -------------------------------------------------------------------------
   useEffect(() => {
-    track(Events.BeginCheckout);
+    const pathSignature = buildCheckoutPathSignature();
+    trackWithCooldown(
+      `begin_checkout:${pathSignature}`,
+      Events.BeginCheckout,
+      { page_path: pathSignature },
+    );
   }, []);
 
   // -------------------------------------------------------------------------
@@ -333,6 +343,7 @@ export function ContratarPageClient() {
     setState((prev) => ({ ...prev, isValidating: true, fieldErrors: {} }));
     try {
       await validateClientUseCase(state.client as RegisterClientInput);
+      track(Events.CompletedTutor);
       setState((prev) => ({ ...prev, step: 1, isValidating: false }));
     } catch (e) {
       if (e instanceof ValidationError) {
@@ -375,6 +386,12 @@ export function ContratarPageClient() {
           }
         });
         if (allValid) {
+          const petsCount = state.pets.length;
+          track(Events.CompletedPet, {
+            pets_count: petsCount,
+            value: (petsCount * publicConfig.pricePerPetCents) / 100,
+            currency: 'BRL',
+          });
           setState((prev) => ({ ...prev, step: 2, fieldErrors: {} }));
         } else {
           setState((prev) => ({ ...prev, fieldErrors: allErrors }));
@@ -385,6 +402,9 @@ export function ContratarPageClient() {
       case 2: {
         if (!state.contractAccepted) return;
         const contractAcceptedAt = new Date().toISOString();
+        track(Events.CompletedContract, {
+          otp_enabled: publicConfig.otpContractEnabled,
+        });
         setState((prev) => ({ ...prev, step: 3, contractAcceptedAt, fieldErrors: {} }));
         break;
       }
@@ -465,7 +485,17 @@ export function ContratarPageClient() {
       clearCvvOnError: false,
     }));
 
+    let paymentCompletedTracked = false;
     const onStageChange = (payload: OnStageChangePayload): void => {
+      if (!paymentCompletedTracked && payload.stage === 7) {
+        paymentCompletedTracked = true;
+        track(Events.CompletedPayment, {
+          pets_count: state.pets.length,
+          value: (state.pets.length * publicConfig.pricePerPetCents) / 100,
+          currency: 'BRL',
+          checkout_stage: payload.stage,
+        });
+      }
       setState((prev) => ({
         ...prev,
         currentStage: payload.stage,
@@ -659,6 +689,7 @@ export function ContratarPageClient() {
   // a complete validated pet object back to the orchestrator.
   // -------------------------------------------------------------------------
   function handleSavePet(pet: RegisterPetInput & { _id?: string }): void {
+    track(pet._id ? Events.EditedPet : Events.AddedPet);
     setState((prev) => {
       if (pet._id) {
         const id = pet._id;
@@ -683,6 +714,7 @@ export function ContratarPageClient() {
   // "Avançar" still requires at least one saved pet.
   // -------------------------------------------------------------------------
   function handleRemovePet(id: string): void {
+    track(Events.RemovedPet);
     setState((prev) => ({
       ...prev,
       pets: prev.pets.filter((pet) => pet._id !== id),

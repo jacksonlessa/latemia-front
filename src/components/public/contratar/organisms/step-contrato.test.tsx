@@ -8,6 +8,19 @@ import {
 } from '@testing-library/react';
 import { StepContrato } from './step-contrato';
 
+const trackMock = vi.fn();
+vi.mock('@/lib/analytics/events', () => ({
+  Events: {
+    ConsentedContract: 'consented_contract',
+    SolicitedOtp: 'solicited_otp',
+    OtpSendError: 'otp_send_error',
+    OtpValidationError: 'otp_validation_error',
+    ResolicitedOtp: 'resolicited_otp',
+    FinishedOtp: 'finished_otp',
+  },
+  track: (...args: unknown[]) => trackMock(...args),
+}));
+
 // ---------------------------------------------------------------------------
 // Module mocks — keep the OTP use-cases out of the unit under test so
 // step-contrato.test.tsx focuses on the bifurcation and state machine.
@@ -37,12 +50,14 @@ vi.mock('@/domain/contract/resend-contract-otp.use-case', () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  trackMock.mockClear();
   vi.stubGlobal('crypto', {
     randomUUID: vi.fn().mockReturnValue('attempt-uuid-1'),
   });
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
 });
 
@@ -78,6 +93,7 @@ describe('StepContrato — legacy flow (otpEnabled=false)', () => {
     const checkbox = screen.getByRole('checkbox');
     fireEvent.click(checkbox);
     expect(onAcceptedChange).toHaveBeenCalledWith(true);
+    expect(trackMock).toHaveBeenCalledWith('consented_contract');
   });
 
   it('should call onNext directly when Avançar is clicked and OTP is disabled', () => {
@@ -144,6 +160,7 @@ describe('StepContrato — OTP flow (otpEnabled=true)', () => {
       contractAttemptId: 'attempt-uuid-1',
       phone: '+5511987654321',
     });
+    expect(trackMock).toHaveBeenCalledWith('solicited_otp');
     expect(onContractAttemptIdAssigned).toHaveBeenCalledWith('attempt-uuid-1');
     expect(screen.getByLabelText('Código de 6 dígitos')).toBeInTheDocument();
     expect(screen.getByText('(11) 9****-4321')).toBeInTheDocument();
@@ -212,6 +229,7 @@ describe('StepContrato — OTP flow (otpEnabled=true)', () => {
     await waitFor(() => {
       expect(onVerified).toHaveBeenCalledWith('tok_xyz');
     });
+    expect(trackMock).toHaveBeenCalledWith('finished_otp');
     expect(onNext).toHaveBeenCalledOnce();
   });
 
@@ -244,6 +262,66 @@ describe('StepContrato — OTP flow (otpEnabled=true)', () => {
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Código incorreto');
     });
+    expect(trackMock).toHaveBeenCalledWith('otp_validation_error', {
+      error_code: 'OTP_INVALID',
+    });
+  });
+
+  it('should emit otp_send_error when initial OTP request fails', async () => {
+    const { ValidationError } = await import('@/lib/validation-error');
+    mockRequestExecute.mockRejectedValueOnce(
+      new ValidationError({
+        _form: 'Não foi possível enviar o código.',
+        _code: 'OTP_REQUEST_FAILED',
+      }),
+    );
+
+    render(<StepContrato {...baseProps} />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Avançar' }));
+    });
+
+    await waitFor(() => {
+      expect(trackMock).toHaveBeenCalledWith('otp_send_error', {
+        otp_action: 'request',
+        error_code: 'OTP_REQUEST_FAILED',
+      });
+    });
+  });
+
+  it('should emit resolicited_otp when resend succeeds', async () => {
+    mockRequestExecute.mockResolvedValueOnce({
+      phoneMasked: '(11) 9****-4321',
+      expiresInSeconds: 600,
+      cooldownSeconds: 1,
+    });
+    mockResendExecute.mockResolvedValueOnce({
+      phoneMasked: '(11) 9****-4321',
+      expiresInSeconds: 600,
+      cooldownSeconds: 60,
+    });
+    vi.useFakeTimers();
+
+    render(<StepContrato {...baseProps} />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Avançar' }));
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(1100);
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /reenviar código/i }));
+    });
+
+    await waitFor(() => {
+      expect(trackMock).toHaveBeenCalledWith('resolicited_otp');
+    });
+
+    vi.useRealTimers();
   });
 
   it('should silently fall back to onNext when OTP_FEATURE_DISABLED is thrown', async () => {
