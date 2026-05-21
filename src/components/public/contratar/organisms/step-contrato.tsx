@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { CONTRATO_TEXTO } from '@/content/contrato';
 import { Button } from '@/components/ui/button';
 import { MarkdownProse } from '@/components/ui/markdown-prose';
+import { Events, track } from '@/lib/analytics/events';
 import {
   ContractOtpPanel,
   type ContractOtpPanelHandle,
@@ -71,6 +72,16 @@ export interface StepContratoProps {
 }
 
 const COOLDOWN_FALLBACK_SECONDS = 60;
+
+function extractOtpErrorCode(error: unknown): string {
+  if (error instanceof ValidationError) {
+    return error.fieldErrors._code ?? 'VALIDATION_ERROR';
+  }
+  if (error instanceof FeatureDisabledError) {
+    return 'OTP_FEATURE_DISABLED';
+  }
+  return 'UNKNOWN_ERROR';
+}
 
 export function StepContrato({
   accepted,
@@ -158,6 +169,7 @@ export function StepContrato({
         contractAttemptId: attemptId,
         phone,
       });
+      track(Events.SolicitedOtp);
       setPhoneMasked(result.phoneMasked);
       setCooldownSeconds(result.cooldownSeconds || COOLDOWN_FALLBACK_SECONDS);
       setOtpPhase('sent');
@@ -172,10 +184,18 @@ export function StepContrato({
         return;
       }
       if (err instanceof ValidationError) {
+        track(Events.OtpSendError, {
+          otp_action: 'request',
+          error_code: extractOtpErrorCode(err),
+        });
         setErrorMessage(
           err.fieldErrors._form ?? 'Erro de conexão. Tente novamente.',
         );
       } else {
+        track(Events.OtpSendError, {
+          otp_action: 'request',
+          error_code: extractOtpErrorCode(err),
+        });
         setErrorMessage('Erro de conexão. Tente novamente.');
       }
       setOtpPhase('error');
@@ -205,6 +225,7 @@ export function StepContrato({
           code,
         });
         setOtpPhase('verified');
+        track(Events.FinishedOtp);
         onVerified(result.verificationToken);
         onNext();
       } catch (err) {
@@ -215,10 +236,16 @@ export function StepContrato({
           return;
         }
         if (err instanceof ValidationError) {
+          track(Events.OtpValidationError, {
+            error_code: extractOtpErrorCode(err),
+          });
           setErrorMessage(
             err.fieldErrors._form ?? 'Erro de conexão. Tente novamente.',
           );
         } else {
+          track(Events.OtpValidationError, {
+            error_code: extractOtpErrorCode(err),
+          });
           setErrorMessage('Erro de conexão. Tente novamente.');
         }
         // Stay in "sent" so the user can edit/retry; flag as `error` to
@@ -242,6 +269,7 @@ export function StepContrato({
         contractAttemptId: attemptId,
         phone,
       });
+      track(Events.ResolicitedOtp);
       setPhoneMasked(result.phoneMasked);
       setCooldownSeconds(result.cooldownSeconds || COOLDOWN_FALLBACK_SECONDS);
       setOtpPhase('sent');
@@ -254,10 +282,18 @@ export function StepContrato({
         return;
       }
       if (err instanceof ValidationError) {
+        track(Events.OtpSendError, {
+          otp_action: 'resend',
+          error_code: extractOtpErrorCode(err),
+        });
         setErrorMessage(
           err.fieldErrors._form ?? 'Erro de conexão. Tente novamente.',
         );
       } else {
+        track(Events.OtpSendError, {
+          otp_action: 'resend',
+          error_code: extractOtpErrorCode(err),
+        });
         setErrorMessage('Erro de conexão. Tente novamente.');
       }
       setOtpPhase('error');
@@ -297,7 +333,13 @@ export function StepContrato({
           id={checkboxId}
           type="checkbox"
           checked={accepted}
-          onChange={(e) => onAcceptedChange(e.target.checked)}
+          onChange={(e) => {
+            const nextAccepted = e.target.checked;
+            if (nextAccepted) {
+              track(Events.ConsentedContract);
+            }
+            onAcceptedChange(nextAccepted);
+          }}
           disabled={showOtpPanel}
           className="mt-0.5 h-4 w-4 cursor-pointer rounded border-border accent-[#4E8C75]"
         />

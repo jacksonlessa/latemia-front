@@ -14,16 +14,19 @@ vi.mock('next/script', () => ({
     id,
     strategy,
     dangerouslySetInnerHTML,
+    onLoad,
   }: {
     id?: string;
     strategy?: string;
     dangerouslySetInnerHTML?: { __html: string };
+    onLoad?: () => void;
   }) => (
     <span
       data-testid="next-script-mock"
       data-script-id={id}
       data-script-strategy={strategy ?? ''}
       data-script-body={dangerouslySetInnerHTML?.__html ?? ''}
+      data-script-on-load={onLoad ? 'yes' : 'no'}
     />
   ),
 }));
@@ -78,5 +81,9 @@ describe('MetaPixel', () => {
     expect(body).toContain("fbq('init', '987654321')");
     // Consent default-revoked → flipped to grant by ConsentProvider
     expect(body).toContain("fbq('consent', 'revoke')");
+    expect(body).toContain("localStorage.getItem('lm_consent_v1')");
+    expect(body).toContain("fbq('consent','grant')");
+    expect(body).toContain("CustomEvent('lm:fbq-ready')");
+    expect(script?.getAttribute('data-script-on-load')).toBe('yes');
   });
 });

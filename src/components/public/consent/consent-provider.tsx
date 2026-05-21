@@ -14,22 +14,25 @@
  *   2. Persists to `localStorage` (best-effort; silently no-ops in private mode).
  *   3. Calls `gtag('consent', 'update', ...)` for Google Consent Mode v2 with
  *      the four ad/analytics signals required by Google.
- *   4. Calls `fbq('consent', 'grant'|'revoke')` and, on first marketing grant,
- *      `fbq('track', 'PageView')` (Meta standard event for Events Manager).
+ *   4. Calls `fbq('consent', 'grant'|'revoke')` for the Meta Pixel.
  *   5. Dispatches a `lm:consent-changed` `CustomEvent` on `window` so other
  *      parts of the app (e.g. the touchpoint provider) can react without
  *      re-rendering through Context.
+ *   6. Re-syncs Meta consent when `MetaPixel` fires `lm:fbq-ready` (the
+ *      hydrate effect often runs before `window.fbq` exists).
  *
  * SSR: the initial render returns `denied/denied/decidedAt:null` to avoid
  * hydration mismatches; `localStorage` is read once on mount.
  */
 
+import { FBQ_READY_EVENT } from '@/lib/analytics/events';
 import {
   createContext,
   useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -137,24 +140,12 @@ function syncToGtag(state: ConsentState): void {
   });
 }
 
-function syncToFbq(
-  state: ConsentState,
-  previousMarketing: ConsentSignal = 'denied',
-): void {
+function syncToFbq(state: ConsentState): void {
   if (typeof window === 'undefined') return;
   if (typeof window.fbq !== 'function') return;
 
   const isGranted = state.marketing === 'granted';
   window.fbq('consent', isGranted ? 'grant' : 'revoke');
-
-  // Standard Meta PageView — only when marketing consent is newly granted (LGPD).
-  if (isGranted && previousMarketing !== 'granted') {
-    try {
-      window.fbq('track', 'PageView');
-    } catch {
-      // Best-effort — analytics must not break the UI.
-    }
-  }
 }
 
 function dispatchConsentChanged(state: ConsentState): void {
@@ -178,6 +169,8 @@ export function ConsentProvider({
   const [state, setState] = useState<ConsentState>(DEFAULT_STATE);
   const [hydrated, setHydrated] = useState<boolean>(false);
   const [preferencesOpen, setPreferencesOpen] = useState<boolean>(false);
+  const stateRef = useRef<ConsentState>(DEFAULT_STATE);
+  stateRef.current = state;
 
   // Hydrate from localStorage once on mount. Hydration mismatch is avoided
   // because the banner uses `needsDecision` which depends on `decidedAt`,
@@ -189,15 +182,32 @@ export function ConsentProvider({
       // On hydration, also re-sync the consent signals to gtag/fbq in case
       // the scripts loaded between the SSR default-denied call and now.
       syncToGtag(stored);
-      syncToFbq(stored, DEFAULT_STATE.marketing);
+      syncToFbq(stored);
     }
     setHydrated(true);
+  }, []);
+
+  // Meta Pixel loads after this provider's mount effect; re-apply grant/revoke.
+  useEffect(() => {
+    const onFbqReady = (): void => {
+      const stored = safeReadStoredState();
+      const effective = stored ?? stateRef.current;
+      syncToFbq(effective);
+    };
+
+    window.addEventListener(FBQ_READY_EVENT, onFbqReady);
+    if (typeof window.fbq === 'function') {
+      onFbqReady();
+    }
+    return () => {
+      window.removeEventListener(FBQ_READY_EVENT, onFbqReady);
+    };
   }, []);
 
   const persist = useCallback((next: ConsentState): void => {
     setState((prev) => {
       syncToGtag(next);
-      syncToFbq(next, prev.marketing);
+      syncToFbq(next);
       safeWriteStoredState(next);
       dispatchConsentChanged(next);
       return next;

@@ -9,8 +9,8 @@
  *   - GA4's automatic page_view is disabled in `ga4.tsx` (`send_page_view:
  *     false`). Letting it auto-fire on the SPA shell would either miss App
  *     Router transitions or double-count them.
- *   - The Meta Pixel's `PageView` standard event is mirrored by the same
- *     `track()` call (helper sends to both gtag and fbq).
+ *   - `track(Events.PageView)` sends GA4 `page_view` and Meta
+ *     `trackCustom('page_view')` on each navigation.
  *
  * Suspense boundary:
  *   `useSearchParams` triggers the App Router's CSR bailout for static

@@ -10,6 +10,35 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { ContratarPageClient } from './contratar-page-client';
 import { ValidationError } from '@/lib/validation-error';
 
+const trackMock = vi.fn();
+vi.mock('@/lib/analytics/events', () => ({
+  Events: {
+    BeginCheckout: 'begin_checkout',
+    CompletedTutor: 'completed_tutor',
+    AddedPet: 'added_pet',
+    EditedPet: 'edited_pet',
+    RemovedPet: 'removed_pet',
+    CompletedPet: 'completed_pet',
+    ConsentedContract: 'consented_contract',
+    SolicitedOtp: 'solicited_otp',
+    OtpSendError: 'otp_send_error',
+    OtpValidationError: 'otp_validation_error',
+    ResolicitedOtp: 'resolicited_otp',
+    FinishedOtp: 'finished_otp',
+    CompletedContract: 'completed_contract',
+    CompletedPayment: 'completed_payment',
+    PageView: 'page_view',
+    PageviewLanding: 'pageview_landing',
+    RegisterContractCompleted: 'register_contract_completed',
+  },
+  track: (...args: unknown[]) => trackMock(...args),
+  trackWithCooldown: (
+    _key: string,
+    eventName: string,
+    params?: Record<string, unknown>,
+  ) => trackMock(eventName, params),
+}));
+
 // ---------------------------------------------------------------------------
 // Module mocks
 // ---------------------------------------------------------------------------
@@ -184,6 +213,7 @@ function fillCardForm() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  trackMock.mockClear();
   installCheckoutFetchMock();
 
   // Reset mock implementations to defaults after clearAllMocks
@@ -227,6 +257,7 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 
 function renderAtStep3() {
+  window.history.pushState({}, '', '/contratar');
   vi.mocked(loadDraft).mockReturnValue(validDraft);
   return render(<ContratarPageClient />);
 }
@@ -236,6 +267,16 @@ function renderAtStep3() {
 // ---------------------------------------------------------------------------
 
 describe('ContratarPageClient — wizard submission (step 3 → 4)', () => {
+  it('should emit begin_checkout when the page is mounted', async () => {
+    renderAtStep3();
+
+    await waitFor(() => {
+      expect(trackMock).toHaveBeenCalledWith('begin_checkout', {
+        page_path: '/contratar',
+      });
+    });
+  });
+
   it('should call RegisterClientUseCase, RegisterPetUseCase, then RegisterContractUseCase in sequence', async () => {
     renderAtStep3();
 
@@ -252,6 +293,12 @@ describe('ContratarPageClient — wizard submission (step 3 → 4)', () => {
       expect(mockClientExecute).toHaveBeenCalledTimes(1);
       expect(mockPetExecute).toHaveBeenCalledTimes(1);
       expect(mockContractExecute).toHaveBeenCalledTimes(1);
+    });
+    expect(trackMock).toHaveBeenCalledWith('completed_payment', {
+      pets_count: 1,
+      value: 25,
+      currency: 'BRL',
+      checkout_stage: 7,
     });
   });
 
@@ -406,6 +453,7 @@ describe('ContratarPageClient — passo 0 dry-run validation', () => {
       // Step 1 button (from StepPets) — "Avançar" or "Próximo" with pets context
       expect(screen.queryByRole('button', { name: /avançar/i })).not.toBeInTheDocument();
     });
+    expect(trackMock).toHaveBeenCalledWith('completed_tutor');
   });
 
   it('should display field error and stay on step 0 when validateClientUseCase throws ValidationError', async () => {
