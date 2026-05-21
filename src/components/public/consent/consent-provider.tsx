@@ -14,8 +14,7 @@
  *   2. Persists to `localStorage` (best-effort; silently no-ops in private mode).
  *   3. Calls `gtag('consent', 'update', ...)` for Google Consent Mode v2 with
  *      the four ad/analytics signals required by Google.
- *   4. Calls `fbq('consent', 'grant'|'revoke')` and, on first marketing grant,
- *      `fbq('track', 'PageView')` (Meta standard event for Events Manager).
+ *   4. Calls `fbq('consent', 'grant'|'revoke')` for the Meta Pixel.
  *   5. Dispatches a `lm:consent-changed` `CustomEvent` on `window` so other
  *      parts of the app (e.g. the touchpoint provider) can react without
  *      re-rendering through Context.
@@ -141,24 +140,12 @@ function syncToGtag(state: ConsentState): void {
   });
 }
 
-function syncToFbq(
-  state: ConsentState,
-  previousMarketing: ConsentSignal = 'denied',
-): void {
+function syncToFbq(state: ConsentState): void {
   if (typeof window === 'undefined') return;
   if (typeof window.fbq !== 'function') return;
 
   const isGranted = state.marketing === 'granted';
   window.fbq('consent', isGranted ? 'grant' : 'revoke');
-
-  // Standard Meta PageView — only when marketing consent is newly granted (LGPD).
-  if (isGranted && previousMarketing !== 'granted') {
-    try {
-      window.fbq('track', 'PageView');
-    } catch {
-      // Best-effort — analytics must not break the UI.
-    }
-  }
 }
 
 function dispatchConsentChanged(state: ConsentState): void {
@@ -195,7 +182,7 @@ export function ConsentProvider({
       // On hydration, also re-sync the consent signals to gtag/fbq in case
       // the scripts loaded between the SSR default-denied call and now.
       syncToGtag(stored);
-      syncToFbq(stored, DEFAULT_STATE.marketing);
+      syncToFbq(stored);
     }
     setHydrated(true);
   }, []);
@@ -205,9 +192,7 @@ export function ConsentProvider({
     const onFbqReady = (): void => {
       const stored = safeReadStoredState();
       const effective = stored ?? stateRef.current;
-      const previousMarketing: ConsentSignal =
-        effective.marketing === 'granted' ? 'denied' : effective.marketing;
-      syncToFbq(effective, previousMarketing);
+      syncToFbq(effective);
     };
 
     window.addEventListener(FBQ_READY_EVENT, onFbqReady);
@@ -222,7 +207,7 @@ export function ConsentProvider({
   const persist = useCallback((next: ConsentState): void => {
     setState((prev) => {
       syncToGtag(next);
-      syncToFbq(next, prev.marketing);
+      syncToFbq(next);
       safeWriteStoredState(next);
       dispatchConsentChanged(next);
       return next;

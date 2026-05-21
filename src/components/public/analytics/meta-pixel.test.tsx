@@ -81,6 +81,9 @@ describe('MetaPixel', () => {
     expect(body).toContain("fbq('init', '987654321')");
     // Consent default-revoked → flipped to grant by ConsentProvider
     expect(body).toContain("fbq('consent', 'revoke')");
+    expect(body).toContain("localStorage.getItem('lm_consent_v1')");
+    expect(body).toContain("fbq('consent','grant')");
+    expect(body).toContain("CustomEvent('lm:fbq-ready')");
     expect(script?.getAttribute('data-script-on-load')).toBe('yes');
   });
 });

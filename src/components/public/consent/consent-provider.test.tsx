@@ -282,15 +282,11 @@ describe('ConsentProvider — third-party signal sync', () => {
       screen.getByTestId('accept').click();
     });
     expect(fbqSpy).toHaveBeenCalledWith('consent', 'grant');
-    expect(fbqSpy).toHaveBeenCalledWith('track', 'PageView');
 
     act(() => {
       screen.getByTestId('reject').click();
     });
     expect(fbqSpy).toHaveBeenCalledWith('consent', 'revoke');
-    expect(
-      fbqSpy.mock.calls.filter((c) => c[0] === 'track' && c[1] === 'PageView'),
-    ).toHaveLength(1);
   });
 
   it('should call fbq grant when lm:fbq-ready fires and marketing was already granted in storage', () => {
@@ -320,7 +316,9 @@ describe('ConsentProvider — third-party signal sync', () => {
     });
 
     expect(fbqSpy).toHaveBeenCalledWith('consent', 'grant');
-    expect(fbqSpy).toHaveBeenCalledWith('track', 'PageView');
+    expect(
+      fbqSpy.mock.calls.filter((c) => c[0] === 'track' && c[1] === 'PageView'),
+    ).toHaveLength(0);
   });
 
   it('should no-op gracefully when neither gtag nor fbq are loaded', () => {

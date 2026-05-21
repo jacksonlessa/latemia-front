@@ -7,7 +7,7 @@ afterEach(() => {
 });
 
 describe('track', () => {
-  it('should send standard Meta PageView when event is page_view', () => {
+  it('should send Meta trackCustom for page_view', () => {
     const fbqSpy = vi.fn();
     (window as unknown as { fbq: typeof fbqSpy }).fbq = fbqSpy;
 
@@ -16,12 +16,12 @@ describe('track', () => {
     expect(fbqSpy).toHaveBeenCalledWith('trackCustom', 'page_view', {
       page_path: '/contratar',
     });
-    expect(fbqSpy).toHaveBeenCalledWith('track', 'PageView', {
-      page_path: '/contratar',
-    });
+    expect(
+      fbqSpy.mock.calls.filter((c) => c[0] === 'track' && c[1] === 'PageView'),
+    ).toHaveLength(0);
   });
 
-  it('should not send standard Meta PageView for non-page_view events', () => {
+  it('should send trackCustom only for non-page_view funnel events', () => {
     const fbqSpy = vi.fn();
     (window as unknown as { fbq: typeof fbqSpy }).fbq = fbqSpy;
 
