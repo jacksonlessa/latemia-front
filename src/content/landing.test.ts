@@ -18,6 +18,12 @@ describe('landing content integrity', () => {
     expect(publicSite.whatsapp.number).toBe('5547997077953');
   });
 
+  it('should keep landing whatsapp message in sync with publicSite.messages.default', () => {
+    expect(landingContent.contact.whatsapp.message).toBe(
+      publicSite.whatsapp.messages.default,
+    );
+  });
+
   it('should have 5 to 8 FAQ entries', () => {
     expect(landingContent.faq.items.length).toBeGreaterThanOrEqual(5);
     expect(landingContent.faq.items.length).toBeLessThanOrEqual(8);

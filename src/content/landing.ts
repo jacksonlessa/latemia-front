@@ -1,6 +1,8 @@
 // Centralised content for the public landing page.
 // No React imports, no formatting logic — pure data and types.
 
+import { publicSite } from '@/config/public-site';
+
 export type LucideIconName =
   | 'ShieldCheck'
   | 'Clock'
@@ -29,8 +31,8 @@ export interface FaqEntry {
 }
 
 export interface WhatsAppConfig {
-  number: '5547997077953';
-  defaultMessage: string;
+  number: typeof publicSite.whatsapp.number;
+  message: string;
 }
 
 export interface LandingContent {
@@ -225,9 +227,8 @@ export const landingContent: LandingContent = {
     email: '',
     mapsUrl: 'https://www.google.com/maps/place/Late+%26+Mia+Cl%C3%ADnica+Veterin%C3%A1ria/@-27.0337695,-48.6487444,19z/data=!4m6!3m5!1s0x94d8b76bc7fc191f:0x6b944b2d0758290b!8m2!3d-27.0337695!4d-48.6477971!16s%2Fg%2F11thc3nrm1?entry=ttu&g_ep=EgoyMDI2MDQxNS4wIKXMDSoASAFQAw%3D%3D',
     whatsapp: {
-      number: '5547997077953',
-      defaultMessage:
-        'Olá! Tenho interesse no Plano Emergencial Pet Dr. Cleitinho e gostaria de mais informações.',
+      number: publicSite.whatsapp.number,
+      message: publicSite.whatsapp.messages.default,
     },
   },
 } as const;

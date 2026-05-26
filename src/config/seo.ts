@@ -167,9 +167,101 @@ export const seoConfig = {
       images: [OG_IMAGE_FALLBACK],
     },
   },
+  '/clube-de-vantagens': {
+    title: 'Clube de Vantagens – Plano Pet Dr. Cleitinho',
+    description:
+      'Descontos em consultas, exames e cirurgias eletivas para o seu pet desde o primeiro pagamento. A partir de R$ 25/mês.',
+    openGraph: {
+      type: 'website',
+      siteName: CLINIC_NAME,
+      title: 'Clube de Vantagens – Plano Pet Dr. Cleitinho',
+      description:
+        'Descontos em consultas, exames e cirurgias eletivas para o seu pet desde o primeiro pagamento. A partir de R$ 25/mês.',
+      images: [
+        {
+          url: OG_IMAGE_FALLBACK,
+          width: 1200,
+          height: 630,
+          alt: 'Clube de Vantagens – Plano Pet Dr. Cleitinho',
+        },
+      ],
+      locale: 'pt_BR',
+    },
+    twitter: {
+      card: TWITTER_CARD,
+      title: 'Clube de Vantagens – Plano Pet Dr. Cleitinho',
+      description:
+        'Descontos em consultas, exames e cirurgias eletivas para o seu pet desde o primeiro pagamento. A partir de R$ 25/mês.',
+      images: [OG_IMAGE_FALLBACK],
+    },
+  },
+  '/emergencia': {
+    title: 'Proteção Emergencial Pet – Dr. Cleitinho',
+    description:
+      '50% de desconto em atendimento emergencial veterinário após 6 meses de carência. Plano Pet Dr. Cleitinho em Camboriú/SC.',
+    openGraph: {
+      type: 'website',
+      siteName: CLINIC_NAME,
+      title: 'Proteção Emergencial Pet – Dr. Cleitinho',
+      description:
+        '50% de desconto em atendimento emergencial veterinário após 6 meses de carência. Plano Pet Dr. Cleitinho em Camboriú/SC.',
+      images: [
+        {
+          url: OG_IMAGE_FALLBACK,
+          width: 1200,
+          height: 630,
+          alt: 'Proteção Emergencial Pet – Dr. Cleitinho',
+        },
+      ],
+      locale: 'pt_BR',
+    },
+    twitter: {
+      card: TWITTER_CARD,
+      title: 'Proteção Emergencial Pet – Dr. Cleitinho',
+      description:
+        '50% de desconto em atendimento emergencial veterinário após 6 meses de carência. Plano Pet Dr. Cleitinho em Camboriú/SC.',
+      images: [OG_IMAGE_FALLBACK],
+    },
+  },
+  '/sobre-a-clinica': {
+    title: 'Clínica Veterinária Dr. Cleitinho – Camboriú/SC',
+    description:
+      'Conheça a estrutura, serviços e localização da Clínica Veterinária Dr. Cleitinho em Camboriú/SC.',
+    openGraph: {
+      type: 'website',
+      siteName: CLINIC_NAME,
+      title: 'Clínica Veterinária Dr. Cleitinho – Camboriú/SC',
+      description:
+        'Conheça a estrutura, serviços e localização da Clínica Veterinária Dr. Cleitinho em Camboriú/SC.',
+      images: [
+        {
+          url: OG_IMAGE_FALLBACK,
+          width: 1200,
+          height: 630,
+          alt: 'Clínica Veterinária Dr. Cleitinho – Camboriú/SC',
+        },
+      ],
+      locale: 'pt_BR',
+    },
+    twitter: {
+      card: TWITTER_CARD,
+      title: 'Clínica Veterinária Dr. Cleitinho – Camboriú/SC',
+      description:
+        'Conheça a estrutura, serviços e localização da Clínica Veterinária Dr. Cleitinho em Camboriú/SC.',
+      images: [OG_IMAGE_FALLBACK],
+    },
+  },
 } as const satisfies Record<SeoRoutePath, SeoEntry>;
 
-export type SeoRoutePath = '/' | '/privacidade' | '/termos' | '/lgpd' | '/beneficios';
+export type SeoRoutePath =
+  | '/'
+  | '/privacidade'
+  | '/termos'
+  | '/lgpd'
+  | '/beneficios'
+  | '/clube-de-vantagens'
+  | '/emergencia'
+  | '/sobre-a-clinica';
 
 export function getSeoMetadata(path: SeoRoutePath): Metadata {
   const entry = seoConfig[path];

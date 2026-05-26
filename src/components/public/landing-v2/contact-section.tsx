@@ -2,7 +2,7 @@ import { publicSite } from '@/config/public-site';
 import { landingContent } from '@/content/landing';
 
 const whatsappHref = `https://wa.me/${publicSite.whatsapp.number}?text=${encodeURIComponent(
-  publicSite.whatsapp.defaultMessage,
+  publicSite.whatsapp.messages.default,
 )}`;
 
 export function ContactSection() {
