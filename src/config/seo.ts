@@ -30,30 +30,30 @@ type SeoEntry = {
 
 export const seoConfig = {
   '/': {
-    title: `${PRODUCT_COMMERCIAL_NAME} — ${CLINIC_NAME}`,
+    title: 'Plano Pet Dr. Cleitinho | Benefícios desde o primeiro mês + proteção emergencial',
     description:
-      'Garanta 50% de desconto nos atendimentos emergenciais do seu pet. Plano simples, mensalidade fixa por pet, sem surpresas — Camboriú, Balneário Camboriú, Itapema e Itajaí.',
+      'Por R$ 25/mês por pet, tenha Clube de Vantagens na rotina, orientação por WhatsApp e 50% de desconto em emergências após carência na Late&Mia Clínica Veterinária, em Camboriú.',
     openGraph: {
       type: 'website',
       siteName: CLINIC_NAME,
-      title: `${PRODUCT_COMMERCIAL_NAME} — ${CLINIC_NAME}`,
+      title: 'Plano Pet Dr. Cleitinho | Benefícios desde o primeiro mês + proteção emergencial',
       description:
-        'Plano simples com 50% de desconto em atendimentos emergenciais para o seu pet.',
+        'Por R$ 25/mês por pet, tenha Clube de Vantagens na rotina, orientação por WhatsApp e 50% de desconto em emergências após carência na Late&Mia Clínica Veterinária, em Camboriú.',
       images: [
         {
           url: OG_IMAGE_FALLBACK,
           width: 1200,
           height: 630,
-          alt: `${CLINIC_NAME} — ${PRODUCT_COMMERCIAL_NAME}`,
+          alt: 'Late&Mia Clínica Veterinária — Plano Pet Dr. Cleitinho',
         },
       ],
       locale: 'pt_BR',
     },
     twitter: {
       card: TWITTER_CARD,
-      title: `${PRODUCT_COMMERCIAL_NAME} — ${CLINIC_NAME}`,
+      title: 'Plano Pet Dr. Cleitinho | Benefícios desde o primeiro mês + proteção emergencial',
       description:
-        'Plano simples com 50% de desconto em atendimentos emergenciais para o seu pet.',
+        'Por R$ 25/mês por pet, tenha Clube de Vantagens na rotina, orientação por WhatsApp e 50% de desconto em emergências após carência na Late&Mia Clínica Veterinária, em Camboriú.',
       images: [OG_IMAGE_FALLBACK],
     },
   },
