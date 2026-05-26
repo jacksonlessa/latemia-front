@@ -7,84 +7,34 @@ interface FaqEntry {
   answer: string;
 }
 
-interface FaqSectionProps {
-  /**
-   * Per-pet monthly price in cents — when provided, replaces the
-   * `{{pricePerPet}}` placeholder inside any FAQ answer string with the
-   * formatted BRL value (e.g. "R$ 25,00"). Omitting it keeps the
-   * placeholder visible, which would be a developer-visible bug — so the
-   * parent page must always pass it.
-   */
-  pricePerPetCents?: number;
-}
-
-const priceFormatter = new Intl.NumberFormat('pt-BR', {
-  style: 'currency',
-  currency: 'BRL',
-});
-
-function applyPlaceholders(text: string, pricePerPetCents?: number): string {
-  if (pricePerPetCents === undefined) return text;
-  return text.replaceAll(
-    '{{pricePerPet}}',
-    priceFormatter.format(pricePerPetCents / 100),
-  );
-}
-
 const items: FaqEntry[] = [
   {
-    question: 'Como funciona a carência de 6 meses?',
+    question: 'O plano é só para emergência?',
     answer:
-      'Após o primeiro pagamento confirmado, o plano fica em carência por 6 meses. O contrato está ativo, mas o desconto emergencial ainda não pode ser utilizado. A partir do 7.º mês, o benefício está disponível integralmente.',
+      'Não. O plano tem três pilares: Clube de Vantagens desde o primeiro pagamento, orientação por WhatsApp e 50% de desconto em atendimentos emergenciais após a carência.',
   },
   {
-    question: 'E se eu precisar de emergência durante a carência?',
+    question: 'Posso usar algum benefício antes dos 6 meses?',
     answer:
-      'O desconto emergencial de 50% ainda não está disponível nos primeiros 6 meses. Mas os descontos do Clube de Vantagens — em consultas, vacinas e outros procedimentos na clínica — já valem desde o primeiro dia.',
+      'Sim. O Clube de Vantagens e a orientação por WhatsApp ficam disponíveis após a confirmação do primeiro pagamento. A carência de 180 dias vale apenas para o desconto emergencial.',
   },
   {
-    question: 'O que é considerado emergência veterinária?',
+    question: 'O plano vale em qualquer clínica?',
     answer:
-      'Situações que colocam a vida do pet em risco imediato ou que precisam de atendimento urgente para evitar piora grave — como traumas, convulsões, intoxicações, hemorragias e dificuldade respiratória. Consultas de rotina e procedimentos agendados não estão incluídos.',
+      'Não. Os benefícios são válidos para serviços prestados na Late&Mia Clínica Veterinária, em Camboriú.',
   },
   {
-    question: 'O benefício funciona em qualquer clínica veterinária?',
+    question: 'É plano de saúde pet ou seguro?',
     answer:
-      'Não. O desconto de 50% é aplicado exclusivamente na Late&Mia Clínica Veterinária. Ao chegar, basta informar que você é assinante — a equipe verifica o cadastro e aplica o desconto na hora.',
+      'Não. É um programa de benefícios da própria clínica, com descontos e condições definidos nos termos de uso.',
   },
   {
-    question: 'O desconto de 50% cobre internação e cirurgia?',
-    answer:
-      'Cobre toda a fase aguda da emergência: consulta, medicações administradas durante o atendimento e cirurgia de emergência se necessária. Internação de continuidade e cirurgias eletivas não estão incluídas no desconto.',
-  },
-  {
-    question: 'Como o pagamento é feito?',
-    answer:
-      'A cobrança é mensal e automática no seu cartão de crédito. O valor é reajustado uma vez por ano pelo IPCA (inflação oficial), sempre com aviso de 30 dias de antecedência.',
-  },
-  {
-    question: 'Meus dados de cartão ficam salvos com vocês?',
-    answer:
-      'Não. Os dados do cartão são processados diretamente pelo Pagar.me, nosso provedor de pagamento, e nunca passam pelos nossos servidores. Guardamos apenas uma referência anônima gerada pelo Pagar.me para realizar as cobranças mensais.',
-  },
-  {
-    question: 'Posso incluir mais de um pet?',
-    answer:
-      'Sim! O plano é por pet — você pode incluir todos os seus companheiros. O total mensal é {{pricePerPet}} multiplicado pelo número de pets cadastrados.',
-  },
-  {
-    question: 'Posso cancelar a qualquer momento?',
-    answer:
-      'Sim, sem multa e sem aviso prévio. O plano continua ativo até o fim do mês já pago. Se quiser retomar depois, é só contratar novamente. Fale com a gente pelo WhatsApp ou e-mail.',
-  },
-  {
-    question: 'Posso me arrepender e pedir reembolso?',
-    answer:
-      'Sim. Você tem 7 dias a partir da contratação para cancelar e receber o valor integral de volta, desde que ainda não tenha utilizado nenhum benefício. Basta entrar em contato pelo WhatsApp ou e-mail.',
+    question: 'Quanto custa?',
+    answer: 'R$ 25 por mês por pet cadastrado.',
   },
 ];
 
-export function FaqSection({ pricePerPetCents }: FaqSectionProps = {}) {
+export function FaqSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
@@ -141,9 +91,7 @@ export function FaqSection({ pricePerPetCents }: FaqSectionProps = {}) {
                   }`}
                 >
                   <div className="min-h-0 overflow-hidden">
-                    <p className="text-sm leading-[1.65] text-ink-soft">
-                      {applyPlaceholders(item.answer, pricePerPetCents)}
-                    </p>
+                    <p className="text-sm leading-[1.65] text-ink-soft">{item.answer}</p>
                   </div>
                 </div>
               </div>

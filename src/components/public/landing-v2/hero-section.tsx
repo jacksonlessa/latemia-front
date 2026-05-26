@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { publicSite } from '@/config/public-site';
 
-const whatsappHref = `https://wa.me/${publicSite.whatsapp.number}`;
+const whatsappHref = `https://wa.me/${publicSite.whatsapp.number}?text=${encodeURIComponent(
+  publicSite.whatsapp.messages.homeHero,
+)}`;
 
 export function HeroSection() {
   return (
@@ -12,15 +14,17 @@ export function HeroSection() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <path d="M12 3l8 3v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-3z" />
             </svg>
-            50% de desconto* em emergências
+            Benefícios imediatos + proteção emergencial
           </div>
 
           <h1 className="font-display text-[clamp(36px,10vw,58px)] leading-[1.05] tracking-[-0.03em] text-ink">
-            Emergência veterinária sem <span className="text-forest">susto no bolso</span>.
+            Plano Pet Dr. Cleitinho: cuidado na rotina e proteção quando mais precisar.
           </h1>
 
           <p className="max-w-[480px] text-base leading-[1.55] text-ink-soft">
-            O {publicSite.productCommercialName} garante metade do valor dos atendimentos urgentes para o seu pet — de forma simples, com mensalidade fixa.
+            Por R$ 25/mês por pet, você tem Clube de Vantagens desde o primeiro
+            pagamento, orientação por WhatsApp em horário estendido e 50% de desconto
+            em atendimentos emergenciais após a carência.
           </p>
 
           <div className="flex w-full flex-col gap-3 sm:flex-row sm:w-auto">
@@ -31,7 +35,7 @@ export function HeroSection() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <path d="M5 12h14M13 6l6 6-6 6" />
               </svg>
-              Contratar agora — R$ 25/mês
+              Contratar por R$ 25/mês
             </Link>
             <a
               href={whatsappHref}
@@ -40,34 +44,13 @@ export function HeroSection() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
               </svg>
-              Tirar dúvidas
+              Tirar dúvidas no WhatsApp
             </a>
           </div>
 
-          <div className="flex w-full items-center gap-2.5 rounded-xl border border-sand-dark bg-white px-4 py-3">
-            <div className="flex">
-              {['🐕', '🐈', '🐶'].map((emoji, idx) => (
-                <div
-                  key={idx}
-                  className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-forest-soft text-xs first:ml-0 -ml-1.5"
-                >
-                  {emoji}
-                </div>
-              ))}
-            </div>
-            <div className="text-[12.5px] leading-[1.35] text-ink-soft">
-              <strong className="text-ink">Tutores que já confiam no plano.</strong>
-              <br />
-              Atendimento 24h na {publicSite.clinicName}, Camboriú.
-            </div>
-          </div>
-
           <p className="text-[11px] leading-[1.45] text-ink-muted">
-            *Após carência de 180 dias, em emergências atendidas na {publicSite.clinicName} (Camboriú), na fase aguda do quadro. Consulte exclusões e condições nos{' '}
-            <Link href="/termos" className="underline underline-offset-2 hover:text-ink">
-              termos do plano
-            </Link>
-            .
+            O plano é válido para serviços prestados na {publicSite.clinicName}, em
+            Camboriú. Não é seguro nem plano de saúde pet.
           </p>
         </div>
 
@@ -88,9 +71,11 @@ export function HeroSection() {
             </div>
             <div>
               <div className="text-[10px] font-semibold uppercase tracking-[1px] text-ink-muted">
-                Desconto garantido*
+                Benefício emergencial
               </div>
-              <div className="mt-0.5 font-display text-[22px] leading-none text-ink">50% off</div>
+              <div className="mt-0.5 font-display text-[22px] leading-none text-ink">
+                50% após 180 dias
+              </div>
             </div>
           </div>
         </div>
