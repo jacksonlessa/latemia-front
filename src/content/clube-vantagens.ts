@@ -37,6 +37,6 @@ export const clubeContent: ClubeContent = {
     'Identificação por microchip',
   ],
   legalNote:
-    'Descontos aplicados exclusivamente em serviços prestados pela clínica Dr. Cleitinho. Não cumulativos com outras promoções.',
+    'Descontos aplicados exclusivamente em serviços prestados pela clínica veterinária Late&Mia. Não cumulativos com outras promoções.',
   officialBenefitsLink: '/beneficios',
 } as const;

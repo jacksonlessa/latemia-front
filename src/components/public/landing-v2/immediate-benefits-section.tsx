@@ -59,8 +59,11 @@ const benefits: BenefitItem[] = [
     discount: '10%',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        <path d="M20 7l-8-5-8 5v10l8 5 8-5V7z" />
-        <path d="M12 2v20M2 7l10 6 10-6" />
+        <circle cx="6" cy="6" r="3" />
+        <path d="M8.12 8.12 12 12" />
+        <path d="M20 4 8.12 15.88" />
+        <circle cx="6" cy="18" r="3" />
+        <path d="M14.8 14.8 20 20" />
       </svg>
     ),
   },

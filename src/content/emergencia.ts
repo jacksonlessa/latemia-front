@@ -17,7 +17,7 @@ export const emergenciaContent: EmergenciaContent = {
   },
   warnings: [
     'Válido somente após 180 dias de carência a contar da confirmação do primeiro pagamento.',
-    'Atendimento exclusivamente na Clínica Dr. Cleitinho, em Camboriú/SC.',
+    'Atendimento exclusivamente na Clínica Veterinária Late&Mia, em Camboriú/SC.',
     'Não é um seguro. Não é plano de saúde pet. Não cobre atendimento em outras clínicas.',
   ],
 } as const;

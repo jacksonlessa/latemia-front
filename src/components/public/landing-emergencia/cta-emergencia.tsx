@@ -16,7 +16,7 @@ export function CtaEmergencia() {
           <p className="mt-4 max-w-[840px] text-[15px] leading-[1.6] text-white/80">
             Após a confirmação do primeiro pagamento, a carência de 180 dias começa a
             contar. Quando ela terminar, você poderá usar o desconto de 50% em
-            atendimentos emergenciais na Clínica Dr. Cleitinho, em Camboriú/SC.
+            atendimentos emergenciais na Clínica Veterinária Late&Mia, em Camboriú/SC.
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Link

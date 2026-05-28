@@ -50,7 +50,7 @@ export function PillarsSection() {
       <div className="mx-auto w-full max-w-[1120px] px-5">
         <div className="flex flex-col gap-2.5">
           <span className="text-[11px] font-semibold uppercase tracking-[1.4px] text-ink-muted">
-            Cuidado agora, proteção depois
+            Cuidado agora, precaução depois
           </span>
           <h2 className="font-display text-[clamp(28px,7vw,42px)] leading-[1.05] tracking-[-0.03em] text-ink">
             <span className="text-forest">Cuidado</span> que começa agora.{' '}
