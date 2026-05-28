@@ -75,7 +75,7 @@ export function ImmediateBenefitsSection() {
             Começa desde o primeiro pagamento
           </span>
           <h2 className="font-display text-[clamp(28px,7vw,42px)] leading-[1.05] tracking-[-0.03em] text-ink">
-            O Clube de Vantagens ajuda no cuidado do{' '}
+            O <span className="text-forest">Clube de Vantagens</span> ajuda no cuidado do{' '}
             <span className="text-forest">dia a dia</span>.
           </h2>
           <p className="max-w-[680px] text-[15px] leading-[1.55] text-ink-soft">

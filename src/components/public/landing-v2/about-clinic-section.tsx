@@ -8,8 +8,8 @@ export function AboutClinicSection() {
         <div className="grid grid-cols-1 gap-6 rounded-[22px] sm:grid-cols-2">
           <div>
             <h2 className="font-display text-[clamp(28px,7vw,40px)] leading-[1.05] tracking-[-0.03em] text-ink">
-              Um plano ligado a uma clínica <span className="text-forest">real</span>, em
-              Camboriú.
+              Um plano ligado a uma <span className="text-forest">clínica real</span>, em{' '}
+              <span className="text-forest">Camboriú</span>.
             </h2>
             <p className="mt-3 text-[15px] leading-[1.6] text-ink-soft">
               O Plano Pet Dr. Cleitinho é oferecido pela Late&Mia Clínica Veterinária,
