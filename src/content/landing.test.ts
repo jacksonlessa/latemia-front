@@ -19,9 +19,13 @@ describe('landing content integrity', () => {
   });
 
   it('should keep landing whatsapp message in sync with publicSite.messages.default', () => {
-    expect(landingContent.contact.whatsapp.message).toBe(
-      publicSite.whatsapp.messages.default,
-    );
+    const expected =
+      'Olá! Tenho interesse no Plano Pet Dr. Cleitinho e gostaria de mais informações.';
+
+    expect(landingContent.contact.whatsapp.message).toBe(expected);
+    expect(publicSite.whatsapp.messages.default).toBe(expected);
+    expect(JSON.stringify(publicSite.whatsapp)).not.toContain('Plano Emergencial Pet');
+    expect('defaultMessage' in publicSite.whatsapp).toBe(false);
   });
 
   it('should have 5 to 8 FAQ entries', () => {

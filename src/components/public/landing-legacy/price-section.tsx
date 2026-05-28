@@ -1,16 +1,9 @@
 import Link from 'next/link';
 import { publicSite } from '@/config/public-site';
 
-interface PriceSectionProps {
-  /** Per-pet monthly price in cents — injected by the page (SSR fetch). */
-  pricePerPetCents: number;
-}
-
 const whatsappHref = `https://wa.me/${publicSite.whatsapp.number}`;
 
-export function PriceSection({ pricePerPetCents }: PriceSectionProps) {
-  const priceInt = Math.round(pricePerPetCents / 100);
-
+export function PriceSection() {
   return (
     <section id="contratar" className="bg-forest-deep py-16">
       <div className="mx-auto w-full max-w-[1120px] px-5">
@@ -29,7 +22,7 @@ export function PriceSection({ pricePerPetCents }: PriceSectionProps) {
             </div>
             <div className="flex items-baseline gap-1.5 font-display text-[72px] leading-none tracking-[-2px] text-white">
               <span className="text-[28px] font-medium">R$</span>
-              <span>{priceInt}</span>
+              <span>25</span>
               <span className="ml-1 font-sans text-base font-medium tracking-normal text-white/70">
                 /pet · mês
               </span>

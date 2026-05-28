@@ -1,15 +1,5 @@
+import { ClinicPhoto } from '@/components/public/atoms/clinic-photo';
 import { clinicaContent } from '@/content/clinica';
-
-function ClinicPhotoPlaceholder() {
-  return (
-    <div
-      className="flex aspect-square w-full max-w-sm items-center justify-center rounded-lg bg-muted"
-      aria-hidden
-    >
-      <span className="text-sm text-muted-foreground">Foto da clínica</span>
-    </div>
-  );
-}
 
 export function ClinicaHero() {
   const { name, city } = clinicaContent;
@@ -37,7 +27,10 @@ export function ClinicaHero() {
             </p>
           </div>
 
-          <ClinicPhotoPlaceholder />
+          <ClinicPhoto
+            className="aspect-square w-full max-w-sm rounded-lg"
+            sizes="(max-width: 1024px) 100vw, 384px"
+          />
         </div>
       </div>
     </section>

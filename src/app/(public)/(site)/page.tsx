@@ -2,16 +2,12 @@ import type { Metadata } from 'next';
 import { HeroSection } from '@/components/public/landing-v2/hero-section';
 import { PillarsSection } from '@/components/public/landing-v2/pillars-section';
 import { ImmediateBenefitsSection } from '@/components/public/landing-v2/immediate-benefits-section';
-import { RoutineSection } from '@/components/public/landing-v2/routine-section';
 import { EmergencySection } from '@/components/public/landing-v2/emergency-section';
-import { CarenceSection } from '@/components/public/landing-v2/carence-section';
 import { PriceSection } from '@/components/public/landing-v2/price-section';
-import { ForWhomSection } from '@/components/public/landing-v2/for-whom-section';
-import { NotForSection } from '@/components/public/landing-v2/not-for-section';
 import { AboutClinicSection } from '@/components/public/landing-v2/about-clinic-section';
 import { TestimonialsSection } from '@/components/public/landing-v2/testimonials-section';
 import { FaqSection } from '@/components/public/landing-v2/faq-section';
-import { FinalCtaSection } from '@/components/public/landing-v2/final-cta-section';
+import { ContactSection } from '@/components/public/landing-v2/contact-section';
 import { getSeoMetadata, SITE_URL } from '@/config/seo';
 import { getPublicConfigSSR } from '@/domain/public-config/get-public-config.server';
 
@@ -98,16 +94,12 @@ export default async function HomePage() {
       <HeroSection />
       <PillarsSection />
       <ImmediateBenefitsSection />
-      <RoutineSection />
       <EmergencySection />
-      <CarenceSection />
       <PriceSection pricePerPetCents={pricePerPetCents} />
-      <ForWhomSection />
-      <NotForSection />
       <AboutClinicSection />
       <TestimonialsSection />
       <FaqSection />
-      <FinalCtaSection />
+      <ContactSection />
     </main>
   );
 }
