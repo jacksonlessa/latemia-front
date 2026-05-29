@@ -165,15 +165,6 @@ export function Footer() {
         </a>
         ,{' '}
         <a
-          href="https://www.pexels.com/pt-br/@mikhail-nilov"
-          target="_blank"
-          rel="noopener"
-          className="underline-offset-2 transition-colors hover:text-white/40 hover:underline"
-        >
-          Mikhail Nilov
-        </a>
-        ,{' '}
-        <a
           href="https://www.pexels.com/pt-br/@pixabay"
           target="_blank"
           rel="noopener"
