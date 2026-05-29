@@ -19,7 +19,20 @@ export const publicSite = {
   },
   whatsapp: {
     number: '5547997077953',
-    defaultMessage:
-      'Olá! Tenho interesse no Plano Emergencial Pet Dr. Cleitinho e gostaria de mais informações.',
+    messages: {
+      default:
+        'Olá! Tenho interesse no Plano Pet Dr. Cleitinho e gostaria de mais informações.',
+      homeHero:
+        'Olá! Vi o site do Plano Pet Dr. Cleitinho e quero tirar uma dúvida.',
+      homeFinal: 'Olá! Quero falar sobre o Plano Pet Dr. Cleitinho.',
+      clube:
+        'Olá! Quero saber mais sobre o Clube de Vantagens do Plano Pet Dr. Cleitinho.',
+      emergencia:
+        'Olá! Quero saber mais sobre a proteção emergencial do Plano Pet Dr. Cleitinho.',
+      clinica: 'Olá! Quero falar com a Late&Mia Clínica Veterinária.',
+      footer: 'Olá! Entrei em contato pelo site do Plano Pet Dr. Cleitinho.',
+    },
   },
 } as const;
+
+export type WhatsAppMessageKey = keyof typeof publicSite.whatsapp.messages;

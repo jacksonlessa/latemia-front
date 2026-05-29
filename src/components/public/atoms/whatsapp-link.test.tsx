@@ -7,7 +7,7 @@ describe('WhatsAppLink', () => {
   it('should build wa.me href with encoded default message when no message prop is provided', () => {
     render(<WhatsAppLink>click</WhatsAppLink>);
     const anchor = screen.getByRole('link');
-    const expected = `https://wa.me/${publicSite.whatsapp.number}?text=${encodeURIComponent(publicSite.whatsapp.defaultMessage)}`;
+    const expected = `https://wa.me/${publicSite.whatsapp.number}?text=${encodeURIComponent(publicSite.whatsapp.messages.default)}`;
     expect(anchor).toHaveAttribute('href', expected);
   });
 

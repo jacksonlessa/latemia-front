@@ -26,6 +26,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
+      url: siteAbsoluteUrl('/clube-de-vantagens'),
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: siteAbsoluteUrl('/emergencia'),
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: siteAbsoluteUrl('/sobre-a-clinica'),
+      lastModified,
+      changeFrequency: 'yearly',
+      priority: 0.6,
+    },
+    {
       url: siteAbsoluteUrl('/privacidade'),
       lastModified,
       changeFrequency: 'yearly',

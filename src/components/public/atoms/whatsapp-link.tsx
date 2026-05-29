@@ -13,7 +13,7 @@ export function WhatsAppLink({
   className,
   children,
 }: WhatsAppLinkProps) {
-  const text = message ?? publicSite.whatsapp.defaultMessage;
+  const text = message ?? publicSite.whatsapp.messages.default;
   const href = `https://wa.me/${publicSite.whatsapp.number}?text=${encodeURIComponent(text)}`;
 
   return (

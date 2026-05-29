@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import { HeroSection } from '@/components/public/landing-v2/hero-section';
-import { BenefitsSection } from '@/components/public/landing-v2/benefits-section';
-import { CoverageSection } from '@/components/public/landing-v2/coverage-section';
-import { CarenceSection } from '@/components/public/landing-v2/carence-section';
+import { PillarsSection } from '@/components/public/landing-v2/pillars-section';
+import { ImmediateBenefitsSection } from '@/components/public/landing-v2/immediate-benefits-section';
+import { EmergencySection } from '@/components/public/landing-v2/emergency-section';
 import { PriceSection } from '@/components/public/landing-v2/price-section';
+import { AboutClinicSection } from '@/components/public/landing-v2/about-clinic-section';
 import { TestimonialsSection } from '@/components/public/landing-v2/testimonials-section';
 import { FaqSection } from '@/components/public/landing-v2/faq-section';
 import { ContactSection } from '@/components/public/landing-v2/contact-section';
@@ -49,9 +50,8 @@ function buildServiceLd(pricePerPetCents: number) {
   return {
     '@context': 'https://schema.org',
     '@type': 'Service',
-    name: 'Plano Emergencial Pet Dr. Cleitinho',
-    serviceType:
-      'Plano emergencial veterinário com desconto em atendimentos urgentes',
+    name: 'Plano Pet Dr. Cleitinho',
+    serviceType: 'Programa de benefícios veterinários com proteção emergencial',
     provider: {
       '@type': 'Organization',
       name: 'Late&Mia Clínica Veterinária',
@@ -92,12 +92,13 @@ export default async function HomePage() {
         }}
       />
       <HeroSection />
-      <BenefitsSection />
-      <CoverageSection />
-      <CarenceSection />
+      <PillarsSection />
+      <ImmediateBenefitsSection />
+      <EmergencySection />
       <PriceSection pricePerPetCents={pricePerPetCents} />
+      <AboutClinicSection />
       <TestimonialsSection />
-      <FaqSection pricePerPetCents={pricePerPetCents} />
+      <FaqSection />
       <ContactSection />
     </main>
   );

@@ -9,28 +9,34 @@ interface FaqEntry {
 
 const items: FaqEntry[] = [
   {
-    question: 'O plano é só para emergência?',
+    question: 'Como funciona a carência de 6 meses?',
     answer:
-      'Não. O plano tem três pilares: Clube de Vantagens desde o primeiro pagamento, orientação por WhatsApp e 50% de desconto em atendimentos emergenciais após a carência.',
+      'Após o primeiro pagamento confirmado, o plano fica em carência por 6 meses. O contrato está ativo, mas o desconto emergencial ainda não pode ser utilizado. A partir do 7.º mês, o benefício está disponível integralmente.',
   },
   {
-    question: 'Posso usar algum benefício antes dos 6 meses?',
+    question: 'O que é considerado emergência veterinária?',
     answer:
-      'Sim. O Clube de Vantagens e a orientação por WhatsApp ficam disponíveis após a confirmação do primeiro pagamento. A carência de 180 dias vale apenas para o desconto emergencial.',
+      'Qualquer situação que coloca a vida do animal em risco imediato ou causa sofrimento intenso e agudo — traumas, convulsões, intoxicações, hemorragias e dificuldade respiratória. Consultas de rotina ou procedimentos eletivos não se enquadram.',
   },
   {
-    question: 'O plano vale em qualquer clínica?',
+    question: 'Como o pagamento é feito?',
     answer:
-      'Não. Os benefícios são válidos para serviços prestados na Late&Mia Clínica Veterinária, em Camboriú.',
+      'O plano é cobrado mensalmente via débito recorrente. O valor é fixo por pet e não sofre reajustes surpresa ao longo do período anual.',
   },
   {
-    question: 'É plano de saúde pet ou seguro?',
+    question: 'Como utilizo o benefício quando precisar?',
     answer:
-      'Não. É um programa de benefícios da própria clínica, com descontos e condições definidos nos termos de uso.',
+      'Leve seu pet diretamente à Late & Mia informando que é assinante do plano. A equipe verifica o cadastro e aplica o desconto de 50% automaticamente. Sem reembolso posterior.',
   },
   {
-    question: 'Quanto custa?',
-    answer: 'R$ 25 por mês por pet cadastrado.',
+    question: 'Posso incluir mais de um pet?',
+    answer:
+      'Sim! O plano é por pet — você pode incluir todos os seus companheiros. O total mensal é R$ 25,00 multiplicado pelo número de pets cadastrados.',
+  },
+  {
+    question: 'Posso cancelar a qualquer momento?',
+    answer:
+      'Sim. O cancelamento pode ser solicitado a qualquer momento sem multa. O plano permanece ativo até o fim do período já pago. Entre em contato pelo WhatsApp.',
   },
 ];
 
