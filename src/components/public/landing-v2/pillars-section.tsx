@@ -50,14 +50,14 @@ export function PillarsSection() {
       <div className="mx-auto w-full max-w-[1120px] px-5">
         <div className="flex flex-col gap-2.5">
           <span className="text-[11px] font-semibold uppercase tracking-[1.4px] text-ink-muted">
-            Cuidado agora, precaução depois
+            Cuidado agora, tranquilidade  depois
           </span>
           <h2 className="font-display text-[clamp(28px,7vw,42px)] leading-[1.05] tracking-[-0.03em] text-ink">
             <span className="text-forest">Cuidado</span> que começa agora.{' '}
             <span className="text-forest">Proteção</span> para quando precisar.
           </h2>
           <p className="max-w-[640px] text-[15px] leading-[1.55] text-ink-soft">
-            Desde o primeiro pagamento, seu pet já acessa benefícios de rotina e
+            Desde o primeiro pagamento, seu pet já tem acesso a benefícios de rotina clínica e
             orientação pelo WhatsApp. Após a carência, conta também com desconto em
             emergências.
           </p>
