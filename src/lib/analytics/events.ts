@@ -17,6 +17,8 @@
  * IDs and aggregated values (CPF, e-mail, telefone are forbidden).
  */
 
+import posthog from 'posthog-js';
+
 /**
  * Canonical event names used across the public funnel. Centralizing them
  * here avoids drift between callers (e.g. `step-sucesso` and `analytics`
@@ -70,6 +72,12 @@ export function track(
     } catch {
       // Swallow — analytics is best-effort.
     }
+  }
+
+  try {
+    posthog.capture(eventName, params);
+  } catch {
+    // Swallow — analytics is best-effort.
   }
 }
 
