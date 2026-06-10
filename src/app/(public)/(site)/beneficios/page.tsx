@@ -23,8 +23,8 @@ export default function BeneficiosPage() {
   return (
     <main className="px-6 md:px-10 py-16 max-w-3xl mx-auto">
       <header className="mb-8 border-b border-forest-soft pb-6">
-        <p className="text-xs uppercase tracking-wide text-forest/60 font-medium">
-          Versão {CLUBE_VANTAGENS_VERSION} — em vigor desde{' '}
+        <p className="text-xs text-forest/40">
+          {CLUBE_VANTAGENS_VERSION} — última atualização em{' '}
           {effectiveDateFormatted}
         </p>
 
