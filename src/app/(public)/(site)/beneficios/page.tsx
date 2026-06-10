@@ -23,12 +23,7 @@ export default function BeneficiosPage() {
   return (
     <main className="px-6 md:px-10 py-16 max-w-3xl mx-auto">
       <header className="mb-8 border-b border-forest-soft pb-6">
-        <p className="text-xs uppercase tracking-wide text-forest/60 font-medium">
-          Versão {CLUBE_VANTAGENS_VERSION} — em vigor desde{' '}
-          {effectiveDateFormatted}
-        </p>
-
-        <h1 className="mt-2 font-display text-3xl md:text-4xl font-semibold text-forest-strong leading-tight">
+        <h1 className="font-display text-3xl md:text-4xl font-semibold text-forest-strong leading-tight">
           Clube de Vantagens
         </h1>
 
@@ -88,6 +83,11 @@ export default function BeneficiosPage() {
             </tbody>
           </table>
         </div>
+
+        <p className="mt-3 text-xs text-forest/40">
+          {CLUBE_VANTAGENS_VERSION} — última atualização em{' '}
+          {effectiveDateFormatted}
+        </p>
       </section>
 
       <section aria-labelledby="regras-uso-heading">

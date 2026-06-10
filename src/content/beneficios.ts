@@ -36,12 +36,12 @@
  * página /beneficios em formato "vX.Y — DD/MM/AAAA". NUNCA alterar sem
  * seguir o PROCESSO DE BUMP descrito no topo do arquivo.
  */
-export const CLUBE_VANTAGENS_VERSION = 'v1.0';
+export const CLUBE_VANTAGENS_VERSION = 'v1.0.1';
 
 /**
  * Data de entrada em vigor desta versão da tabela (ISO YYYY-MM-DD).
  */
-export const CLUBE_VANTAGENS_EFFECTIVE_DATE = '2026-05-15';
+export const CLUBE_VANTAGENS_EFFECTIVE_DATE = '2026-06-10';
 
 /**
  * Item da tabela vigente do Clube de Vantagens.
@@ -58,11 +58,15 @@ export interface ClubeVantagensItem {
  * vigente. A ordem desta lista é a ordem de exibição na página pública.
  */
 export const CLUBE_VANTAGENS_ITENS: ClubeVantagensItem[] = [
-  { procedimento: 'Microchipagem', percentual: 30 },
-  { procedimento: 'Consultas eletivas e de especialidades', percentual: 30 },
+  { procedimento: 'Consultas eletivas', percentual: 30 },
+  { procedimento: 'Consultas com especialistas', percentual: 10 },
   { procedimento: 'Exames de sangue laboratoriais', percentual: 10 },
-  { procedimento: 'Exames de imagem (Raio-X e Ultrassom)', percentual: 5 },
   { procedimento: 'Cirurgias eletivas', percentual: 10 },
+  { procedimento: 'Procedimentos', percentual: 10 },
+  { procedimento: 'Banho e Tosa', percentual: 10 },
+  { procedimento: 'Vacinas', percentual: 10 },
+  { procedimento: 'Exames de imagem (Raio-X e Ultrassom)', percentual: 5 },
+  { procedimento: 'Microchipagem **', percentual: 30 },
 ];
 
 /**
@@ -73,4 +77,5 @@ export const CLUBE_VANTAGENS_NOTAS: string[] = [
   'Não cumulativos com outras promoções da Late&Mia Clínica Veterinária.',
   'Aplicam-se exclusivamente a serviços prestados pela CLÍNICA.',
   'Não abrangem serviços terceirizados.',
+  '** Mediante agendamento prévio.',
 ];
