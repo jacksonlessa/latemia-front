@@ -91,7 +91,7 @@ export async function mapClientApiError(res: Response): Promise<ValidationError>
 
     case "INVALID_PHONE":
       return new ValidationError({
-        phone: "Telefone inválido. Use DDD + número (10 ou 11 dígitos).",
+        phone: "Celular inválido. Use DDD + 9 dígitos (ex.: (47) 99522-1932).",
       });
 
     case "INVALID_EMAIL":

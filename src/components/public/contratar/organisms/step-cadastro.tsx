@@ -204,9 +204,9 @@ export function StepCadastro({
           )}
         </div>
 
-        {/* Telefone */}
+        {/* Celular */}
         <div className="space-y-1.5">
-          <Label htmlFor="phone">Telefone</Label>
+          <Label htmlFor="phone">Celular</Label>
           <PhoneInput
             id="phone"
             name="phone"

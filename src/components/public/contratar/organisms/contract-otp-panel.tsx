@@ -20,11 +20,12 @@ import { cn } from '@/lib/utils';
  */
 export interface ContractOtpPanelProps {
   /**
-   * Server-built phone mask (e.g. `(11) 9****-1234`). The frontend NEVER
-   * builds this string from the raw phone — it is always echoed back from
-   * the backend so we keep one source of truth.
+   * Full formatted mobile the tutor entered in this wizard
+   * (e.g. `(11) 98765-4321`). Built client-side from the local E.164
+   * value — not from the API `phone_masked` (which stays masked for
+   * logs/evidence).
    */
-  phoneMasked: string;
+  phoneDisplay: string;
 
   /**
    * Number of seconds remaining on the resend cooldown. The button is
@@ -99,7 +100,7 @@ export const ContractOtpPanel = forwardRef<
   ContractOtpPanelHandle,
   ContractOtpPanelProps
 >(function ContractOtpPanel(
-  { phoneMasked, cooldownSeconds, onSubmit, onResend, errorMessage, busy },
+  { phoneDisplay, cooldownSeconds, onSubmit, onResend, errorMessage, busy },
   ref,
 ) {
   const [code, setCode] = useState('');
@@ -202,7 +203,7 @@ export const ContractOtpPanel = forwardRef<
         </h3>
         <p id={HELPER_ID} className="text-sm text-muted-foreground">
           Enviamos um código de 6 dígitos para{' '}
-          <span className="font-medium text-foreground">{phoneMasked}</span>.
+          <span className="font-medium text-foreground">{phoneDisplay}</span>.
           Pode levar alguns segundos.
         </p>
       </header>
@@ -235,8 +236,7 @@ export const ContractOtpPanel = forwardRef<
               'text-center text-lg tracking-[0.5em] font-mono',
               errorMessage && 'border-destructive focus-visible:ring-destructive',
             )}
-            // The visible mask string is server-built; the user never sees
-            // their raw phone here.
+            // Digits-only visual cue for OTP length — not related to phone.
             placeholder="••••••"
           />
           {errorMessage ? (

@@ -167,16 +167,43 @@ describe("ClientEntity.validate — email", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Phone validation
+// Mobile phone validation
 // ---------------------------------------------------------------------------
 
-describe("ClientEntity.validate — phone", () => {
+describe("ClientEntity.validate — mobile phone", () => {
   it("should throw ValidationError with phone error when phone is too short", () => {
     try {
       ClientEntity.validate(validInput({ phone: "12345" }));
     } catch (e) {
       expect((e as ValidationError).fieldErrors["phone"]).toBeDefined();
     }
+  });
+
+  it("should reject 10-digit landline numbers", () => {
+    try {
+      ClientEntity.validate(validInput({ phone: "4795221932" }));
+      expect.unreachable();
+    } catch (e) {
+      expect(e).toBeInstanceOf(ValidationError);
+      expect((e as ValidationError).fieldErrors["phone"]).toContain("Celular");
+    }
+  });
+
+  it("should reject 11 digits when the digit after DDD is not 9", () => {
+    try {
+      ClientEntity.validate(validInput({ phone: "47852219321" }));
+      expect.unreachable();
+    } catch (e) {
+      expect(e).toBeInstanceOf(ValidationError);
+      expect((e as ValidationError).fieldErrors["phone"]).toBeDefined();
+    }
+  });
+
+  it("should accept a complete 11-digit mobile with 9 after DDD", () => {
+    const entity = ClientEntity.validate(
+      validInput({ phone: "47995221932" }),
+    );
+    expect(entity.phone).toBe("47995221932");
   });
 });
 

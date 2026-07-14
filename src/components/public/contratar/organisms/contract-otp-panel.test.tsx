@@ -30,7 +30,7 @@ describe('ContractOtpPanel', () => {
   it('should auto-focus the OTP input on mount', () => {
     render(
       <ContractOtpPanel
-        phoneMasked="(11) 9****-4321"
+        phoneDisplay="(11) 98765-4321"
         cooldownSeconds={60}
         onSubmit={noopSubmit}
         onResend={noopResend}
@@ -43,19 +43,19 @@ describe('ContractOtpPanel', () => {
   it('should display the masked phone in the header', () => {
     render(
       <ContractOtpPanel
-        phoneMasked="(11) 9****-4321"
+        phoneDisplay="(11) 98765-4321"
         cooldownSeconds={60}
         onSubmit={noopSubmit}
         onResend={noopResend}
       />,
     );
-    expect(screen.getByText('(11) 9****-4321')).toBeInTheDocument();
+    expect(screen.getByText('(11) 98765-4321')).toBeInTheDocument();
   });
 
   it('should strip non-digit characters from the input', () => {
     render(
       <ContractOtpPanel
-        phoneMasked="(11) 9****-4321"
+        phoneDisplay="(11) 98765-4321"
         cooldownSeconds={60}
         onSubmit={noopSubmit}
         onResend={noopResend}
@@ -70,7 +70,7 @@ describe('ContractOtpPanel', () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     render(
       <ContractOtpPanel
-        phoneMasked="(11) 9****-4321"
+        phoneDisplay="(11) 98765-4321"
         cooldownSeconds={60}
         onSubmit={onSubmit}
         onResend={noopResend}
@@ -88,7 +88,7 @@ describe('ContractOtpPanel', () => {
   it('should preserve digits typed when an error is rendered (do NOT zero the input)', () => {
     const { rerender } = render(
       <ContractOtpPanel
-        phoneMasked="(11) 9****-4321"
+        phoneDisplay="(11) 98765-4321"
         cooldownSeconds={60}
         onSubmit={noopSubmit}
         onResend={noopResend}
@@ -99,7 +99,7 @@ describe('ContractOtpPanel', () => {
 
     rerender(
       <ContractOtpPanel
-        phoneMasked="(11) 9****-4321"
+        phoneDisplay="(11) 98765-4321"
         cooldownSeconds={60}
         onSubmit={noopSubmit}
         onResend={noopResend}
@@ -113,7 +113,7 @@ describe('ContractOtpPanel', () => {
   it('should render error with role="alert" and mark input aria-invalid', () => {
     render(
       <ContractOtpPanel
-        phoneMasked="(11) 9****-4321"
+        phoneDisplay="(11) 98765-4321"
         cooldownSeconds={60}
         onSubmit={noopSubmit}
         onResend={noopResend}
@@ -131,7 +131,7 @@ describe('ContractOtpPanel', () => {
   it('should disable the resend button while cooldownSeconds > 0', () => {
     render(
       <ContractOtpPanel
-        phoneMasked="(11) 9****-4321"
+        phoneDisplay="(11) 98765-4321"
         cooldownSeconds={45}
         onSubmit={noopSubmit}
         onResend={noopResend}
@@ -145,7 +145,7 @@ describe('ContractOtpPanel', () => {
   it('should enable the resend button when cooldownSeconds reaches 0', () => {
     render(
       <ContractOtpPanel
-        phoneMasked="(11) 9****-4321"
+        phoneDisplay="(11) 98765-4321"
         cooldownSeconds={0}
         onSubmit={noopSubmit}
         onResend={noopResend}
@@ -159,7 +159,7 @@ describe('ContractOtpPanel', () => {
     const onResend = vi.fn().mockResolvedValue(undefined);
     render(
       <ContractOtpPanel
-        phoneMasked="(11) 9****-4321"
+        phoneDisplay="(11) 98765-4321"
         cooldownSeconds={0}
         onSubmit={noopSubmit}
         onResend={onResend}
@@ -174,7 +174,7 @@ describe('ContractOtpPanel', () => {
   it('should disable both controls when busy=true', () => {
     render(
       <ContractOtpPanel
-        phoneMasked="(11) 9****-4321"
+        phoneDisplay="(11) 98765-4321"
         cooldownSeconds={0}
         onSubmit={noopSubmit}
         onResend={noopResend}
@@ -189,7 +189,7 @@ describe('ContractOtpPanel', () => {
   it('should expose inputMode="numeric" and autoComplete="one-time-code" on the input', () => {
     render(
       <ContractOtpPanel
-        phoneMasked="(11) 9****-4321"
+        phoneDisplay="(11) 98765-4321"
         cooldownSeconds={60}
         onSubmit={noopSubmit}
         onResend={noopResend}
@@ -204,7 +204,7 @@ describe('ContractOtpPanel', () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     render(
       <ContractOtpPanel
-        phoneMasked="(11) 9****-4321"
+        phoneDisplay="(11) 98765-4321"
         cooldownSeconds={60}
         onSubmit={onSubmit}
         onResend={noopResend}
@@ -230,7 +230,7 @@ describe('ContractOtpPanel', () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     render(
       <ContractOtpPanel
-        phoneMasked="(11) 9****-4321"
+        phoneDisplay="(11) 98765-4321"
         cooldownSeconds={60}
         onSubmit={onSubmit}
         onResend={noopResend}

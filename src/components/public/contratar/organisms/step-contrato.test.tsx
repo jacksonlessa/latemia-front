@@ -163,7 +163,7 @@ describe('StepContrato — OTP flow (otpEnabled=true)', () => {
     expect(trackMock).toHaveBeenCalledWith('solicited_otp');
     expect(onContractAttemptIdAssigned).toHaveBeenCalledWith('attempt-uuid-1');
     expect(screen.getByLabelText('Código de 6 dígitos')).toBeInTheDocument();
-    expect(screen.getByText('(11) 9****-4321')).toBeInTheDocument();
+    expect(screen.getByText('(11) 98765-4321')).toBeInTheDocument();
   });
 
   it('should NOT call onNext immediately when OTP is enabled', async () => {
@@ -317,9 +317,7 @@ describe('StepContrato — OTP flow (otpEnabled=true)', () => {
       fireEvent.click(screen.getByRole('button', { name: /reenviar código/i }));
     });
 
-    await waitFor(() => {
-      expect(trackMock).toHaveBeenCalledWith('resolicited_otp');
-    });
+    expect(trackMock).toHaveBeenCalledWith('resolicited_otp');
 
     vi.useRealTimers();
   });

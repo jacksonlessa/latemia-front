@@ -72,9 +72,9 @@ export const Aceito: Story = {
 
 /**
  * Flag de OTP habilitada — ao clicar "Avançar" o overlay `ContractOtpPanel`
- * é renderizado após o backend retornar o `phoneMasked`. Para reproduzir o
- * estado em Storybook, mock `RequestContractOtpUseCase.execute` em
- * `.storybook/preview.ts`.
+ * é renderizado com o celular formatado a partir do `phone` local. Para
+ * reproduzir o estado em Storybook, mock `RequestContractOtpUseCase.execute`
+ * em `.storybook/preview.ts`.
  */
 export const OtpEnabled: Story = {
   name: 'OTP habilitado (após Avançar → overlay)',

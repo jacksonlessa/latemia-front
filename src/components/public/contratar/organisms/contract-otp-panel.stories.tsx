@@ -37,7 +37,7 @@ const noopResend = (): Promise<void> => Promise.resolve();
 export const Idle: Story = {
   name: 'Idle (código enviado)',
   args: {
-    phoneMasked: '(11) 9****-4321',
+    phoneDisplay: '(11) 98765-4321',
     cooldownSeconds: 0,
     onSubmit: noopSubmit,
     onResend: noopResend,
@@ -48,7 +48,7 @@ export const Idle: Story = {
 export const Sent: Story = {
   name: 'Cooldown ativo (45s)',
   args: {
-    phoneMasked: '(11) 9****-4321',
+    phoneDisplay: '(11) 98765-4321',
     cooldownSeconds: 45,
     onSubmit: noopSubmit,
     onResend: noopResend,
@@ -59,7 +59,7 @@ export const Sent: Story = {
 export const Sending: Story = {
   name: 'Sending (request em voo)',
   args: {
-    phoneMasked: '(11) 9****-4321',
+    phoneDisplay: '(11) 98765-4321',
     cooldownSeconds: 0,
     onSubmit: noopSubmit,
     onResend: noopResend,
@@ -71,7 +71,7 @@ export const Sending: Story = {
 export const Verifying: Story = {
   name: 'Verifying (verify em voo)',
   args: {
-    phoneMasked: '(11) 9****-4321',
+    phoneDisplay: '(11) 98765-4321',
     cooldownSeconds: 60,
     onSubmit: noopSubmit,
     onResend: noopResend,
@@ -83,7 +83,7 @@ export const Verifying: Story = {
 export const ErrorInvalid: Story = {
   name: 'Error — código incorreto',
   args: {
-    phoneMasked: '(11) 9****-4321',
+    phoneDisplay: '(11) 98765-4321',
     cooldownSeconds: 60,
     onSubmit: noopSubmit,
     onResend: noopResend,
@@ -95,7 +95,7 @@ export const ErrorInvalid: Story = {
 export const ErrorExpired: Story = {
   name: 'Error — código expirado',
   args: {
-    phoneMasked: '(11) 9****-4321',
+    phoneDisplay: '(11) 98765-4321',
     cooldownSeconds: 0,
     onSubmit: noopSubmit,
     onResend: noopResend,
@@ -107,7 +107,7 @@ export const ErrorExpired: Story = {
 export const ErrorLocked: Story = {
   name: 'Error — muitas tentativas (locked)',
   args: {
-    phoneMasked: '(11) 9****-4321',
+    phoneDisplay: '(11) 98765-4321',
     cooldownSeconds: 0,
     onSubmit: noopSubmit,
     onResend: noopResend,
@@ -119,7 +119,7 @@ export const ErrorLocked: Story = {
 export const ErrorSmsProvider: Story = {
   name: 'Error — SMS provider unavailable',
   args: {
-    phoneMasked: '(11) 9****-4321',
+    phoneDisplay: '(11) 98765-4321',
     cooldownSeconds: 0,
     onSubmit: noopSubmit,
     onResend: noopResend,
@@ -132,7 +132,7 @@ export const ErrorSmsProvider: Story = {
 export const Resending: Story = {
   name: 'Resending (resend em voo)',
   args: {
-    phoneMasked: '(11) 9****-4321',
+    phoneDisplay: '(11) 98765-4321',
     cooldownSeconds: 0,
     onSubmit: noopSubmit,
     onResend: noopResend,
