@@ -99,7 +99,7 @@ describe("validateClientUseCase — API error mapping", () => {
     try {
       await validateClientUseCase(validInput());
     } catch (e) {
-      expect((e as ValidationError).fieldErrors["phone"]).toContain("Telefone inválido");
+      expect((e as ValidationError).fieldErrors["phone"]).toContain("Celular inválido");
     }
   });
 

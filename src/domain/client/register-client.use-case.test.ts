@@ -191,7 +191,7 @@ describe("RegisterClientUseCase.execute — API error mapping", () => {
     try {
       await useCase.execute(validInput());
     } catch (e) {
-      expect((e as ValidationError).fieldErrors["phone"]).toContain("Telefone inválido");
+      expect((e as ValidationError).fieldErrors["phone"]).toContain("Celular inválido");
     }
   });
 

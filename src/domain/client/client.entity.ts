@@ -67,14 +67,17 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-/** Validates Brazilian phone numbers (10 or 11 digits). */
-function isValidPhone(phone: string): boolean {
+/**
+ * Validates Brazilian mobile numbers: DDD (2) + 9 + 8 local digits (11 total).
+ * Landlines (10 digits) are rejected — registration requires SMS/WhatsApp.
+ */
+function isValidMobilePhone(phone: string): boolean {
   const digits = digitsOnly(phone);
-  return digits.length === 10 || digits.length === 11;
+  return digits.length === 11 && digits[2] === "9";
 }
 
-/** Returns digits-only phone string. */
-function normalisePhone(phone: string): string {
+/** Returns digits-only mobile phone string. */
+function normaliseMobilePhone(phone: string): string {
   return digitsOnly(phone);
 }
 
@@ -111,7 +114,7 @@ export class ClientEntity {
     public readonly name: string,
     /** Canonical masked CPF: "000.000.000-00". */
     public readonly cpf: string,
-    /** Digits-only phone (10 or 11 digits). */
+    /** Digits-only Brazilian mobile (11 digits, 9 after DDD). */
     public readonly phone: string,
     /** Lower-cased, trimmed e-mail. */
     public readonly email: string,
@@ -138,9 +141,10 @@ export class ClientEntity {
       errors["cpf"] = "CPF inválido";
     }
 
-    // Phone
-    if (!isValidPhone(input.phone ?? "")) {
-      errors["phone"] = "Telefone inválido";
+    // Mobile phone
+    if (!isValidMobilePhone(input.phone ?? "")) {
+      errors["phone"] =
+        "Celular inválido. Use DDD + 9 dígitos (ex.: (47) 99522-1932).";
     }
 
     // Email
@@ -166,7 +170,7 @@ export class ClientEntity {
       input.name.trim(),
       // canonicalCpf is guaranteed non-null here (errors would have thrown)
       canonicalCpf!,
-      normalisePhone(input.phone),
+      normaliseMobilePhone(input.phone),
       input.email.trim().toLowerCase(),
       {
         cep: digitsOnly(input.address.cep),

@@ -458,7 +458,7 @@ describe('ContratarPageClient — passo 0 dry-run validation', () => {
 
   it('should display field error and stay on step 0 when validateClientUseCase throws ValidationError', async () => {
     mockValidateClientUseCase.mockRejectedValueOnce(
-      new ValidationError({ phone: 'Telefone inválido. Use DDD + número (10 ou 11 dígitos).' }),
+      new ValidationError({ phone: 'Celular inválido. Use DDD + 9 dígitos (ex.: (47) 99522-1932).' }),
     );
     vi.mocked(loadDraft).mockReturnValue(null);
     render(<ContratarPageClient />);

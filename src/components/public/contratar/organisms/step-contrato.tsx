@@ -14,6 +14,7 @@ import { VerifyContractOtpUseCase } from '@/domain/contract/verify-contract-otp.
 import { ResendContractOtpUseCase } from '@/domain/contract/resend-contract-otp.use-case';
 import { ValidationError } from '@/lib/validation-error';
 import { FeatureDisabledError } from '@/lib/feature-disabled-error';
+import { formatE164BrMobileDisplay } from '@/lib/format-e164-br-mobile-display';
 
 /**
  * OTP flow state machine — captures every observable transition inside the
@@ -50,9 +51,9 @@ export interface StepContratoProps {
    */
   otpEnabled?: boolean;
   /**
-   * E.164 BR phone of the tutor. Forwarded to the OTP endpoints. Required
-   * when `otpEnabled=true`. Ignored otherwise. PII — never displayed; only
-   * the server-built `phoneMasked` is rendered.
+   * E.164 BR mobile of the tutor. Forwarded to the OTP endpoints and
+   * formatted client-side for display in `ContractOtpPanel`. Required when
+   * `otpEnabled=true`. Ignored otherwise.
    */
   phone?: string;
   /**
@@ -97,7 +98,6 @@ export function StepContrato({
   const checkboxId = 'contrato-aceite';
 
   const [otpPhase, setOtpPhase] = useState<StepContratoOtpPhase>('idle');
-  const [phoneMasked, setPhoneMasked] = useState<string>('');
   const [cooldownSeconds, setCooldownSeconds] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string | undefined>(
     undefined,
@@ -170,7 +170,6 @@ export function StepContrato({
         phone,
       });
       track(Events.SolicitedOtp);
-      setPhoneMasked(result.phoneMasked);
       setCooldownSeconds(result.cooldownSeconds || COOLDOWN_FALLBACK_SECONDS);
       setOtpPhase('sent');
     } catch (err) {
@@ -270,7 +269,6 @@ export function StepContrato({
         phone,
       });
       track(Events.ResolicitedOtp);
-      setPhoneMasked(result.phoneMasked);
       setCooldownSeconds(result.cooldownSeconds || COOLDOWN_FALLBACK_SECONDS);
       setOtpPhase('sent');
       panelRef.current?.clear();
@@ -356,7 +354,7 @@ export function StepContrato({
       {showOtpPanel ? (
         <ContractOtpPanel
           ref={panelRef}
-          phoneMasked={phoneMasked}
+          phoneDisplay={formatE164BrMobileDisplay(phone ?? '')}
           cooldownSeconds={cooldownSeconds}
           onSubmit={handleOtpSubmit}
           onResend={handleOtpResend}
