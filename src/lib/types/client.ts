@@ -114,6 +114,24 @@ export interface ClientDetail {
    * Null when no token has ever been generated.
    */
   paymentUpdateToken?: ClientPaymentUpdateToken | null;
+  /**
+   * True when the client is eligible to have a new pet added to its
+   * existing Pagar.me subscription (`adicao-pet-cliente-existente`, Tarefa
+   * 6.0). `undefined` when the backend has not computed this field (should
+   * not happen for `GET /v1/clients/:id`, kept optional for forward
+   * compatibility with older API responses / tests).
+   */
+  petAdditionEligible?: boolean;
+  /**
+   * Reason the client is blocked from having a pet added, mirroring
+   * `PetAdditionBlockedReason` on the backend. `null`/`undefined` when
+   * `petAdditionEligible` is `true`.
+   */
+  petAdditionBlockedReason?:
+    | 'client_inadimplente'
+    | 'client_pendente'
+    | 'client_no_subscription'
+    | null;
 }
 
 /** Lightweight row returned by GET /v1/clients list. */

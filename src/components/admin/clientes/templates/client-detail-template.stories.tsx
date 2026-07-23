@@ -183,6 +183,69 @@ export const PlanoInadimplente: Story = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// "Adicionar pet" button — Tarefa 7.9 (adicao-pet-cliente-existente)
+// ---------------------------------------------------------------------------
+
+/** Cliente sem subscription ativa — botão "Adicionar pet" oculto. */
+export const AdicionarPetOculto: Story = {
+  name: 'Adicionar pet — oculto (sem subscription)',
+  args: {
+    client: {
+      ...mockClient,
+      pagarmeSubscriptionId: undefined,
+      petAdditionEligible: undefined,
+      petAdditionBlockedReason: undefined,
+    },
+    plans: mockPlans,
+  },
+};
+
+/** Cliente inadimplente — botão "Adicionar pet" desabilitado com tooltip. */
+export const AdicionarPetDesabilitadoInadimplente: Story = {
+  name: 'Adicionar pet — desabilitado (inadimplente)',
+  args: {
+    client: {
+      ...mockClient,
+      pagarmeSubscriptionId: 'sub_mock_123',
+      petAdditionEligible: false,
+      petAdditionBlockedReason: 'client_inadimplente',
+    },
+    plans: mockPlans,
+  },
+};
+
+/** Cliente pendente (primeira charge não confirmada) — botão desabilitado. */
+export const AdicionarPetDesabilitadoPendente: Story = {
+  name: 'Adicionar pet — desabilitado (pendente)',
+  args: {
+    client: {
+      ...mockClient,
+      pagarmeSubscriptionId: 'sub_mock_123',
+      petAdditionEligible: false,
+      petAdditionBlockedReason: 'client_pendente',
+    },
+    plans: mockPlans,
+  },
+};
+
+/** Cliente elegível — botão "Adicionar pet" habilitado, abre o wizard. */
+export const AdicionarPetHabilitado: Story = {
+  name: 'Adicionar pet — habilitado',
+  args: {
+    client: {
+      ...mockClient,
+      pagarmeSubscriptionId: 'sub_mock_123',
+      petAdditionEligible: true,
+      petAdditionBlockedReason: null,
+    },
+    plans: mockPlans,
+    pricePerPetCents: 2500,
+    petAdditionContractText:
+      'O pet passa a integrar a assinatura já existente do tutor.',
+  },
+};
+
 /** Cliente com histórico de planos inativos */
 export const ComHistoricoInativos: Story = {
   name: 'Com histórico de planos inativos',

@@ -73,6 +73,15 @@ vi.mock('./pet-plan-panel', () => ({
   },
 }));
 
+// Mock AddPetToClientDialog — the dialog's own behavior is covered by
+// add-pet-to-client-dialog.test.tsx; here we only assert that the parent
+// wires the "open" state correctly from the button.
+vi.mock('./add-pet-to-client-dialog', () => ({
+  AddPetToClientDialog: ({ open }: { open: boolean }) => (
+    <div data-testid="add-pet-dialog" data-open={open ? 'true' : 'false'} />
+  ),
+}));
+
 // ---------------------------------------------------------------------------
 // Fixtures
 // ---------------------------------------------------------------------------
@@ -213,6 +222,70 @@ describe('ClientDetailPageClient', () => {
     // Now Mia panel should be visible and Rex panel hidden
     expect(screen.getByTestId('panel-pet-2')).toBeInTheDocument();
     expect(screen.queryByTestId('panel-pet-1')).not.toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// "Adicionar pet" button — Tarefa 7.0 (adicao-pet-cliente-existente)
+// ---------------------------------------------------------------------------
+
+describe('ClientDetailPageClient — Adicionar pet button', () => {
+  it('should hide the "Adicionar pet" button when the client has no pagarmeSubscriptionId', () => {
+    const client = makeClient({ pagarmeSubscriptionId: undefined });
+    const plans = makePlans();
+
+    render(<ClientDetailPageClient client={client} plans={plans} />);
+
+    expect(
+      screen.queryByRole('button', { name: /adicionar pet/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('should render the button disabled when petAdditionEligible is false', () => {
+    const client = makeClient({
+      pagarmeSubscriptionId: 'sub_123',
+      petAdditionEligible: false,
+      petAdditionBlockedReason: 'client_inadimplente',
+    });
+    const plans = makePlans();
+
+    render(<ClientDetailPageClient client={client} plans={plans} />);
+
+    const button = screen.getByRole('button', { name: /adicionar pet/i });
+    expect(button).toBeDisabled();
+  });
+
+  it('should render the button enabled when petAdditionEligible is true', () => {
+    const client = makeClient({
+      pagarmeSubscriptionId: 'sub_123',
+      petAdditionEligible: true,
+      petAdditionBlockedReason: null,
+    });
+    const plans = makePlans();
+
+    render(<ClientDetailPageClient client={client} plans={plans} />);
+
+    const button = screen.getByRole('button', { name: /adicionar pet/i });
+    expect(button).toBeEnabled();
+  });
+
+  it('should open the AddPetToClientDialog when clicking the enabled button', () => {
+    const client = makeClient({
+      pagarmeSubscriptionId: 'sub_123',
+      petAdditionEligible: true,
+      petAdditionBlockedReason: null,
+    });
+    const plans = makePlans();
+
+    render(<ClientDetailPageClient client={client} plans={plans} />);
+
+    expect(screen.getByTestId('add-pet-dialog')).toHaveAttribute('data-open', 'false');
+
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: /adicionar pet/i }));
+    });
+
+    expect(screen.getByTestId('add-pet-dialog')).toHaveAttribute('data-open', 'true');
   });
 });
 

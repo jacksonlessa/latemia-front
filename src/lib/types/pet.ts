@@ -67,3 +67,37 @@ export interface UpdatePetPayload {
   weight?: number;
   castrated?: boolean;
 }
+
+// ---------------------------------------------------------------------------
+// Pet addition to an existing client (`adicao-pet-cliente-existente`, F6)
+// ---------------------------------------------------------------------------
+
+/**
+ * Payload sent to POST /v1/clients/:clientId/pets (via the internal
+ * `/api/admin/clients/:id/pets` proxy). Mirrors the backend
+ * `CreatePetForClientDto` — `CreatePetDto` fields plus the explicit
+ * tutor-acknowledgement checkbox.
+ */
+export interface AddPetToClientPayload {
+  name: string;
+  species: PetSpecies;
+  breed: string;
+  /** ISO 8601 date string. */
+  birthDate: string;
+  weight: number;
+  castrated: boolean;
+  sex: PetSex;
+  /** Checkbox "O tutor está ciente e concorda" — must be `true`. */
+  tutorAcknowledged: boolean;
+}
+
+/** Response returned by a successful POST /v1/clients/:clientId/pets. */
+export interface AddPetToClientResult {
+  petId: string;
+  planId: string;
+  /** ISO 8601 — from the Pagar.me subscription's current cycle. */
+  nextBillingAt: string;
+  nextBillingAmountCents: number;
+  /** Equal to `nextBillingAt` — coverage only starts at the next consolidated charge. */
+  coverageStartsAt: string;
+}
