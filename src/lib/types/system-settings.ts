@@ -9,6 +9,12 @@ export interface SystemSettingsDto {
    * Conversão para boolean é responsabilidade do consumidor.
    */
   otp_contract_enabled: string | null;
+  /**
+   * Texto do contrato adicional exibido na confirmação de "adicionar pet"
+   * a cliente com plano existente. Editável via este painel sem depender
+   * de deploy de frontend.
+   */
+  pet_addition_contract_text: string | null;
 }
 
 export interface UpdateSystemSettingsInput {
@@ -21,4 +27,6 @@ export interface UpdateSystemSettingsInput {
    * Aceita exclusivamente as strings literais `'true'` ou `'false'`.
    */
   otp_contract_enabled?: 'true' | 'false';
+  /** Texto do contrato adicional de adição de pet. String não vazia. */
+  pet_addition_contract_text?: string;
 }

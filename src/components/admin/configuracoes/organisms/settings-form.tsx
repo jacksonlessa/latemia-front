@@ -42,6 +42,8 @@ function getFeedbackMessage(code: string): string {
       return "Preço do plano inválido. Informe um valor inteiro positivo em centavos.";
     case "INVALID_OTP_CONTRACT_ENABLED":
       return "Valor inválido para o OTP do contrato. Tente novamente.";
+    case "INVALID_PET_ADDITION_CONTRACT_TEXT":
+      return "Texto do contrato de adição de pet não pode ficar vazio.";
     case "EMPTY_UPDATE":
       return "Nenhuma alteração detectada. Modifique ao menos um campo antes de salvar.";
     case "UNAUTHORIZED":
@@ -65,17 +67,23 @@ export function SettingsForm({ initialValues, saveAction, fetchError }: Settings
   const [otpContractEnabled, setOtpContractEnabled] = useState<boolean>(
     initialValues?.otp_contract_enabled === "true",
   );
+  const [petAdditionContractText, setPetAdditionContractText] = useState<string>(
+    initialValues?.pet_addition_contract_text ?? "",
+  );
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const savedPriceCents = parseInt(savedValues?.subscription_plan_price_cents ?? "0", 10) || 0;
   const savedOtpEnabled = savedValues?.otp_contract_enabled === "true";
+  const savedPetAdditionContractText =
+    savedValues?.pet_addition_contract_text ?? "";
   const isDirty =
     paymentProvider !== (savedValues?.payment_provider ?? "") ||
     subscriptionPlanId !== (savedValues?.subscription_plan_id ?? "") ||
     subscriptionPlanPriceCents !== savedPriceCents ||
-    otpContractEnabled !== savedOtpEnabled;
+    otpContractEnabled !== savedOtpEnabled ||
+    petAdditionContractText !== savedPetAdditionContractText;
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -90,6 +98,9 @@ export function SettingsForm({ initialValues, saveAction, fetchError }: Settings
     // campos, a flag é booleana e ambos os valores são significativos.
     if (otpContractEnabled !== savedOtpEnabled) {
       payload.otp_contract_enabled = otpContractEnabled ? "true" : "false";
+    }
+    if (petAdditionContractText !== savedPetAdditionContractText) {
+      payload.pet_addition_contract_text = petAdditionContractText;
     }
 
     startTransition(async () => {
@@ -235,6 +246,32 @@ export function SettingsForm({ initialValues, saveAction, fetchError }: Settings
             className="data-[state=checked]:bg-[#4E8C75]"
           />
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="pet_addition_contract_text">
+          Texto do contrato — adição de pet
+        </Label>
+        <textarea
+          id="pet_addition_contract_text"
+          value={petAdditionContractText}
+          onChange={(e) => {
+            setPetAdditionContractText(e.target.value);
+            setSuccessMessage(null);
+          }}
+          rows={6}
+          disabled={isPending}
+          placeholder="Texto exibido ao atendente na confirmação de adição de pet a cliente existente…"
+          aria-describedby="pet_addition_contract_text_help"
+          className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+        />
+        <p
+          id="pet_addition_contract_text_help"
+          className="text-xs text-muted-foreground"
+        >
+          Exibido ao atendente na tela de confirmação ao adicionar um pet a um
+          cliente com plano ativo. Alterações não exigem deploy de frontend.
+        </p>
       </div>
 
       <div className="flex justify-end">

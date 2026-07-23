@@ -11,6 +11,7 @@ const baseValues: SystemSettingsDto = {
   subscription_plan_id: "plan_abc123",
   subscription_plan_price_cents: "4990",
   otp_contract_enabled: "false",
+  pet_addition_contract_text: "Texto original do contrato de adição.",
 };
 
 function makeSaveSuccess() {
@@ -184,5 +185,64 @@ describe("SettingsForm — OTP contract toggle", () => {
     const payload = saveAction.mock.calls[0][0];
     expect(payload.otp_contract_enabled).toBeUndefined();
     expect(payload.subscription_plan_id).toBe("plan_new_id");
+  });
+});
+
+describe("SettingsForm — pet_addition_contract_text", () => {
+  it("should render the persisted contract text from initialValues", () => {
+    render(
+      <SettingsForm initialValues={baseValues} saveAction={makeSaveSuccess()} />,
+    );
+
+    const textarea = screen.getByLabelText(/texto do contrato — adição de pet/i);
+    expect(textarea).toHaveValue("Texto original do contrato de adição.");
+  });
+
+  it("should submit the updated pet_addition_contract_text when edited", async () => {
+    const saveAction = makeSaveSuccess();
+    render(<SettingsForm initialValues={baseValues} saveAction={saveAction} />);
+
+    const textarea = screen.getByLabelText(/texto do contrato — adição de pet/i);
+    fireEvent.change(textarea, {
+      target: { value: "Novo texto revisado pelo jurídico." },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /salvar/i }));
+
+    await waitFor(() => expect(saveAction).toHaveBeenCalledTimes(1));
+    const payload = saveAction.mock.calls[0][0];
+    expect(payload.pet_addition_contract_text).toBe(
+      "Novo texto revisado pelo jurídico.",
+    );
+  });
+
+  it("should NOT include pet_addition_contract_text in payload when not dirty", async () => {
+    const saveAction = makeSaveSuccess();
+    render(<SettingsForm initialValues={baseValues} saveAction={saveAction} />);
+
+    const planIdInput = screen.getByLabelText(/id do plano de assinatura/i);
+    fireEvent.change(planIdInput, { target: { value: "plan_new_id" } });
+
+    fireEvent.click(screen.getByRole("button", { name: /salvar/i }));
+
+    await waitFor(() => expect(saveAction).toHaveBeenCalledTimes(1));
+    const payload = saveAction.mock.calls[0][0];
+    expect(payload.pet_addition_contract_text).toBeUndefined();
+  });
+
+  it("should display INVALID_PET_ADDITION_CONTRACT_TEXT friendly message when backend rejects", async () => {
+    const saveAction = makeSaveError("INVALID_PET_ADDITION_CONTRACT_TEXT");
+    render(<SettingsForm initialValues={baseValues} saveAction={saveAction} />);
+
+    const textarea = screen.getByLabelText(/texto do contrato — adição de pet/i);
+    fireEvent.change(textarea, { target: { value: "   " } });
+    fireEvent.click(screen.getByRole("button", { name: /salvar/i }));
+
+    await waitFor(() => expect(saveAction).toHaveBeenCalled());
+    await waitFor(() =>
+      expect(
+        screen.getByText(/texto do contrato de adição de pet não pode ficar vazio/i),
+      ).toBeInTheDocument(),
+    );
   });
 });
