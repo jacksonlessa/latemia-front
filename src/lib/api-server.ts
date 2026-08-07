@@ -477,6 +477,29 @@ export async function fetchDelinquentClients(
   return res.json() as Promise<DelinquentClientsResponse>;
 }
 
+/** Response DTO of `GET /v1/admin/delinquency/summary`. */
+export interface DelinquencySummaryDto {
+  totalDelinquentClients: number;
+  clientsWithPendingMessageToday: number;
+}
+
+/**
+ * GET /v1/admin/delinquency/summary
+ * Returns the counters shown by the dashboard's `DelinquencySummaryCard`:
+ * total delinquent clients and how many of them still have a pending
+ * message stage applicable today.
+ */
+export async function fetchDelinquencySummary(
+  token: string,
+): Promise<DelinquencySummaryDto> {
+  const res = await fetch(`${apiUrl()}/v1/admin/delinquency/summary`, {
+    headers: authHeaders(token),
+    cache: "no-store",
+  });
+  if (!res.ok) return handleErrorResponse(res);
+  return res.json() as Promise<DelinquencySummaryDto>;
+}
+
 /**
  * GET /v1/clients/:clientId/pets/:petId
  * Returns full pet detail. Throws ApiError(404) when pet does not exist
