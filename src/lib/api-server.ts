@@ -27,6 +27,10 @@ import type {
   BenefitUsageResponse,
   Paginated,
 } from "./types/benefit-usage";
+import type {
+  DelinquencyTemplateDto,
+  UpdateDelinquencyTemplateInput,
+} from "./types/delinquency";
 
 function apiUrl(): string {
   return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
@@ -404,6 +408,48 @@ export async function fetchNotificationBufferEntryText(
     limit: 100,
   });
   return list.items.find((item) => item.id === id) ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// Delinquency templates endpoints (admin)
+// ---------------------------------------------------------------------------
+
+/**
+ * GET /v1/admin/delinquency/templates
+ * Returns the 5 fixed message templates of the delinquency billing flow.
+ */
+export async function fetchDelinquencyTemplates(
+  token: string,
+): Promise<DelinquencyTemplateDto[]> {
+  const res = await fetch(`${apiUrl()}/v1/admin/delinquency/templates`, {
+    headers: authHeaders(token),
+    cache: "no-store",
+  });
+  if (!res.ok) return handleErrorResponse(res);
+  return res.json() as Promise<DelinquencyTemplateDto[]>;
+}
+
+/**
+ * PUT /v1/admin/delinquency/templates/:stageDays
+ * Updates a single fixed template. Backend returns 404 for an unknown
+ * `stageDays` and 422 `TEMPLATE_MISSING_LINK_PLACEHOLDER` when `body` does
+ * not contain the `[LINK]` placeholder.
+ */
+export async function putDelinquencyTemplate(
+  token: string,
+  stageDays: number,
+  payload: UpdateDelinquencyTemplateInput,
+): Promise<DelinquencyTemplateDto> {
+  const res = await fetch(
+    `${apiUrl()}/v1/admin/delinquency/templates/${encodeURIComponent(String(stageDays))}`,
+    {
+      method: "PUT",
+      headers: authHeaders(token),
+      body: JSON.stringify(payload),
+    },
+  );
+  if (!res.ok) return handleErrorResponse(res);
+  return res.json() as Promise<DelinquencyTemplateDto>;
 }
 
 /**

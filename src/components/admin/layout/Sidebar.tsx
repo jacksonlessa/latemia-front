@@ -15,6 +15,7 @@ import {
   Bell,
   Inbox,
   Gift,
+  MessageSquareWarning,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -73,7 +74,7 @@ const menuItems: MenuItem[] = [
     kind: "parent",
     label: "Configurações",
     icon: Settings,
-    roles: ["admin"],
+    roles: ["admin", "atendente"],
     children: [
       {
         kind: "leaf",
@@ -109,6 +110,13 @@ const menuItems: MenuItem[] = [
         label: "Clube de Vantagens",
         icon: Gift,
         roles: ["admin"],
+      },
+      {
+        kind: "leaf",
+        path: "/admin/configuracoes/mensagens-inadimplencia",
+        label: "Mensagens de Inadimplência",
+        icon: MessageSquareWarning,
+        roles: ["admin", "atendente"],
       },
     ],
   },
