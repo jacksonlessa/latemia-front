@@ -67,6 +67,7 @@ const menuItems: MenuItem[] = [
   { kind: "leaf", path: "/admin/home", label: "Dashboard", icon: Home, roles: ["admin", "atendente"] },
   { kind: "leaf", path: "/admin/clientes", label: "Clientes", icon: Users, roles: ["admin", "atendente"] },
   { kind: "leaf", path: "/admin/planos", label: "Planos", icon: Shield, roles: ["admin", "atendente"] },
+  { kind: "leaf", path: "/admin/inadimplencia", label: "Inadimplência", icon: MessageSquareWarning, roles: ["admin", "atendente"] },
   { kind: "leaf", path: "/admin/uso-beneficio", label: "Uso do Benefício", icon: Clipboard, roles: ["admin"] },
   { kind: "leaf", path: "/admin/pagamentos", label: "Pagamentos", icon: DollarSign, roles: ["admin"] },
   { kind: "leaf", path: "/admin/usuarios-internos", label: "Usuários Internos", icon: Users, roles: ["admin"] },

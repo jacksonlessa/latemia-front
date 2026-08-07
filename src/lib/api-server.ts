@@ -28,7 +28,9 @@ import type {
   Paginated,
 } from "./types/benefit-usage";
 import type {
+  DelinquencyClientsSort,
   DelinquencyTemplateDto,
+  DelinquentClientsResponse,
   UpdateDelinquencyTemplateInput,
 } from "./types/delinquency";
 
@@ -450,6 +452,29 @@ export async function putDelinquencyTemplate(
   );
   if (!res.ok) return handleErrorResponse(res);
   return res.json() as Promise<DelinquencyTemplateDto>;
+}
+
+/**
+ * GET /v1/admin/delinquency/clients
+ * Returns delinquent clients grouped by client, with days overdue and the
+ * currently applicable message stage (if any).
+ */
+export async function fetchDelinquentClients(
+  token: string,
+  params: { sort?: DelinquencyClientsSort } = {},
+): Promise<DelinquentClientsResponse> {
+  const qs = new URLSearchParams();
+  if (params.sort) qs.set("sort", params.sort);
+
+  const query = qs.toString();
+  const url = `${apiUrl()}/v1/admin/delinquency/clients${query ? `?${query}` : ""}`;
+
+  const res = await fetch(url, {
+    headers: authHeaders(token),
+    cache: "no-store",
+  });
+  if (!res.ok) return handleErrorResponse(res);
+  return res.json() as Promise<DelinquentClientsResponse>;
 }
 
 /**
