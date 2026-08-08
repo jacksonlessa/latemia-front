@@ -7,12 +7,14 @@ import { PlansTable } from "@/components/admin/dashboard/PlansTable";
 import { AlertsPanel } from "@/components/admin/dashboard/AlertsPanel";
 import { RecentUsage } from "@/components/admin/dashboard/RecentUsage";
 import { PlanDetailDrawer } from "@/components/admin/dashboard/PlanDetailDrawer";
+import { DelinquencySummaryCard } from "@/components/admin/dashboard/DelinquencySummaryCard";
 import type {
   DashboardKpisResponse,
   DashboardStatusChartResponse,
 } from "@/lib/types/dashboard";
 import type { PlanListResponse } from "@/lib/types/plan";
 import type { SessionUser } from "@/lib/session";
+import type { DelinquencySummaryDto } from "@/lib/api-server";
 
 interface DashboardHomeClientProps {
   kpis: DashboardKpisResponse;
@@ -20,6 +22,8 @@ interface DashboardHomeClientProps {
   plansInitial: PlanListResponse;
   plansFilters: { status?: string; search?: string };
   role: SessionUser["role"];
+  /** `null` when the summary fetch failed — rendered as the card's error state. */
+  delinquencySummary: DelinquencySummaryDto | null;
 }
 
 /**
@@ -34,6 +38,7 @@ export function DashboardHomeClient({
   plansInitial,
   plansFilters,
   role: _role,
+  delinquencySummary,
 }: DashboardHomeClientProps) {
   void _role;
 
@@ -49,7 +54,17 @@ export function DashboardHomeClient({
         <div className="lg:col-span-2">
           <StatusChart data={statusChart.data} />
         </div>
-        <div>
+        <div className="space-y-4 md:space-y-6">
+          {delinquencySummary ? (
+            <DelinquencySummaryCard
+              totalDelinquentClients={delinquencySummary.totalDelinquentClients}
+              clientsWithPendingMessageToday={
+                delinquencySummary.clientsWithPendingMessageToday
+              }
+            />
+          ) : (
+            <DelinquencySummaryCard state="error" />
+          )}
           <AlertsPanel />
         </div>
       </div>

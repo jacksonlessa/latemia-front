@@ -7,6 +7,7 @@ import {
   fetchNotificationEvents,
   fetchQuietHours,
   patchNotificationEvent,
+  putDelinquencyTemplate,
   putQuietHours,
   updateSystemSettings,
 } from "@/lib/api-server";
@@ -19,6 +20,10 @@ import type {
   NotificationEventType,
   QuietHoursDto,
 } from "@/lib/types/notifications";
+import type {
+  DelinquencyTemplateDto,
+  UpdateDelinquencyTemplateInput,
+} from "@/lib/types/delinquency";
 
 type SaveResult =
   | { success: true; data: SystemSettingsDto }
@@ -158,6 +163,37 @@ export async function updateQuietHours(
     return {
       success: false,
       error: toActionError(err, "Erro ao salvar a janela de silêncio."),
+    };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Delinquency templates — admin actions
+// ---------------------------------------------------------------------------
+
+/**
+ * Updates a single delinquency billing-flow message template
+ * (`PUT /v1/admin/delinquency/templates/:stageDays`).
+ *
+ * Client-side validation of the `[LINK]` placeholder happens in
+ * `DelinquencyTemplateEditor` before this action is invoked; a 422
+ * (`TEMPLATE_MISSING_LINK_PLACEHOLDER`) here indicates a race with another
+ * edit or a bypass of the client-side check.
+ */
+export async function updateDelinquencyTemplate(
+  stageDays: number,
+  input: UpdateDelinquencyTemplateInput,
+): Promise<ActionResult<DelinquencyTemplateDto>> {
+  const auth = await getTokenOrFail();
+  if (!auth.ok) return { success: false, error: auth.error };
+  try {
+    const data = await putDelinquencyTemplate(auth.token, stageDays, input);
+    revalidatePath("/admin/configuracoes/mensagens-inadimplencia");
+    return { success: true, data };
+  } catch (err) {
+    return {
+      success: false,
+      error: toActionError(err, "Erro ao salvar o template de mensagem."),
     };
   }
 }
