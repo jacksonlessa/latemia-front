@@ -53,14 +53,19 @@ export async function GET(_req: Request, ctx: RouteContext) {
  *
  * Expected body: `{ cardToken: string }` — PAN/CVV never reach this handler.
  *
- * Returns `{ outcome, chargesBehavior, failureMessage? }` on 200, where
- *   `outcome` ∈ { card_updated_no_charge | charge_paid | charge_pending | charge_failed }.
- * `charge_failed` is still a 200 — the token stays alive on the backend so
- * the client can try another card without a new link. The page renders the
- * `failureMessage` inline.
+ * Returns `{ outcome, chargesBehavior, failureMessage?, failureCode?, failureTitle?, failureDetail? }`
+ * on 200, where
+ *   `outcome` ∈ { card_updated_no_charge | charge_paid | charge_pending | charge_failed | token_exhausted }.
+ * `charge_failed` is still a 200 — the token stays alive on the backend (until the
+ * failure limit is reached) so the client can try another card without a new link.
+ * `token_exhausted` is also a 200 — the link itself is now invalid for new attempts;
+ * the client is guided to contact the clinic for a new one.
+ * `failureCode`, `failureTitle` and `failureDetail` are forwarded as-is from the
+ * backend — no transformation happens in this handler nor in the page. All fields
+ * are passed through verbatim via the raw body below (no JSON parsing/re-serialization).
  *
  * Returns 404 for invalid/expired/used tokens.
- * Returns 400 for validation/gateway errors prior to the retry.
+ * Returns 400 for validation/gateway errors prior to the recovery charge.
  */
 export async function POST(req: Request, ctx: RouteContext) {
   const { token } = await ctx.params;

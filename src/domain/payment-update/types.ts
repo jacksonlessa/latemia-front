@@ -23,16 +23,19 @@ export type ChargesBehavior = 'immediate' | 'next_cycle';
  * Desfecho canônico do consumo do token.
  *
  * - `card_updated_no_charge` — cartão atualizado, nenhuma cobrança disparada.
- * - `charge_paid`            — cartão atualizado e retry aprovado.
- * - `charge_pending`         — cartão atualizado e retry em processamento.
- * - `charge_failed`          — cartão atualizado mas retry recusado;
- *                              token permanece ativo para nova tentativa.
+ * - `charge_paid`            — cartão atualizado e a cobrança de recuperação foi aprovada.
+ * - `charge_pending`         — cartão atualizado e a cobrança de recuperação está em processamento.
+ * - `charge_failed`          — cartão atualizado mas a cobrança de recuperação foi recusada;
+ *                              token permanece ativo para nova tentativa (até o limite de falhas).
+ * - `token_exhausted`        — limite de falhas do link atingido; o link deixa de aceitar
+ *                              novas tentativas e o cliente precisa pedir um link novo.
  */
 export type ConsumeOutcome =
   | 'card_updated_no_charge'
   | 'charge_paid'
   | 'charge_pending'
-  | 'charge_failed';
+  | 'charge_failed'
+  | 'token_exhausted';
 
 /**
  * Contexto retornado pelo backend ao validar o token.
@@ -50,8 +53,24 @@ export interface ConsumeResult {
   outcome: ConsumeOutcome;
   chargesBehavior: ChargesBehavior;
   /**
-   * Mensagem do gateway quando `outcome === 'charge_failed'`.
-   * Sem PII de cartão; usada apenas para exibição inline.
+   * Mensagem crua do gateway quando `outcome === 'charge_failed'`.
+   * Sem PII de cartão; mantida por compatibilidade — preferir `failureDetail`.
    */
   failureMessage?: string;
+  /**
+   * Código do gateway (ex.: '9201') quando `outcome === 'charge_failed'`.
+   * Sem PII de cartão.
+   */
+  failureCode?: string;
+  /**
+   * Título fixo do desfecho de recusa, já formatado pelo backend
+   * (ex.: "Não foi possível concluir a cobrança").
+   */
+  failureTitle?: string;
+  /**
+   * Mensagem + código já formatados pelo backend
+   * (ex.: "Transação recusada por excesso de retentativas - Código: 9201").
+   * Repassada crua ao cliente, sem tradução ou reescrita no frontend.
+   */
+  failureDetail?: string;
 }
