@@ -56,6 +56,8 @@ const mockSaveSuccess = async (_payload: UpdateSystemSettingsInput) => ({
     subscription_plan_id: "plan_abc123",
     subscription_plan_price_cents: "4990",
     otp_contract_enabled: "false",
+    pet_addition_contract_text:
+      "Ao adicionar este pet ao plano já contratado, ele passa a integrar a mesma assinatura vigente.",
   } as SystemSettingsDto,
 });
 
@@ -79,6 +81,8 @@ const filledValues: SystemSettingsDto = {
   subscription_plan_id: "plan_abc123",
   subscription_plan_price_cents: "4990",
   otp_contract_enabled: "false",
+  pet_addition_contract_text:
+    "Ao adicionar este pet ao plano já contratado, ele passa a integrar a mesma assinatura vigente.",
 };
 
 const filledValuesOtpOn: SystemSettingsDto = {

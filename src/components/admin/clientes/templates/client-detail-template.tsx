@@ -12,6 +12,10 @@ interface ClientDetailTemplateProps {
   client: ClientDetail;
   /** All plans for this client (up to 100, pre-loaded server-side). */
   plans: PlanListItem[];
+  /** Current subscription price per pet, in cents (pre-loaded server-side). */
+  pricePerPetCents?: number;
+  /** Additional-pet contract text (pre-loaded server-side). */
+  petAdditionContractText?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -30,6 +34,8 @@ interface ClientDetailTemplateProps {
 export function ClientDetailTemplate({
   client,
   plans,
+  pricePerPetCents,
+  petAdditionContractText,
 }: ClientDetailTemplateProps) {
   return (
     <div className="space-y-4 md:space-y-6">
@@ -45,7 +51,12 @@ export function ClientDetailTemplate({
       </div>
 
       {/* Client detail — interactive owner */}
-      <ClientDetailPageClient client={client} plans={plans} />
+      <ClientDetailPageClient
+        client={client}
+        plans={plans}
+        pricePerPetCents={pricePerPetCents}
+        petAdditionContractText={petAdditionContractText}
+      />
     </div>
   );
 }

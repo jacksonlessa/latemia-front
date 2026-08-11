@@ -10,11 +10,16 @@
  * Returns ConsumeResult on success (200). The `outcome` field describes the
  * effective result:
  *   - `card_updated_no_charge` — `ativo`/`carencia`: card updated, no charge.
- *   - `charge_paid`            — retry approved.
- *   - `charge_pending`         — retry accepted, still processing.
- *   - `charge_failed`          — retry refused; token remains ACTIVE so the
- *                                client may try another card without a new link.
- *                                `failureMessage` may carry a gateway message.
+ *   - `charge_paid`            — recovery charge approved.
+ *   - `charge_pending`         — recovery charge accepted, still processing.
+ *   - `charge_failed`          — recovery charge refused; token remains ACTIVE
+ *                                (until the failure limit) so the client may try
+ *                                another card without a new link. `failureMessage`,
+ *                                `failureCode`, `failureTitle` and `failureDetail`
+ *                                may carry the raw gateway reason — forwarded as-is,
+ *                                no translation/reformatting on the frontend.
+ *   - `token_exhausted`        — failure limit reached; the link itself stops
+ *                                accepting new attempts.
  *
  * Throws TokenInvalidError on 404.
  * Throws ConsumePaymentError on 400 (validation/gateway errors prior to retry)

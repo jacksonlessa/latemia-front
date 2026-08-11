@@ -3,16 +3,22 @@
 /**
  * AtualizarPagamentoClient
  *
- * Client Component that orchestrates the 6-state machine for the public
+ * Client Component that orchestrates the 7-state machine for the public
  * payment-update flow:
  *
  *   loading    — validating token on mount
  *   invalid    — token invalid/expired/used
+ *   exhausted  — `token_exhausted` outcome; link reached its failure limit,
+ *                no form is rendered, customer is guided to the clinic
  *   form       — shows tutorMaskedName, petsCovered and card form
  *   submitting — card is being tokenized and submitted
  *   error      — gateway error OR `charge_failed` outcome; form remains
- *                active for retry, token stays alive on the backend
+ *                active for retry, token stays alive on the backend (until
+ *                the failure limit turns the next attempt into `exhausted`)
  *   success    — card updated; renders success message based on chargesBehavior
+ *
+ * The `error` state renders a title + detail pair. Both are forwarded as-is
+ * from the backend (RF-4.1) — no translation or reformatting happens here.
  *
  * LGPD: displays only tutorMaskedName and petsCovered — no CPF, phone, or email.
  * PCI:  card data (PAN, CVV) never leave the PaymentCardForm component;
@@ -26,6 +32,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { PaymentCardForm } from './molecules/payment-card-form';
 import { PaymentUpdateInvalid } from './organisms/payment-update-invalid';
+import { PaymentUpdateExhausted } from './organisms/payment-update-exhausted';
 import {
   validatePaymentUpdateToken,
   TokenInvalidError,
@@ -43,9 +50,10 @@ import type { TokenContext } from '@/domain/payment-update/types';
 type PageState =
   | { kind: 'loading' }
   | { kind: 'invalid' }
+  | { kind: 'exhausted' }
   | { kind: 'form'; context: TokenContext }
   | { kind: 'submitting'; context: TokenContext }
-  | { kind: 'error'; context: TokenContext; message: string }
+  | { kind: 'error'; context: TokenContext; title: string; detail: string }
   | { kind: 'success'; chargesBehavior: TokenContext['chargesBehavior'] };
 
 // ---------------------------------------------------------------------------
@@ -59,7 +67,9 @@ const SUCCESS_MESSAGES: Record<TokenContext['chargesBehavior'], string> = {
     'Pronto! O novo cartão será usado na próxima cobrança mensal.',
 };
 
+const FAILED_CHARGE_TITLE = 'Não foi possível concluir a cobrança';
 const FAILED_CHARGE_FALLBACK = 'Cartão recusado. Tente outro cartão.';
+const GENERIC_ERROR_TITLE = 'Não foi possível atualizar o cartão';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -122,36 +132,56 @@ export function AtualizarPagamentoClient() {
     try {
       const result = await consumePaymentUpdateToken(token, cardToken);
 
+      // `token_exhausted` — the link itself reached its failure limit.
+      // No form: insisting on the same link is exactly what must stop.
+      if (result.outcome === 'token_exhausted') {
+        setState({ kind: 'exhausted' });
+        return;
+      }
+
       // `charge_failed` is NOT a success state — keep the form alive so the
-      // customer can try another card. Token remains active on the backend.
+      // customer can try another card. Token remains active on the backend
+      // (until the failure limit is reached, which yields `token_exhausted`).
+      // Title/detail are forwarded as-is from the backend (RF-4.1) — no
+      // translation or reformatting happens on the frontend. Fallback chain:
+      // failureDetail → failureMessage → generic text, so the screen keeps
+      // working even if front/back momentarily disagree on the contract.
       if (result.outcome === 'charge_failed') {
         setState({
           kind: 'error',
           context,
-          message: result.failureMessage ?? FAILED_CHARGE_FALLBACK,
+          title: result.failureTitle ?? FAILED_CHARGE_TITLE,
+          detail: result.failureDetail ?? result.failureMessage ?? FAILED_CHARGE_FALLBACK,
         });
         return;
       }
 
       setState({ kind: 'success', chargesBehavior: context.chargesBehavior });
     } catch (err) {
-      let message = 'Não foi possível atualizar o cartão. Tente novamente.';
+      let detail = 'Não foi possível atualizar o cartão. Tente novamente.';
       if (err instanceof TokenInvalidError) {
         setState({ kind: 'invalid' });
         return;
       }
       if (err instanceof ConsumePaymentError) {
-        message = err.message;
+        detail = err.message;
       }
-      setState({ kind: 'error', context, message });
+      setState({ kind: 'error', context, title: GENERIC_ERROR_TITLE, detail });
     }
   }
 
   function handleCardError(message: string): void {
     // Error was already set inline by PaymentCardForm; propagate to state so
-    // the error banner stays visible if re-renders occur.
+    // the error banner stays visible if re-renders occur. This is a
+    // client-side tokenization failure (before hitting the backend), so it
+    // uses the generic title rather than the backend's charge-failure title.
     if (state.kind === 'form' || state.kind === 'error') {
-      setState({ kind: 'error', context: state.context, message });
+      setState({
+        kind: 'error',
+        context: state.context,
+        title: GENERIC_ERROR_TITLE,
+        detail: message,
+      });
     }
   }
 
@@ -176,6 +206,10 @@ export function AtualizarPagamentoClient() {
     return <PaymentUpdateInvalid />;
   }
 
+  if (state.kind === 'exhausted') {
+    return <PaymentUpdateExhausted />;
+  }
+
   if (state.kind === 'success') {
     return (
       <div className="flex flex-col items-center gap-6 py-6 text-center">
@@ -195,7 +229,8 @@ export function AtualizarPagamentoClient() {
   // form | submitting | error
   const context = state.context;
   const isSubmitting = state.kind === 'submitting';
-  const errorMessage = state.kind === 'error' ? state.message : undefined;
+  const errorTitle = state.kind === 'error' ? state.title : undefined;
+  const errorDetail = state.kind === 'error' ? state.detail : undefined;
 
   return (
     <div className="space-y-6">
@@ -218,13 +253,15 @@ export function AtualizarPagamentoClient() {
         </section>
       </header>
 
-      {/* Error banner — inline, form stays active */}
-      {errorMessage && (
+      {/* Error banner — inline, form stays active. Title in destaque, detail
+          as secondary text. Both are forwarded as-is from the backend. */}
+      {errorTitle && errorDetail && (
         <div
-          className="rounded-lg border border-destructive/40 bg-destructive/5 p-4"
+          className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 space-y-1"
           role="alert"
         >
-          <p className="text-sm text-destructive">{errorMessage}</p>
+          <p className="text-sm font-semibold text-destructive">{errorTitle}</p>
+          <p className="text-sm text-destructive/90">{errorDetail}</p>
         </div>
       )}
 

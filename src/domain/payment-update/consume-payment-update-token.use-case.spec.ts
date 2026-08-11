@@ -65,6 +65,21 @@ const chargeFailedWithoutMessage: ConsumeResult = {
   chargesBehavior: 'immediate',
 };
 
+const chargeFailedWithCode: ConsumeResult = {
+  outcome: 'charge_failed',
+  chargesBehavior: 'immediate',
+  failureMessage: 'Transação recusada por excesso de retentativas',
+  failureCode: '9201',
+  failureTitle: 'Não foi possível concluir a cobrança',
+  failureDetail:
+    'Transação recusada por excesso de retentativas - Código: 9201',
+};
+
+const tokenExhausted: ConsumeResult = {
+  outcome: 'token_exhausted',
+  chargesBehavior: 'immediate',
+};
+
 // ---------------------------------------------------------------------------
 // Setup / Teardown
 // ---------------------------------------------------------------------------
@@ -164,6 +179,35 @@ describe('consumePaymentUpdateToken — charge_failed (200, inline retry)', () =
     await expect(
       consumePaymentUpdateToken('valid-token', CARD_TOKEN),
     ).resolves.toMatchObject({ outcome: 'charge_failed' });
+  });
+
+  it('should forward failureCode, failureTitle and failureDetail as-is when the backend sends them', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      makeResponse(chargeFailedWithCode, 200),
+    );
+
+    const result = await consumePaymentUpdateToken('valid-token', CARD_TOKEN);
+
+    expect(result.outcome).toBe('charge_failed');
+    expect(result.failureCode).toBe('9201');
+    expect(result.failureTitle).toBe('Não foi possível concluir a cobrança');
+    expect(result.failureDetail).toBe(
+      'Transação recusada por excesso de retentativas - Código: 9201',
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// token_exhausted — 200 response, link stops accepting new attempts
+// ---------------------------------------------------------------------------
+
+describe('consumePaymentUpdateToken — token_exhausted (200, link stops accepting attempts)', () => {
+  it('should return outcome=token_exhausted without throwing', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(makeResponse(tokenExhausted, 200));
+
+    await expect(
+      consumePaymentUpdateToken('valid-token', CARD_TOKEN),
+    ).resolves.toMatchObject({ outcome: 'token_exhausted' });
   });
 });
 

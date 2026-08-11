@@ -12,9 +12,12 @@
  *   - `immediate`   — at least one plan is pendente/inadimplente
  *   - `next_cycle`  — all plans are ativo/carencia
  *
- * A `ChargeFailedInline` story renders the same layout with the inline error
- * banner that appears when the consume returns `outcome: 'charge_failed'` —
- * the form stays active for a new attempt and the token is NOT invalidated.
+ * `ChargeFailedWithCode` and `ChargeFailedWithoutCode` render the same layout
+ * with the inline error banner that appears when the consume returns
+ * `outcome: 'charge_failed'` — the form stays active for a new attempt and
+ * the token remains valid (until the failure limit is reached, see
+ * `PaymentUpdateExhausted`). Title and detail are forwarded as-is from the
+ * backend (RF-4.1/RF-4.2) — no formatting happens in the frontend.
  */
 
 import type React from 'react';
@@ -38,8 +41,9 @@ const meta = {
           'O `chargesBehavior` é agregado de todos os planos do cliente: ' +
           '`immediate` se há pelo menos 1 plano em pendente/inadimplente; ' +
           '`next_cycle` se todos estão em ativo/carencia. ' +
-          'A variante `ChargeFailedInline` mostra o banner inline exibido ' +
-          'quando o backend retorna `outcome: charge_failed` — formulário permanece ativo ' +
+          'As variantes `ChargeFailedWithCode` e `ChargeFailedWithoutCode` mostram o banner ' +
+          'inline exibido quando o backend retorna `outcome: charge_failed` — título e ' +
+          'detalhe repassados crus do backend (RF-4.1/RF-4.2), formulário permanece ativo ' +
           'e o token continua válido para nova tentativa.',
       },
     },
@@ -56,7 +60,8 @@ interface PreviewProps {
   tutorMaskedName: string;
   petsCovered: string[];
   chargesBehavior: ChargesBehavior;
-  errorMessage?: string;
+  errorTitle?: string;
+  errorDetail?: string;
   disabled?: boolean;
 }
 
@@ -70,7 +75,8 @@ function buildPetsCoveredLabel(petsCovered: string[]): string {
 function PaymentUpdateFormPreview({
   tutorMaskedName,
   petsCovered,
-  errorMessage,
+  errorTitle,
+  errorDetail,
   disabled = false,
 }: PreviewProps) {
   return (
@@ -93,12 +99,13 @@ function PaymentUpdateFormPreview({
         </section>
       </header>
 
-      {errorMessage && (
+      {errorTitle && errorDetail && (
         <div
-          className="rounded-lg border border-destructive/40 bg-destructive/5 p-4"
+          className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 space-y-1"
           role="alert"
         >
-          <p className="text-sm text-destructive">{errorMessage}</p>
+          <p className="text-sm font-semibold text-destructive">{errorTitle}</p>
+          <p className="text-sm text-destructive/90">{errorDetail}</p>
         </div>
       )}
 
@@ -149,15 +156,37 @@ export const Default3Pets: Story = {
   ),
 };
 
-/** outcome: charge_failed — banner inline e formulário ativo (token vivo) */
-export const ChargeFailedInline: Story = {
-  name: 'outcome: charge_failed (inline retry)',
+/**
+ * outcome: charge_failed com failureCode — o backend já compõe failureDetail
+ * como `${failureMessage} - Código: ${failureCode}`. Banner inline, formulário
+ * ativo, token continua válido para nova tentativa.
+ */
+export const ChargeFailedWithCode: Story = {
+  name: 'outcome: charge_failed (recusa com código)',
   render: () => (
     <PaymentUpdateFormPreview
       tutorMaskedName="J** S***"
       petsCovered={['Rex', 'Mia']}
       chargesBehavior="immediate"
-      errorMessage="Cartão recusado. Tente outro cartão."
+      errorTitle="Não foi possível concluir a cobrança"
+      errorDetail="Transação recusada por excesso de retentativas - Código: 9201"
+    />
+  ),
+};
+
+/**
+ * outcome: charge_failed sem failureCode — o backend envia apenas a
+ * mensagem, sem sufixo de código pendurado.
+ */
+export const ChargeFailedWithoutCode: Story = {
+  name: 'outcome: charge_failed (recusa sem código)',
+  render: () => (
+    <PaymentUpdateFormPreview
+      tutorMaskedName="J** S***"
+      petsCovered={['Rex']}
+      chargesBehavior="immediate"
+      errorTitle="Não foi possível concluir a cobrança"
+      errorDetail="Cartão sem limite disponível."
     />
   ),
 };

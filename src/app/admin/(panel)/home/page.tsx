@@ -1,6 +1,10 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { fetchMe } from "@/lib/api-server";
+import {
+  fetchMe,
+  fetchDelinquencySummary,
+  type DelinquencySummaryDto,
+} from "@/lib/api-server";
 import { SESSION_COOKIE } from "@/lib/session";
 import {
   fetchKpis,
@@ -46,6 +50,16 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       fetchInitialPlans(token, { page: 1, perPage: 20, status, search }),
     ]);
 
+    // Fetched independently: a failure here must not break the rest of the
+    // dashboard (KPIs, chart, table), so it never joins the Promise.all
+    // above nor the surrounding try/catch's failure path.
+    let delinquencySummary: DelinquencySummaryDto | null = null;
+    try {
+      delinquencySummary = await fetchDelinquencySummary(token);
+    } catch {
+      delinquencySummary = null;
+    }
+
     return (
       <DashboardHomeClient
         kpis={kpis}
@@ -53,6 +67,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         plansInitial={plansInitial}
         plansFilters={plansFilters}
         role={user.role}
+        delinquencySummary={delinquencySummary}
       />
     );
   } catch (error) {
