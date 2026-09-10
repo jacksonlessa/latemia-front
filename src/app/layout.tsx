@@ -16,6 +16,10 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "Late&Mia Clínica Veterinária",
   description: "Plano Emergencial Pet Dr. Cleitinho — 50% de desconto em atendimentos emergenciais para o seu pet.",
+  // Comprova a propriedade do domínio no Google Search Console.
+  verification: {
+    google: "ZkiJ1ody-QZbYBfCXrLGxiuGLSLP1v3dWCJF8M6GtOU",
+  },
 };
 
 export default function RootLayout({
